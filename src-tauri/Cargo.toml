@@ -1,6 +1,6 @@
 [package]
 name = "albaro-notes"
-version = "0.6.0"
+version = "1.0.0"
 description = "AlbaRo Notes: notas con editor de bloques, bases de datos e IA opcional"
 authors = ["AlbaRoDev"]
 edition = "2021"
