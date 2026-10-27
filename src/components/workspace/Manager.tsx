@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CalendarDays, Columns3, Inbox, ListChecks, Shapes, type LucideIcon } from "lucide-react";
+import { CalendarDays, Columns3, ListChecks, Shapes, type LucideIcon } from "lucide-react";
 import { readPref, writePref } from "../../lib/prefs";
 import { startItemDrag } from "../../lib/drag-item";
 import type { PageSummary } from "../../types";
@@ -134,15 +134,6 @@ export function ManagerCompanion({
           </ul>
         )}
       </section>
-      {["Hoy", "Próximos"].map((title) => (
-        <section key={title} className="companion-section">
-          <h3>
-            <Inbox size={14} aria-hidden />
-            {title}
-          </h3>
-          <p className="companion-empty">Llegan con el calendario.</p>
-        </section>
-      ))}
     </div>
   );
 }
