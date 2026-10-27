@@ -43,7 +43,7 @@ La clave de API del servicio de IA se guarda en el almacén de credenciales del 
 
 ## Seguridad
 
-Cómo avisar de un problema: [SECURITY.md](./SECURITY.md). En corto: la página no tiene acceso a internet, cada comando valida de nuevo sus argumentos en Rust, la IA solo propone cambios que tú aplicas, y la CI (preparada, aún sin estrenar en GitHub) revisa dependencias y licencias cada semana.
+Cómo avisar de un problema: [SECURITY.md](./SECURITY.md). En corto: la página no tiene acceso a internet, cada comando valida de nuevo sus argumentos en Rust, la IA solo propone cambios que tú aplicas, y la CI revisa las dependencias y las licencias en cada subida y cada semana.
 
 La app mira cada 12 horas si hay una versión nueva y **solo te avisa**: no descarga ni instala nada hasta que pulsas el botón, y comprueba la firma de la actualización con la clave del proyecto. Todavía no hay versiones publicadas. Cuando haya instaladores no estarán firmados con certificado de pago: Windows mostrará la advertencia de SmartScreen, y junto a cada instalador se publicará su SHA-256 para que lo compruebes.
 
