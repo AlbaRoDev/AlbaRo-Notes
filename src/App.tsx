@@ -340,11 +340,16 @@ function App() {
           />
         )}
         {selectedPage && (
-          <PageHeader key={selectedPage.id} page={selectedPage} onChanged={refreshPages} />
+          <PageHeader
+            key={`header-${selectedPage.id}`}
+            page={selectedPage}
+            onChanged={refreshPages}
+          />
         )}
         {selectedPageId && (
-          // Keyed by page so a page that fails to draw does not stop the next one from opening.
-          <ErrorBoundary key={selectedPageId} what="la página">
+          // Keyed by page so a page that fails to draw does not stop the next one from opening. Siblings need
+          // different keys: with the same one React duplicated the header of every page visited.
+          <ErrorBoundary key={`editor-${selectedPageId}`} what="la página">
             <PageEditor
               // A database page's editor is title-only, so it needs its own editor instance.
               key={selectedPage?.ownDatabaseId ? "database" : "page"}
