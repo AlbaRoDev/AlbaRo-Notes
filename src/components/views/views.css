@@ -1,0 +1,641 @@
+/* Calendar, timeline and map components. Used by the database views and by the standalone blocks. */
+
+.page-editor .ProseMirror .calendar-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4em;
+  margin-bottom: 0.5em;
+}
+
+.page-editor .ProseMirror .calendar-title {
+  font-weight: 600;
+  margin-left: 0.3em;
+}
+
+.page-editor .ProseMirror .calendar-select {
+  width: auto;
+}
+
+.page-editor .ProseMirror .calendar-year {
+  width: 5.2em;
+}
+
+.page-editor .ProseMirror .calendar-today,
+.page-editor .ProseMirror .calendar-modes button {
+  font: inherit;
+  font-size: 0.85em;
+  color: inherit;
+  cursor: var(--cursor-pointer, pointer);
+  padding: 0.2em 0.6em;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: rgba(var(--ink), 0.08);
+}
+
+.page-editor .ProseMirror .calendar-today:hover,
+.page-editor .ProseMirror .calendar-modes button:hover {
+  background: rgba(var(--ink), 0.2);
+}
+
+.page-editor .ProseMirror .calendar-modes {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.page-editor .ProseMirror .calendar-modes button[aria-pressed="true"] {
+  background: rgba(var(--accent-rgb), 0.3);
+  border-color: rgba(var(--accent-rgb), 0.6);
+}
+
+.page-editor .ProseMirror .calendar-grid {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.page-editor .ProseMirror .calendar-weekdays,
+.page-editor .ProseMirror .calendar-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.page-editor .ProseMirror .calendar-weekdays span {
+  padding: 0.25em 0.4em;
+  font-size: 0.8em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  background: rgba(var(--ink), 0.1);
+}
+
+.page-editor .ProseMirror .calendar-day {
+  min-height: 5.2em;
+  padding: 0.15em 0.25em;
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  min-width: 0;
+}
+
+.page-editor .ProseMirror .calendar-day:first-child {
+  border-left: none;
+}
+
+.page-editor .ProseMirror .calendar-day[data-week="true"] {
+  min-height: 14em;
+}
+
+.page-editor .ProseMirror .calendar-day[data-outside="true"] {
+  background: rgba(var(--ink), 0.07);
+  opacity: 0.6;
+}
+
+.page-editor .ProseMirror .calendar-day-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.page-editor .ProseMirror .calendar-day-number {
+  font-size: 0.8em;
+  padding: 0 0.35em;
+  border-radius: 999px;
+}
+
+.page-editor .ProseMirror .calendar-day[data-today="true"] .calendar-day-number {
+  background: var(--danger);
+  color: #fff;
+  font-weight: 600;
+}
+
+.page-editor .ProseMirror .calendar-add {
+  opacity: 0;
+}
+
+.page-editor .ProseMirror .calendar-day:hover .calendar-add,
+.page-editor .ProseMirror .calendar-add:focus-visible {
+  opacity: 0.8;
+}
+
+.page-editor .ProseMirror .calendar-chip {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 1px 0;
+  padding: 0.05em 0.4em;
+  font: inherit;
+  font-size: 0.8em;
+  color: inherit;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: var(--cursor-pointer, pointer);
+  background: rgba(var(--accent-rgb), 0.25);
+  border: none;
+  border-radius: 4px;
+}
+
+.page-editor .ProseMirror .calendar-chip:hover {
+  background: rgba(var(--accent-rgb), 0.45);
+}
+
+/* a ranged row keeps one chip per day, joined: square the inner ends */
+.page-editor .ProseMirror .calendar-chip[data-first="false"] {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.page-editor .ProseMirror .calendar-chip[data-last="false"] {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.page-editor .ProseMirror .calendar-undated {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3em;
+  margin-top: 0.5em;
+}
+
+.page-editor .ProseMirror .calendar-undated .calendar-chip {
+  width: auto;
+  max-width: 14em;
+}
+
+.page-editor .ProseMirror .timeline-scroll {
+  position: relative;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.page-editor .ProseMirror .timeline-inner {
+  position: relative;
+}
+
+.page-editor .ProseMirror .timeline-row {
+  display: flex;
+  height: 2em;
+  border-top: 1px solid var(--border);
+}
+
+.page-editor .ProseMirror .timeline-axis {
+  border-top: none;
+  background: rgba(var(--ink), 0.1);
+}
+
+.page-editor .ProseMirror .timeline-label {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  flex: 0 0 176px;
+  width: 176px;
+  box-sizing: border-box;
+  padding: 0 0.5em;
+  font: inherit;
+  font-size: 0.85em;
+  color: inherit;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: var(--bg);
+  border: none;
+  border-right: 1px solid var(--border);
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.page-editor .ProseMirror .timeline-axis .timeline-label {
+  background: var(--bg);
+  cursor: var(--cursor-default, default);
+}
+
+.page-editor .ProseMirror .timeline-track {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.page-editor .ProseMirror .timeline-tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  padding-left: 0.3em;
+  font-size: 0.75em;
+  line-height: 2.6;
+  opacity: 0.65;
+  border-left: 1px solid var(--border);
+}
+
+.page-editor .ProseMirror .timeline-bar {
+  position: absolute;
+  top: 0.3em;
+  bottom: 0.3em;
+  box-sizing: border-box;
+  padding: 0 0.4em;
+  font: inherit;
+  font-size: 0.75em;
+  color: var(--on-accent);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: var(--cursor-pointer, pointer);
+  background: rgba(var(--accent-rgb), 0.85);
+  border: none;
+  border-radius: 4px;
+}
+
+.page-editor .ProseMirror .timeline-bar:hover {
+  background: var(--accent);
+}
+
+.page-editor .ProseMirror .timeline-today {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--danger);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.page-editor .ProseMirror .map-surface {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #cfd8dc;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.page-editor .ProseMirror .map-surface[data-adding="true"] {
+  cursor: crosshair;
+}
+
+.page-editor .ProseMirror .map-tile {
+  position: absolute;
+  max-width: none;
+  pointer-events: none;
+}
+
+.page-editor .ProseMirror .map-tile-empty {
+  background: #dfe5e8;
+  outline: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.page-editor .ProseMirror .map-pin {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--danger);
+  cursor: var(--cursor-pointer, pointer);
+  background: none;
+  border: none;
+  /* the tip of the pin sits on the coordinates */
+  transform: translate(-50%, -100%);
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5));
+}
+
+.page-editor .ProseMirror .map-pin svg {
+  fill: currentColor;
+  stroke: #fff;
+}
+
+.page-editor .ProseMirror .map-controls {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+  z-index: 3;
+  display: grid;
+  gap: 2px;
+  justify-items: end;
+}
+
+.page-editor .ProseMirror .map-controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.9em;
+  height: 1.9em;
+  padding: 0 0.5em;
+  font: inherit;
+  font-size: 0.8em;
+  color: #222;
+  cursor: var(--cursor-pointer, pointer);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+}
+
+.page-editor .ProseMirror .map-controls button:hover,
+.page-editor .ProseMirror .map-controls button[aria-pressed="true"] {
+  background: #fff;
+  border-color: var(--accent);
+}
+
+.page-editor .ProseMirror .map-attribution {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
+  padding: 0 0.4em;
+  font-size: 0.7em;
+  color: #333;
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.page-editor .ProseMirror .map-places {
+  display: grid;
+  gap: 0.15em;
+  margin: 0.5em 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9em;
+}
+
+.page-editor .ProseMirror .map-places li {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.page-editor .ProseMirror .map-place {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: var(--cursor-pointer, pointer);
+  background: none;
+  border: none;
+  padding: 0.1em 0.2em;
+}
+
+.page-editor .ProseMirror .map-place:hover {
+  text-decoration: underline;
+}
+
+.page-editor .ProseMirror .map-place-name {
+  opacity: 0.6;
+}
+
+.page-editor .ProseMirror .map-open {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+/* standalone view blocks */
+.page-editor .ProseMirror .view-block-title {
+  flex: 1;
+  text-decoration: none;
+  cursor: var(--cursor-default, default);
+}
+
+.page-editor .ProseMirror .map-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+  margin-bottom: 0.4em;
+}
+
+.page-editor .ProseMirror .map-search .db-input {
+  flex: 1;
+  border-color: var(--border);
+}
+
+.page-editor .ProseMirror .map-search .db-place-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: var(--bg-popover);
+  box-shadow: var(--shadow-popover);
+}
+
+.page-editor .ProseMirror .calendar-chip[data-selected="true"],
+.page-editor .ProseMirror .timeline-bar[data-selected="true"] {
+  outline: 2px solid #e0a82e;
+}
+
+.page-editor .ProseMirror .map-pin[data-selected="true"] {
+  color: #e0a82e;
+  z-index: 3;
+}
+
+/* Chart view */
+.page-editor .ProseMirror .chart-view {
+  display: grid;
+  gap: 0.4em;
+  margin-top: 0.6em;
+}
+
+.page-editor .ProseMirror .chart-measure {
+  margin: 0;
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.page-editor .ProseMirror .chart-scroll {
+  overflow-x: auto;
+}
+
+.page-editor .ProseMirror .chart-svg {
+  display: block;
+  max-width: none;
+  font-family: inherit;
+}
+
+.page-editor .ProseMirror .chart-grid {
+  stroke: currentColor;
+  stroke-opacity: 0.12;
+}
+
+.page-editor .ProseMirror .chart-axis {
+  stroke: currentColor;
+  stroke-opacity: 0.45;
+}
+
+.page-editor .ProseMirror .chart-tick,
+.page-editor .ProseMirror .chart-label {
+  font-size: 11px;
+  fill: currentColor;
+  opacity: 0.7;
+}
+
+.page-editor .ProseMirror .chart-value {
+  font-size: 11px;
+  fill: currentColor;
+}
+
+.page-editor .ProseMirror .chart-center {
+  font-size: 22px;
+  font-weight: 600;
+  fill: currentColor;
+}
+
+.page-editor .ProseMirror .chart-donut {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.2em;
+}
+
+.page-editor .ProseMirror .chart-legend {
+  display: grid;
+  gap: 0.25em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 12em;
+}
+
+.page-editor .ProseMirror .chart-legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0;
+}
+
+.page-editor .ProseMirror .chart-swatch {
+  flex: none;
+  width: 0.8em;
+  height: 0.8em;
+  border-radius: 3px;
+}
+
+.page-editor .ProseMirror .chart-legend-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.page-editor .ProseMirror .chart-legend-value {
+  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
+}
+
+.page-editor .ProseMirror .chart-number {
+  display: grid;
+  justify-items: center;
+  gap: 0.2em;
+  padding: 1.2em 0;
+}
+
+.page-editor .ProseMirror .chart-number strong {
+  font-size: 3em;
+  line-height: 1.1;
+}
+
+.page-editor .ProseMirror .chart-number span {
+  opacity: 0.7;
+}
+
+/* Standalone chart block: its own data, edited under the chart */
+.page-editor .ProseMirror .chart-data {
+  display: grid;
+  gap: 0.35em;
+  margin-top: 0.6em;
+}
+
+.page-editor .ProseMirror .chart-data-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 7em auto;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.page-editor .ProseMirror .chart-data-row .db-input {
+  font-size: 0.9em;
+  border-color: var(--border);
+}
+
+.page-editor .ProseMirror .view-block .db-header-actions select {
+  font: inherit;
+  font-size: 0.85em;
+  color: inherit;
+  padding: 0.25em 0.5em;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: none;
+}
+
+/* Dashboard view */
+.page-editor .ProseMirror .dash {
+  display: grid;
+  gap: 0.6em;
+  margin-top: 0.6em;
+}
+
+.page-editor .ProseMirror .dash-grid {
+  display: grid;
+  /* as many columns as fit: it follows the block's own width, not the window's */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18em), 1fr));
+  gap: 0.8em;
+}
+
+.page-editor .ProseMirror .dash-widget {
+  min-width: 0;
+  padding: 0.7em 0.9em;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.page-editor .ProseMirror .dash-widget[data-wide="true"] {
+  grid-column: 1 / -1;
+}
+
+.page-editor .ProseMirror .dash-widget-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4em;
+}
+
+.page-editor .ProseMirror .dash-widget-head h4 {
+  margin: 0;
+  font-size: 1em;
+}
+
+.page-editor .ProseMirror .dash-widget-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25em;
+}
+
+.page-editor .ProseMirror .dash-widget-actions > button:not(.db-icon-btn) {
+  font: inherit;
+  font-size: 0.8em;
+  color: inherit;
+  cursor: var(--cursor-pointer, pointer);
+  padding: 0.2em 0.5em;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: rgba(var(--ink), 0.08);
+}
+
+.page-editor .ProseMirror .dash-widget-actions .db-icon-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.page-editor .ProseMirror .dash-editor {
+  display: grid;
+  gap: 0.4em;
+  margin: 0.5em 0;
+}
+
+.page-editor .ProseMirror .dash-widget .chart-number strong {
+  font-size: 2.4em;
+}

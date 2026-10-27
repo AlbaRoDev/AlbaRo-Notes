@@ -1,0 +1,348 @@
+/* ---- Theme ----
+   Every colour in the app comes from these tokens. `src/lib/theme.ts` sets
+   `data-theme` on <html> to the resolved theme ("light" | "dark"), following
+   the system when the user picks «Sistema». `--ink` is the RGB of the overlay
+   colour, used as `rgba(var(--ink), alpha)` for hovers and subtle fills. */
+:root {
+  color-scheme: light;
+  --bg: #ffffff;
+  --bg-sidebar: #f7f7f5;
+  --bg-popover: #ffffff;
+  --text: #37352f;
+  --text-muted: #787774;
+  --text-faint: rgba(55, 53, 47, 0.4);
+  --ink: 55, 53, 47;
+  --border: rgba(55, 53, 47, 0.16);
+  --border-strong: rgba(55, 53, 47, 0.28);
+  --accent: #2383e2;
+  --accent-rgb: 35, 131, 226;
+  --on-accent: #ffffff; /* text on the accent: white, except in the themed dark style, whose accents are light */
+  --danger: #e03e3e;
+  --highlight: rgba(255, 212, 0, 0.4); /* search matches */
+  --callout-bg: rgba(241, 241, 239, 1);
+  /* Notion's tag colours (select options), in order: gray, brown, orange, yellow, green, blue, purple, pink, red. */
+  --tag-default: rgba(227, 226, 224, 0.5);
+  --tag-gray: rgb(227, 226, 224);
+  --tag-brown: rgb(238, 224, 218);
+  --tag-orange: rgb(250, 222, 201);
+  --tag-yellow: rgb(253, 236, 200);
+  --tag-green: rgb(219, 237, 219);
+  --tag-blue: rgb(211, 229, 239);
+  --tag-purple: rgb(232, 222, 238);
+  --tag-pink: rgb(245, 224, 233);
+  --tag-red: rgb(255, 226, 221);
+  /* Text colours of the formatting bar (the backgrounds are the --tag-* ones). */
+  --text-gray: #787774;
+  --text-brown: #9f6b53;
+  --text-orange: #d9730d;
+  --text-yellow: #cb912f;
+  --text-green: #448361;
+  --text-blue: #337ea9;
+  --text-purple: #9065b0;
+  --text-pink: #c14c8a;
+  --text-red: #d44c47;
+  --scrollbar-thumb: #d3d1cb;
+  --scrollbar-thumb-hover: #aeaca6;
+  --shadow-popover:
+    0 0 0 1px rgba(15, 15, 15, 0.05), 0 3px 6px rgba(15, 15, 15, 0.1),
+    0 9px 24px rgba(15, 15, 15, 0.2);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #191919;
+  --bg-sidebar: #202020;
+  --bg-popover: #252525;
+  --text: rgba(255, 255, 255, 0.81);
+  --text-muted: #9b9b9b;
+  --text-faint: rgba(255, 255, 255, 0.28);
+  --ink: 255, 255, 255;
+  --border: rgba(255, 255, 255, 0.094);
+  --border-strong: rgba(255, 255, 255, 0.2);
+  --danger: #ff7369;
+  --highlight: rgba(255, 212, 0, 0.28);
+  --callout-bg: rgba(255, 255, 255, 0.05);
+  --tag-default: rgb(55, 55, 55);
+  --tag-gray: rgb(90, 90, 90);
+  --tag-brown: rgb(96, 59, 44);
+  --tag-orange: rgb(133, 76, 29);
+  --tag-yellow: rgb(137, 99, 42);
+  --tag-green: rgb(43, 89, 63);
+  --tag-blue: rgb(40, 69, 108);
+  --tag-purple: rgb(73, 47, 100);
+  --tag-pink: rgb(105, 49, 76);
+  --tag-red: rgb(110, 54, 48);
+  --text-gray: #9b9b9b;
+  --text-brown: #bf7e71;
+  --text-orange: #ffa344;
+  --text-yellow: #ffdc49;
+  --text-green: #4dab9a;
+  --text-blue: #529cca;
+  --text-purple: #9a6dd7;
+  --text-pink: #e255a1;
+  --text-red: #ff7369;
+  --scrollbar-thumb: #474c50;
+  --scrollbar-thumb-hover: #5c6166;
+  --shadow-popover:
+    0 0 0 1px rgba(15, 15, 15, 0.1), 0 3px 6px rgba(15, 15, 15, 0.2),
+    0 9px 24px rgba(15, 15, 15, 0.4);
+}
+
+:root {
+  /* Notion's stack: the platform UI font (Segoe UI on Windows, SF on macOS). */
+  font-family:
+    ui-sans-serif,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI Variable Text",
+    "Segoe UI",
+    Helvetica,
+    Arial,
+    sans-serif,
+    "Segoe UI Emoji",
+    "Apple Color Emoji";
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--text);
+  background-color: var(--bg);
+  accent-color: var(--accent); /* checkboxes, radios, range sliders */
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+/* The themed style (src/lib/theme.ts sets data-style, the season's palette and these): a strip of the season's
+   colours along the top of the window and a serif for the titles, like the website and the Downloader. */
+:root[data-style="themed"] {
+  --font-display: "Playfair Display Variable", Georgia, "Times New Roman", serif;
+}
+
+:root[data-style="themed"] body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  height: 3px;
+  background: var(--season-strip);
+  pointer-events: none;
+}
+
+.page-editor .ProseMirror h1,
+.page-editor .ProseMirror h2,
+.page-editor .ProseMirror h3,
+.home h1 {
+  font-family: var(--font-display, inherit);
+}
+
+::selection {
+  background: rgba(var(--accent-rgb), 0.28);
+}
+
+/* Scrollbars like Notion's: thin rounded thumb, no track or arrows. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-button,
+::-webkit-scrollbar-corner {
+  display: none;
+  background: transparent;
+}
+
+/* Base for native controls. `:where` keeps specificity at zero, so every
+   component rule still wins — this only fills in what a component leaves out. */
+:where(button, input, select, textarea) {
+  font: inherit;
+  color: inherit;
+}
+
+:where(
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"]),
+  select,
+  textarea
+) {
+  background-color: rgba(var(--ink), 0.03);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+/* WebView2 draws a <select>'s open list with a white background whatever the theme, while the
+   options inherit the theme's (light, in dark mode) text colour: white on white. Give them both. */
+select option,
+select optgroup {
+  background-color: var(--bg-popover);
+  color: var(--text);
+}
+
+:where(button) {
+  cursor: var(--cursor-pointer, pointer);
+}
+
+:where(button:disabled) {
+  cursor: not-allowed;
+}
+
+:focus-visible {
+  outline: 2px solid rgba(var(--accent-rgb), 0.55);
+  outline-offset: 1px;
+}
+
+/* The editor's own surface shows the caret; a ring around the whole page would be noise. */
+.ProseMirror:focus-visible {
+  outline: none;
+}
+
+:where(input, select, textarea):focus-visible {
+  outline: none;
+  border-color: rgba(var(--accent-rgb), 0.7);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.25);
+}
+
+.app-layout {
+  display: flex;
+  align-items: stretch;
+}
+
+.container {
+  flex: 1 1 auto;
+  margin: 0 auto;
+  max-width: 720px;
+  /* A flex item's automatic min-width is its content's min-content — a wide
+     database/table inside a scroll container would otherwise push the whole
+     layout wider than the window instead of scrolling inside its block. */
+  min-width: 0;
+  /* Side margins follow the width of the zone the page is in (it may be a third of the window). */
+  padding: 10vh clamp(1.5rem, 6%, 4rem) 2rem;
+}
+
+.container--wide {
+  max-width: none;
+  margin: 0;
+  padding-left: clamp(1.5rem, 8%, 6rem);
+  padding-right: clamp(1.5rem, 8%, 6rem);
+}
+
+/* The app's version, always at the foot of the page (a failed database check shows above it). */
+.app-footer {
+  margin: 2rem 0 0;
+  font-size: 0.75rem;
+  color: var(--text-faint);
+  text-align: right;
+}
+
+.app-footer + .app-footer {
+  margin-top: 0.25rem;
+}
+
+.app-footer--error {
+  color: var(--danger);
+}
+
+/* ---- Motion: things that open, close, fold or resize glide ---- */
+.fold {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.fold[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+
+.fold-inner {
+  min-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.fold[data-open="true"] > .fold-inner {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* The minimal pointer (src/lib/cursor.ts sets data-cursor and the two images): an arrow everywhere, the hand over what
+   can be pressed. The text I-beam, the resize arrows and grabbing stay the system's. */
+:root[data-cursor="minimal"],
+:root[data-cursor="minimal"] body {
+  cursor: var(--cursor-default);
+}
+
+:root[data-cursor="minimal"]
+  :is(
+    button,
+    a,
+    summary,
+    select,
+    label,
+    [role="button"],
+    [role="tab"],
+    [role="menuitem"],
+    [role="option"],
+    [role="radio"],
+    [role="combobox"],
+    input[type="checkbox"],
+    input[type="radio"],
+    input[type="range"],
+    input[type="file"]
+  ) {
+  cursor: var(--cursor-pointer);
+}
+
+:root[data-cursor="minimal"]
+  :is(
+    .ProseMirror,
+    [contenteditable="true"],
+    textarea,
+    input:not(
+      [type="checkbox"],
+      [type="radio"],
+      [type="range"],
+      [type="file"],
+      [type="button"],
+      [type="submit"]
+    )
+  ) {
+  cursor: text;
+}
+
+.error-boundary {
+  margin: 2rem auto;
+  max-width: 28rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  color: var(--text);
+  background: var(--bg-popover);
+}

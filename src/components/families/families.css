@@ -1,0 +1,217 @@
+/* ---- families ---- */
+.families {
+  padding-bottom: 1rem;
+}
+
+.families-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.25rem 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.families-bar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.families-bar select,
+.family-panel select {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.families-modes {
+  display: inline-flex;
+  margin-left: auto;
+}
+
+.families-modes button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: -1px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.families-modes button:first-child {
+  margin-left: 0;
+  border-radius: 6px 0 0 6px;
+}
+
+.families-modes button:last-child {
+  border-radius: 0 6px 6px 0;
+}
+
+.families-modes button[aria-pressed="true"] {
+  background: rgba(var(--ink), 0.1);
+  color: var(--text);
+}
+
+.families-empty,
+.families-note {
+  margin: 0.5rem 0;
+  font-size: 0.82rem;
+  color: var(--text-faint);
+}
+
+.families-bubbles {
+  display: block;
+  width: 100%;
+  max-height: 60vh;
+  margin: 0 auto;
+}
+
+.family-bubble {
+  cursor: var(--cursor-pointer, pointer);
+  outline: none;
+}
+
+.family-bubble circle {
+  stroke: transparent;
+  stroke-width: 2;
+  transition: stroke 0.12s;
+}
+
+.family-bubble:hover circle,
+.family-bubble:focus-visible circle {
+  stroke: var(--border-strong);
+}
+
+.family-bubble[data-selected] circle {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+
+.family-bubble text {
+  fill: var(--text);
+  pointer-events: none;
+  font-weight: 600;
+}
+
+.family-bubble .family-count {
+  font-weight: 400;
+  fill: var(--text-muted);
+}
+
+.families-list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.families-list button {
+  display: grid;
+  grid-template-columns: minmax(7rem, 14rem) 1fr 3.5rem;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+}
+
+.families-list button:hover,
+.families-list button[aria-pressed="true"] {
+  background: rgba(var(--ink), 0.07);
+}
+
+.family-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.family-bar {
+  height: 14px;
+  border-radius: 7px;
+  background: rgba(var(--ink), 0.05);
+  overflow: hidden;
+}
+
+.family-bar span {
+  display: block;
+  height: 100%;
+  min-width: 4px;
+  border-radius: 7px;
+}
+
+.family-size {
+  text-align: right;
+  color: var(--text-muted);
+}
+
+.family-panel {
+  margin-top: 1rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-sidebar);
+}
+
+.family-panel header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.family-panel h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 1rem;
+}
+
+.family-panel header select {
+  margin-left: auto;
+}
+
+.family-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+}
+
+.family-panel ul {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.family-panel li button {
+  width: 100%;
+  padding: 5px 6px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+}
+
+.family-panel li button:hover {
+  background: rgba(var(--ink), 0.07);
+}

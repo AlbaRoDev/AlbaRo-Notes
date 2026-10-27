@@ -1,0 +1,968 @@
+.page-editor .ProseMirror {
+  min-height: 60vh;
+  outline: none;
+  font-size: 1rem;
+  line-height: 1.6;
+  text-align: left;
+}
+
+/* Notion-like type scale: tight block spacing, headings a little apart. */
+.page-editor .ProseMirror h1 {
+  font-size: 1.875rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 1.4em 0 0.3em;
+}
+
+/* The first heading is the page title. */
+.page-editor .ProseMirror > h1:first-child {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0 0 0.6em;
+}
+
+.page-editor .ProseMirror h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 1.2em 0 0.3em;
+}
+
+.page-editor .ProseMirror h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 1em 0 0.25em;
+}
+
+.page-editor .ProseMirror p {
+  margin: 0 0 0.4em;
+}
+
+.page-editor .ProseMirror ol {
+  padding-left: 1.5em;
+  margin: 0 0 1em;
+}
+
+.page-editor .ProseMirror blockquote {
+  margin: 0 0 1em;
+  padding-left: 1em;
+  border-left: 3px solid currentColor;
+}
+
+.page-editor .ProseMirror div[data-type="callout"] {
+  display: flex;
+  gap: 0.6em;
+  margin: 0 0 1em;
+  padding: 0.75em 1em;
+  border-radius: 6px;
+  background: var(--callout-bg);
+}
+
+.page-editor .ProseMirror div[data-type="callout"]::before {
+  content: "💡";
+  flex: 0 0 auto;
+}
+
+.page-editor .ProseMirror div[data-type="callout"] > *:last-child {
+  margin-bottom: 0;
+}
+
+.page-editor .ProseMirror div[data-type="toggle"] {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.3em;
+  margin: 0 0 1em;
+}
+
+.page-editor .ProseMirror .toggle-marker {
+  flex: 0 0 auto;
+  border: none;
+  background: none;
+  cursor: var(--cursor-pointer, pointer);
+  color: inherit;
+  padding: 0.25em 0.1em 0 0;
+  line-height: 1;
+}
+
+.page-editor .ProseMirror .toggle-marker::before {
+  content: "▶";
+  display: inline-block;
+  font-size: 0.7em;
+  transition: transform 0.15s ease;
+}
+
+.page-editor .ProseMirror div[data-type="toggle"][data-open="true"] > .toggle-marker::before {
+  transform: rotate(90deg);
+}
+
+.page-editor .ProseMirror .toggle-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.page-editor .ProseMirror div[data-type="toggle-summary"] {
+  padding: 0.2em 0;
+}
+
+.page-editor
+  .ProseMirror
+  div[data-type="toggle"][data-heading-level="1"]
+  div[data-type="toggle-summary"] {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.page-editor .ProseMirror div[data-type="toggle-content"] {
+  padding-left: 0.2em;
+}
+
+.page-editor .ProseMirror div[data-type="toggle-content"] > *:last-child {
+  margin-bottom: 0;
+}
+
+.page-editor
+  .ProseMirror
+  div[data-type="toggle"][data-open="false"]
+  div[data-type="toggle-content"] {
+  display: none;
+}
+
+.page-editor .ProseMirror .columns-block {
+  margin: 0 0 1em;
+}
+
+/* NodeViewContent renders its own unstyled wrapper div around the actual
+   ProseMirror-managed children — the grid has to apply one level down from
+   the element we can put a className/style on. --column-count still
+   inherits down fine since it's a plain CSS custom property. */
+.page-editor .ProseMirror .columns-grid > div {
+  display: grid;
+  grid-template-columns: repeat(var(--column-count, 2), 1fr);
+  gap: 1em;
+}
+
+.page-editor .ProseMirror div[data-type="column"] {
+  min-width: 0;
+}
+
+.page-editor .ProseMirror div[data-type="column"] > *:last-child {
+  margin-bottom: 0;
+}
+
+.page-editor .ProseMirror .columns-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-top: 0.4em;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.page-editor .ProseMirror .columns-controls button {
+  border: 1px solid var(--border);
+  background: none;
+  border-radius: 4px;
+  width: 1.5em;
+  height: 1.5em;
+  cursor: var(--cursor-pointer, pointer);
+  color: inherit;
+}
+
+.page-editor .ProseMirror .columns-controls button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.page-editor .ProseMirror .page-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0 0 1em;
+  padding: 0.4em 0.6em;
+  border-radius: 6px;
+  cursor: var(--cursor-pointer, pointer);
+  background: rgba(var(--ink), 0.08);
+}
+
+.page-editor .ProseMirror .page-link:hover {
+  background: rgba(var(--ink), 0.16);
+}
+
+.page-editor .ProseMirror .page-link-picker {
+  margin: 0 0 1em;
+}
+
+.page-editor .ProseMirror .page-link-picker input {
+  width: 100%;
+  padding: 0.4em 0.6em;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+
+.page-editor .ProseMirror .page-link-picker ul {
+  list-style: none;
+  margin: 0.3em 0 0;
+  padding: 0;
+  max-height: 12em;
+  overflow-y: auto;
+}
+
+.page-editor .ProseMirror .page-link-picker li button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.4em 0.6em;
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: var(--cursor-pointer, pointer);
+  border-radius: 4px;
+  font: inherit;
+}
+
+.page-editor .ProseMirror .page-link-picker li button:hover {
+  background: rgba(var(--ink), 0.12);
+}
+
+.page-editor .ProseMirror .page-link-picker-empty {
+  padding: 0.4em 0.6em;
+  color: var(--text-muted);
+  font-size: 0.85em;
+}
+
+.page-editor .ProseMirror .date-mention,
+.page-editor .ProseMirror .page-mention {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.05em 0.5em;
+  border-radius: 4px;
+  cursor: var(--cursor-pointer, pointer);
+  background: rgba(var(--ink), 0.1);
+}
+
+.page-editor .ProseMirror .date-mention:hover,
+.page-editor .ProseMirror .page-mention:hover {
+  background: rgba(var(--ink), 0.18);
+}
+
+.page-editor .ProseMirror .page-mention[data-missing="true"] {
+  cursor: var(--cursor-default, default);
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.page-editor .ProseMirror .date-mention-picker input,
+.page-editor .ProseMirror .equation-inline-editing input,
+.page-editor .ProseMirror .emoji-picker input,
+.page-editor .ProseMirror .page-mention-picker-box input {
+  font: inherit;
+  font-size: 0.9em;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  padding: 0.1em 0.4em;
+}
+
+.page-editor .ProseMirror .equation-inline {
+  display: inline-block;
+  padding: 0 0.2em;
+  border-radius: 4px;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.page-editor .ProseMirror .equation-inline:hover {
+  background: rgba(var(--ink), 0.1);
+}
+
+.page-editor .ProseMirror .equation-inline .katex-error {
+  color: var(--danger);
+}
+
+/* LaTeX en bruto mientras llega KaTeX */
+.page-editor .ProseMirror .equation-pending {
+  color: var(--text-muted);
+  font-family: ui-monospace, monospace;
+  white-space: pre-wrap;
+}
+
+/* Ecuación de bloque */
+.page-editor .ProseMirror .equation-block {
+  margin: 0 0 1em;
+  padding: 0.4em 0.6em;
+  border-radius: 6px;
+  overflow-x: auto;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.page-editor .ProseMirror .equation-block:hover {
+  background: rgba(var(--ink), 0.1);
+}
+
+.page-editor .ProseMirror .equation-block .katex-error {
+  color: var(--danger);
+}
+
+.page-editor .ProseMirror .equation-block-empty {
+  opacity: 0.5;
+}
+
+.page-editor .ProseMirror .equation-block-editing {
+  display: grid;
+  gap: 0.4em;
+  margin: 0 0 1em;
+}
+
+.page-editor .ProseMirror .equation-block-editing textarea {
+  font: inherit;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.9em;
+  resize: vertical;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  padding: 0.4em 0.6em;
+}
+
+.page-editor .ProseMirror .equation-block-actions {
+  display: flex;
+  gap: 0.3em;
+}
+
+.page-editor .ProseMirror .equation-block-preview {
+  overflow-x: auto;
+}
+
+.page-editor .ProseMirror .emoji-picker,
+.page-editor .ProseMirror .page-mention-picker-box {
+  position: relative;
+  display: inline-block;
+}
+
+.page-editor .ProseMirror .emoji-picker-popup,
+.page-editor .ProseMirror .page-mention-picker-list {
+  position: absolute;
+  top: 1.7em;
+  left: 0;
+  z-index: 20;
+  padding: 0.3em;
+  border-radius: 6px;
+  background: var(--bg-popover);
+  box-shadow: var(--shadow-popover);
+}
+
+.page-editor .ProseMirror .emoji-picker-popup {
+  width: 16.5em;
+}
+
+.page-editor .ProseMirror .page-mention-picker-list {
+  max-height: 10em;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 12em;
+}
+
+.page-editor .ProseMirror .emoji-picker-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1em;
+  padding-bottom: 0.3em;
+  margin-bottom: 0.3em;
+  border-bottom: 1px solid var(--border);
+}
+
+.page-editor .ProseMirror .emoji-picker-tabs button {
+  border: none;
+  background: none;
+  cursor: var(--cursor-pointer, pointer);
+  color: var(--text-muted);
+  padding: 0.3em;
+  border-radius: 4px;
+  line-height: 0;
+}
+
+.page-editor .ProseMirror .emoji-picker-tabs button:hover {
+  background: rgba(var(--ink), 0.12);
+}
+
+.page-editor .ProseMirror .emoji-picker-tabs button[data-active="true"] {
+  color: inherit;
+  background: rgba(var(--accent-rgb), 0.18);
+}
+
+.page-editor .ProseMirror .emoji-picker-list {
+  display: grid;
+  grid-template-columns: repeat(8, 1.8em);
+  gap: 0.1em;
+  max-height: 10em;
+  overflow-y: auto;
+}
+
+.page-editor .ProseMirror .emoji-picker-list button {
+  border: none;
+  background: none;
+  cursor: var(--cursor-pointer, pointer);
+  font-size: 1.1em;
+  line-height: 1.8em;
+  border-radius: 4px;
+}
+
+.page-editor .ProseMirror .emoji-picker-list button:hover,
+.page-editor .ProseMirror .page-mention-picker-list button:hover {
+  background: rgba(var(--ink), 0.15);
+}
+
+.page-editor .ProseMirror .page-mention-picker-list button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.3em 0.5em;
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: var(--cursor-pointer, pointer);
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.9em;
+}
+
+.page-editor .ProseMirror .emoji-picker-empty,
+.page-editor .ProseMirror .page-mention-picker-empty {
+  padding: 0.3em 0.5em;
+  font-size: 0.8em;
+  color: var(--text-muted);
+}
+
+.page-editor .ProseMirror .breadcrumb-block {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+  margin: 0 0 1em;
+  font-size: 0.9em;
+  color: var(--text-muted);
+}
+
+.page-editor .ProseMirror .breadcrumb-block button {
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: var(--cursor-pointer, pointer);
+  padding: 0.1em 0.2em;
+  font: inherit;
+  text-decoration: underline;
+}
+
+.page-editor .ProseMirror .breadcrumb-current {
+  color: inherit;
+  font-weight: 600;
+}
+
+.page-editor .ProseMirror .breadcrumb-separator {
+  opacity: 0.5;
+}
+
+.page-editor .ProseMirror .toc-block {
+  margin: 0 0 1em;
+  padding: 0.75em 1em;
+  border-radius: 6px;
+  background: rgba(var(--ink), 0.06);
+}
+
+.page-editor .ProseMirror .toc-title {
+  font-size: 0.75em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 0.4em;
+}
+
+.page-editor .ProseMirror .toc-empty {
+  color: var(--text-muted);
+  font-size: 0.85em;
+  margin: 0;
+}
+
+.page-editor .ProseMirror .toc-block ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.page-editor .ProseMirror .toc-block button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: var(--cursor-pointer, pointer);
+  padding: 0.2em 0;
+  font: inherit;
+}
+
+.page-editor .ProseMirror .toc-block button:hover {
+  text-decoration: underline;
+}
+
+.page-editor .ProseMirror .toc-block button[data-level="2"] {
+  padding-left: 1em;
+}
+
+.page-editor .ProseMirror .toc-block button[data-level="3"] {
+  padding-left: 2em;
+}
+
+.page-editor .ProseMirror pre {
+  margin: 0 0 1em;
+  padding: 0.75em 1em;
+  border-radius: 6px;
+  background: rgba(var(--ink), 0.12);
+  overflow-x: auto;
+}
+
+.page-editor .ProseMirror pre code {
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.85em;
+  background: none;
+  padding: 0;
+}
+
+.page-editor .ProseMirror hr {
+  margin: 1.5em 0;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+/* Placeholder: one line cut with «…», like Notion's. Floated with no height it used to spill onto a
+   second line over the block below whenever the column was narrower than the text. */
+.page-editor .ProseMirror .is-empty {
+  position: relative;
+}
+
+.page-editor .ProseMirror .is-empty::before {
+  content: attr(data-placeholder);
+  position: absolute;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--text-faint);
+  pointer-events: none;
+}
+
+.page-editor .ProseMirror ul:not([data-type="taskList"]) {
+  padding-left: 1.5em;
+  margin: 0 0 1em;
+}
+
+.page-editor .ProseMirror ul[data-type="taskList"] {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1em;
+}
+
+.page-editor .ProseMirror ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+}
+
+.page-editor .ProseMirror ul[data-type="taskList"] li > label {
+  flex: 0 0 auto;
+  margin-top: 0.3em;
+  user-select: none;
+}
+
+.page-editor .ProseMirror ul[data-type="taskList"] li > div {
+  flex: 1 1 auto;
+}
+
+.page-editor .ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.markdown-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.markdown-hint code {
+  background: rgba(var(--ink), 0.15);
+  border-radius: 3px;
+  padding: 0.05em 0.3em;
+}
+
+.save-indicator {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: right;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.save-indicator[data-visible="true"] {
+  opacity: 1;
+}
+
+/* ---- tabla, botón, pestañas, bloque sincronizado ----
+   Neutral rgba colours so they read in both light and dark themes. */
+
+.page-editor .ProseMirror .tableWrapper {
+  margin: 0 0 1em;
+  overflow-x: auto;
+}
+
+.page-editor .ProseMirror table {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.page-editor .ProseMirror th,
+.page-editor .ProseMirror td {
+  min-width: 6em;
+  padding: 0.35em 0.6em;
+  border: 1px solid var(--border);
+  vertical-align: top;
+  position: relative;
+}
+
+.page-editor .ProseMirror th {
+  background: rgba(var(--ink), 0.12);
+  font-weight: 600;
+  text-align: left;
+}
+
+.page-editor .ProseMirror th > *:last-child,
+.page-editor .ProseMirror td > *:last-child {
+  margin-bottom: 0;
+}
+
+.page-editor .ProseMirror .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(var(--accent-rgb), 0.18);
+  pointer-events: none;
+}
+
+.page-editor .table-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3em;
+  margin: 0 0 1em;
+}
+
+.page-editor .table-controls button,
+.page-editor .ProseMirror .button-block button,
+.page-editor .ProseMirror .equation-block-actions button,
+.page-editor .ProseMirror .tabs-bar button,
+.page-editor .ProseMirror .synced-block-header button {
+  font: inherit;
+  font-size: 0.85em;
+  color: inherit;
+  cursor: var(--cursor-pointer, pointer);
+  padding: 0.25em 0.6em;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: rgba(var(--ink), 0.08);
+}
+
+.page-editor .table-controls button:hover,
+.page-editor .ProseMirror .button-block button:hover,
+.page-editor .ProseMirror .equation-block-actions button:hover,
+.page-editor .ProseMirror .tabs-bar button:hover,
+.page-editor .ProseMirror .synced-block-header button:hover {
+  background: rgba(var(--ink), 0.18);
+}
+
+.page-editor .ProseMirror .tabs-bar button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Botón */
+.page-editor .ProseMirror .button-block {
+  margin: 0 0 1em;
+}
+
+.page-editor .ProseMirror .button-block-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.page-editor .ProseMirror .button-block-run {
+  font-size: 1em;
+  padding: 0.45em 1.1em;
+  font-weight: 600;
+}
+
+.page-editor .ProseMirror .button-block-run[data-missing="true"] {
+  opacity: 0.6;
+}
+
+.page-editor .ProseMirror .button-block-gear {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3em;
+  opacity: 0.6;
+}
+
+.page-editor .ProseMirror .button-block-settings {
+  display: grid;
+  gap: 0.5em;
+  max-width: 24em;
+  margin-top: 0.5em;
+  padding: 0.7em;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.page-editor .ProseMirror .button-block-settings label {
+  display: grid;
+  gap: 0.2em;
+  font-size: 0.85em;
+  opacity: 0.9;
+}
+
+.page-editor .ProseMirror .button-block-settings input,
+.page-editor .ProseMirror .button-block-settings select {
+  font: inherit;
+  padding: 0.3em 0.5em;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: none;
+  color: inherit;
+}
+
+/* Pestañas */
+.page-editor .ProseMirror .tabs-block {
+  margin: 0 0 1em;
+}
+
+.page-editor .ProseMirror .tabs-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3em;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.3em;
+  margin-bottom: 0.6em;
+}
+
+.page-editor .ProseMirror .tabs-bar .tabs-tab[data-active="true"] {
+  background: rgba(var(--accent-rgb), 0.18);
+  border-color: rgba(var(--accent-rgb), 0.6);
+  font-weight: 600;
+}
+
+.page-editor .ProseMirror .tabs-rename {
+  font: inherit;
+  font-size: 0.85em;
+  width: 9em;
+  padding: 0.25em 0.5em;
+  border-radius: 6px;
+  border: 1px solid rgba(var(--accent-rgb), 0.6);
+  background: none;
+  color: inherit;
+}
+
+.page-editor .ProseMirror .tabs-confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-size: 0.85em;
+}
+
+/* NodeViewContent wraps the real children in its own div (see .columns-grid),
+   so the inactive tabs are hidden one level down, by position. */
+.page-editor .ProseMirror .tabs-content > div > div[data-type="tab"] > *:last-child {
+  margin-bottom: 0;
+}
+
+.page-editor
+  .ProseMirror
+  .tabs-block[data-active="0"]
+  > .tabs-content
+  > div
+  > div[data-type="tab"]:not(:nth-child(1)),
+.page-editor
+  .ProseMirror
+  .tabs-block[data-active="1"]
+  > .tabs-content
+  > div
+  > div[data-type="tab"]:not(:nth-child(2)),
+.page-editor
+  .ProseMirror
+  .tabs-block[data-active="2"]
+  > .tabs-content
+  > div
+  > div[data-type="tab"]:not(:nth-child(3)),
+.page-editor
+  .ProseMirror
+  .tabs-block[data-active="3"]
+  > .tabs-content
+  > div
+  > div[data-type="tab"]:not(:nth-child(4)),
+.page-editor
+  .ProseMirror
+  .tabs-block[data-active="4"]
+  > .tabs-content
+  > div
+  > div[data-type="tab"]:not(:nth-child(5)),
+.page-editor
+  .ProseMirror
+  .tabs-block[data-active="5"]
+  > .tabs-content
+  > div
+  > div[data-type="tab"]:not(:nth-child(6)),
+.page-editor
+  .ProseMirror
+  .tabs-block[data-active="6"]
+  > .tabs-content
+  > div
+  > div[data-type="tab"]:not(:nth-child(7)),
+.page-editor
+  .ProseMirror
+  .tabs-block[data-active="7"]
+  > .tabs-content
+  > div
+  > div[data-type="tab"]:not(:nth-child(8)) {
+  display: none;
+}
+
+/* Bloque sincronizado */
+.page-editor .ProseMirror .synced-block {
+  margin: 0 0 1em;
+  padding: 0.4em 0.8em 0.6em;
+  border-left: 3px solid rgba(var(--accent-rgb), 0.6);
+  border-radius: 4px;
+  background: rgba(var(--accent-rgb), 0.05);
+}
+
+.page-editor .ProseMirror .synced-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8em;
+  opacity: 0.8;
+  margin-bottom: 0.3em;
+}
+
+.page-editor .ProseMirror .synced-block-error {
+  margin: 0 0 0.5em;
+  font-size: 0.85em;
+  color: var(--danger);
+}
+
+.page-editor .synced-block .ProseMirror {
+  min-height: 0;
+}
+
+.page-editor .ProseMirror .synced-block-actions {
+  display: flex;
+  gap: 0.3em;
+}
+
+/* ---- coloured text, highlighted text and links (the formatting bar) ---- */
+.page-editor .ProseMirror [data-text-color="gray"] {
+  color: var(--text-gray);
+}
+
+.page-editor .ProseMirror [data-text-color="brown"] {
+  color: var(--text-brown);
+}
+
+.page-editor .ProseMirror [data-text-color="orange"] {
+  color: var(--text-orange);
+}
+
+.page-editor .ProseMirror [data-text-color="yellow"] {
+  color: var(--text-yellow);
+}
+
+.page-editor .ProseMirror [data-text-color="green"] {
+  color: var(--text-green);
+}
+
+.page-editor .ProseMirror [data-text-color="blue"] {
+  color: var(--text-blue);
+}
+
+.page-editor .ProseMirror [data-text-color="purple"] {
+  color: var(--text-purple);
+}
+
+.page-editor .ProseMirror [data-text-color="pink"] {
+  color: var(--text-pink);
+}
+
+.page-editor .ProseMirror [data-text-color="red"] {
+  color: var(--text-red);
+}
+
+.page-editor .ProseMirror [data-bg-color="gray"] {
+  background: var(--tag-gray);
+}
+
+.page-editor .ProseMirror [data-bg-color="brown"] {
+  background: var(--tag-brown);
+}
+
+.page-editor .ProseMirror [data-bg-color="orange"] {
+  background: var(--tag-orange);
+}
+
+.page-editor .ProseMirror [data-bg-color="yellow"] {
+  background: var(--tag-yellow);
+}
+
+.page-editor .ProseMirror [data-bg-color="green"] {
+  background: var(--tag-green);
+}
+
+.page-editor .ProseMirror [data-bg-color="blue"] {
+  background: var(--tag-blue);
+}
+
+.page-editor .ProseMirror [data-bg-color="purple"] {
+  background: var(--tag-purple);
+}
+
+.page-editor .ProseMirror [data-bg-color="pink"] {
+  background: var(--tag-pink);
+}
+
+.page-editor .ProseMirror [data-bg-color="red"] {
+  background: var(--tag-red);
+}
+
+.page-editor .ProseMirror [data-bg-color] {
+  padding: 0 0.15em;
+  border-radius: 3px;
+}
+
+.page-editor .ProseMirror a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: text;
+}
+
+.page-editor .ProseMirror a:hover {
+  text-decoration-thickness: 2px;
+}

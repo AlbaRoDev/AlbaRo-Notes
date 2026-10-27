@@ -1,0 +1,138 @@
+name: CI
+
+# In short: the web part and the Rust part on
+# Windows and Linux on every push, and the supply-chain checks also every week, because new
+# advisories appear without anyone pushing anything.
+on:
+  push:
+    branches: [main, pruebas]
+  pull_request:
+  schedule:
+    - cron: "17 5 * * 1" # Mondays, 05:17 UTC
+  workflow_dispatch:
+
+# The token can only read the repository. No job here needs more, and none holds a secret.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  # The Rust version the code was written with. Bump it on purpose (a new clippy can add lints).
+  RUST_VERSION: "1.98.1"
+
+jobs:
+  web:
+    name: web (types, lint, format, tests, build)
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24 # the tests load TypeScript directly: Node 22.18 or later
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run lint
+      # Linux checks out LF; on Windows git may turn files into CRLF, which Prettier would flag.
+      - run: npx prettier --check .
+      - run: npm run knip
+      - run: npm test
+      - run: npm run build
+
+  # THIRD_PARTY_NOTICES.txt must match the dependencies: it is regenerated here and compared, so a
+  # dependency change that forgot `npm run notices` (or brings a licence not on the allowed list) fails.
+  notices:
+    name: licence notices up to date
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run notices:check
+
+  rust:
+    name: rust (${{ matrix.os }})
+    if: github.event_name != 'schedule'
+    strategy:
+      fail-fast: false
+      matrix:
+        # macOS joins when there are Mac users and an Apple account.
+        os: [windows-latest, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+      # `tauri::generate_context!` reads the built web app (`../dist`) while compiling.
+      - run: npm ci
+      - run: npm run build
+      - name: Libraries Tauri needs on Linux
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential curl wget file libwebkit2gtk-4.1-dev libxdo-dev libssl-dev \
+            libayatana-appindicator3-dev librsvg2-dev
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master (= v1)
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: src-tauri
+      - name: Format
+        working-directory: src-tauri
+        run: cargo fmt --check
+      - name: Lints
+        working-directory: src-tauri
+        run: cargo clippy --locked --all-targets -- -D warnings
+      # The first time the Unix file-permission tests (fsprivate.rs) really run is the Linux job.
+      - name: Tests
+        working-directory: src-tauri
+        run: cargo test --locked
+
+  supply-chain:
+    name: supply chain (advisories, licences, sources)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      # Any advisory, at any level, in anything (also development tools: those do not reach the app,
+      # but each one gets fixed or accepted in writing).
+      - run: npm audit
+      - uses: taiki-e/install-action@5488ac5a951645ce95062214902ac4b6bc1a1037 # v2.87.32
+        with:
+          tool: cargo-audit@0.22.2,cargo-deny@0.20.2
+      - name: RustSec advisories
+        working-directory: src-tauri
+        run: cargo audit
+      # Licences (nothing outside the allow-list; no GPL), the advisories accepted in deny.toml with
+      # their reason, banned crates (OpenSSL) and where crates may come from.
+      - name: Licences, bans, sources
+        working-directory: src-tauri
+        run: cargo deny check

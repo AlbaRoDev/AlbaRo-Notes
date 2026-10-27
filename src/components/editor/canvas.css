@@ -1,0 +1,249 @@
+/* the canvas block (drawing and handwriting). Colours come from the theme variables. */
+.page-editor .ProseMirror .canvas-block {
+  margin: 0.6em 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.page-editor .ProseMirror .canvas-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85em;
+}
+
+.page-editor .ProseMirror .canvas-title {
+  margin-right: 6px;
+  font-weight: 600;
+}
+
+.page-editor .ProseMirror .canvas-bar button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.page-editor .ProseMirror .canvas-bar button:hover:not(:disabled) {
+  background: rgba(var(--ink), 0.08);
+}
+
+.page-editor .ProseMirror .canvas-bar button:disabled {
+  opacity: 0.4;
+  cursor: var(--cursor-default, default);
+}
+
+.page-editor .ProseMirror .canvas-bar button[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.12);
+}
+
+.page-editor .ProseMirror .canvas-swatch {
+  min-width: 22px;
+  width: 22px;
+  height: 22px;
+}
+
+.page-editor .ProseMirror .canvas-swatch::after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.page-editor .ProseMirror .canvas-width span {
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.page-editor .ProseMirror .canvas-bar-end {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.page-editor .ProseMirror .canvas-bar .canvas-done,
+.page-editor .ProseMirror .canvas-review .canvas-done {
+  padding: 0 12px;
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.page-editor .ProseMirror .canvas-bar .canvas-done:hover:not(:disabled) {
+  background: var(--accent);
+  filter: brightness(1.1);
+}
+
+.page-editor .ProseMirror .canvas-stage {
+  position: relative;
+}
+
+.page-editor .ProseMirror .canvas-surface {
+  display: block;
+  width: 100%;
+  touch-action: none; /* a pen or finger draws instead of scrolling the page */
+  cursor: crosshair;
+  user-select: none;
+}
+
+.page-editor .ProseMirror .canvas-surface[data-tool="eraser"] {
+  cursor: cell;
+}
+
+.page-editor .ProseMirror .canvas-surface[data-tool="hand"] {
+  cursor: grab;
+}
+
+.page-editor .ProseMirror .canvas-surface[data-tool="hand"]:active {
+  cursor: grabbing;
+}
+
+.page-editor .ProseMirror .canvas-surface:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.page-editor .ProseMirror .canvas-stage[data-busy] .canvas-surface {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.page-editor .ProseMirror .canvas-reading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.page-editor .ProseMirror .canvas-spin {
+  animation: canvas-spin 1s linear infinite;
+}
+
+@keyframes canvas-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.page-editor .ProseMirror .canvas-review {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.page-editor .ProseMirror .canvas-review p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+.page-editor .ProseMirror .canvas-review textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: inherit;
+  font: inherit;
+  resize: vertical;
+}
+
+.page-editor .ProseMirror .canvas-review-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.page-editor .ProseMirror .canvas-review-actions button {
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.page-editor .ProseMirror .canvas-review-actions button:disabled {
+  opacity: 0.4;
+}
+
+.page-editor .ProseMirror .canvas-note {
+  margin: 0;
+  padding: 6px 10px 8px;
+  color: var(--text-muted);
+  font-size: 0.85em;
+}
+
+.page-editor .ProseMirror .canvas-error {
+  color: var(--danger);
+}
+
+/* Drag the bottom edge to change the height; with the focus, ↑ ↓ do the same. */
+.page-editor .ProseMirror .canvas-resize {
+  height: 10px;
+  border-top: 1px solid var(--border);
+  cursor: ns-resize;
+  touch-action: none;
+  background: rgba(var(--ink), 0.03);
+}
+
+.page-editor .ProseMirror .canvas-resize::after {
+  content: "";
+  display: block;
+  width: 36px;
+  height: 3px;
+  margin: 3px auto 0;
+  border-radius: 2px;
+  background: rgba(var(--ink), 0.3);
+}
+
+.page-editor .ProseMirror .canvas-resize:hover,
+.page-editor .ProseMirror .canvas-resize:focus-visible {
+  background: rgba(var(--accent-rgb), 0.12);
+  outline: none;
+}
+
+.page-editor .ProseMirror .canvas-bar .canvas-zoom {
+  min-width: 52px;
+  font-variant-numeric: tabular-nums;
+}
+
+.page-editor .ProseMirror .canvas-bar .canvas-convert {
+  gap: 4px;
+  border-color: var(--border);
+}
+
+/* Shown while the canvas has the focus, to say how to move around it. */
+.page-editor .ProseMirror .canvas-hint {
+  position: absolute;
+  left: 8px;
+  bottom: 14px;
+  margin: 0;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--bg-popover);
+  color: var(--text-muted);
+  font-size: 0.75em;
+  box-shadow: var(--shadow-popover);
+  pointer-events: none;
+}

@@ -1,0 +1,10 @@
+dist
+src-tauri/target
+node_modules
+# generated or deliberately long-form files
+package-lock.json
+src-tauri/gen
+graphify-out
+CLAUDE.md
+*.tsbuildinfo
+PLAN-SEGURIDAD.md

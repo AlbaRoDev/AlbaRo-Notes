@@ -1,0 +1,43 @@
+/* ---- Importing documents: the note that says what came in ---- */
+.import-note {
+  position: fixed;
+  left: 50%;
+  bottom: 1.2rem;
+  z-index: 1500;
+  max-width: min(520px, 92vw);
+  padding: 0.7rem 2rem 0.7rem 1rem;
+  border-radius: 10px;
+  background: var(--bg-popover);
+  box-shadow: var(--shadow-popover);
+  color: var(--text);
+  font-size: 0.88rem;
+  transform: translateX(-50%);
+  animation: pop-in 120ms ease-out;
+}
+
+.import-note p {
+  margin: 0 0 0.2rem;
+}
+
+.import-note ul {
+  margin: 0.2rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--text-muted);
+}
+
+.import-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  padding: 3px;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  color: var(--text-faint);
+}
+
+.import-close:hover {
+  background: rgba(var(--ink), 0.08);
+  color: var(--text);
+}

@@ -1,0 +1,63 @@
+# cargo-deny: licenses, advisories, bans and sources of the Rust dependencies.
+# Run it from this folder: `cargo deny check`. The CI runs it on every push and every week (the
+# `supply-chain` job), because new advisories appear without anyone pushing anything.
+
+[graph]
+# The platforms the app is for. Without this only the machine's own would be looked at, and what
+# only Linux or macOS pulls in (GTK, zbus, Keychain) would go unchecked.
+targets = ["x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu", "aarch64-apple-darwin", "x86_64-apple-darwin"]
+all-features = true
+
+[licenses]
+# Only what is listed is allowed: anything else (GPL, LGPL, AGPL, SSPL, a licence nobody could
+# identify, proprietary) fails the check. The tree has none of those today.
+# MPL-2.0 is weak, per-file copyleft (the `cssparser` family, via Tauri's HTML handling): fine for a
+# MIT application as long as those files are not modified, which they are not.
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-3.0",
+    "Zlib",
+    "Unlicense",
+    "MPL-2.0",
+    "0BSD",
+    "CC0-1.0",
+    "CDLA-Permissive-2.0",
+    "MIT-0",
+]
+confidence-threshold = 0.93
+
+[licenses.private]
+# The app itself (`publish = false`): MIT, declared in Cargo.toml and LICENSE.
+ignore = true
+
+[advisories]
+# Flag unmaintained and unsound crates in the whole tree, not only the direct dependencies.
+unmaintained = "all"
+unsound = "all"
+yanked = "deny"
+# Each accepted advisory: why, and when it goes away. Anything not listed here fails the check.
+ignore = [
+    { id = "RUSTSEC-2024-0370", reason = "proc-macro-error is unmaintained. Build-time only, pulled by glib-macros in Tauri's GTK layer (Linux); goes away when Tauri moves to GTK 4 / Tauri 3. Review when Tauri 3 is stable." },
+    { id = "RUSTSEC-2024-0429", reason = "glib 0.18 unsound VariantStrIter. Pulled by gtk 0.18 in Tauri's Linux layer; the app never iterates a glib VariantStr. Review when Tauri 3 is stable." },
+    { id = "RUSTSEC-2026-0370", reason = "zvariant is unmaintained. Linux only (zbus, through Tauri's dialog and opener plugins). Review when Tauri updates its Linux plugins." },
+    { id = "RUSTSEC-2026-0371", reason = "zbus_names is unmaintained. Linux only (zbus, through Tauri's dialog and opener plugins). Review when Tauri updates its Linux plugins." },
+    { id = "RUSTSEC-2026-0372", reason = "zvariant_derive is unmaintained. Linux only (zbus, through Tauri's dialog and opener plugins). Review when Tauri updates its Linux plugins." },
+]
+
+[bans]
+# Two versions of a crate are normal in a tree this size (windows-sys alone has four).
+multiple-versions = "allow"
+wildcards = "deny"
+allow-wildcard-paths = true
+# TLS is rustls. OpenSSL would be a second TLS stack to keep patched, and one more thing to ship.
+deny = [{ crate = "openssl" }, { crate = "openssl-sys" }, { crate = "native-tls" }]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

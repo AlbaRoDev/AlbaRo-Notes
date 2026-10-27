@@ -1,0 +1,279 @@
+/* ---- boards ---- */
+.boards {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding-bottom: 1rem;
+}
+
+.boards-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.boards-side {
+  position: sticky;
+  top: calc(var(--topbar-h, 38px) + 0.5rem);
+  flex: 0 0 240px;
+  max-height: calc(100vh - var(--topbar-h, 38px) - 1rem);
+  overflow-y: auto;
+}
+
+.boards-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.25rem 0 0.6rem;
+}
+
+.boards-bar button,
+.boards-empty button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.boards-bar button:hover,
+.boards-empty button:hover {
+  background: rgba(var(--ink), 0.06);
+  color: var(--text);
+}
+
+.boards-bar button[aria-pressed="true"] {
+  background: rgba(var(--ink), 0.1);
+  color: var(--text);
+}
+
+.boards-new-form input,
+.board-add input {
+  box-sizing: border-box;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.boards-empty {
+  display: grid;
+  justify-items: start;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  color: var(--text-muted);
+}
+
+.board-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.board-name {
+  flex: 0 1 28rem;
+  min-width: 0;
+  padding: 2px 6px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.board-name:hover,
+.board-name:focus,
+.board-list-name:hover,
+.board-list-name:focus {
+  border-color: var(--border);
+  background: var(--bg);
+}
+
+.board-confirm {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.board-confirm button {
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8rem;
+}
+
+.board-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  color: var(--text-faint);
+}
+
+.board-icon-btn:hover {
+  background: rgba(var(--ink), 0.08);
+  color: var(--text);
+}
+
+/* The row of lists scrolls sideways inside the zone. */
+.board-lists {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  overflow-x: auto;
+  padding-bottom: 0.6rem;
+}
+
+.board-list {
+  flex: 0 0 272px;
+  box-sizing: border-box;
+  max-height: calc(100vh - var(--topbar-h, 38px) - 9rem);
+  display: flex;
+  flex-direction: column;
+  padding: 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-sidebar);
+}
+
+.board-list[data-drop-before] {
+  box-shadow: -4px 0 0 0 var(--accent);
+}
+
+.board-list[data-drop-after] {
+  box-shadow: 4px 0 0 0 var(--accent);
+}
+
+.board-list-head {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-bottom: 0.3rem;
+}
+
+.board-grip {
+  display: inline-flex;
+  padding: 3px 0;
+  border: none;
+  background: none;
+  color: var(--text-faint);
+  cursor: grab;
+}
+
+.board-list-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 2px 6px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.board-count {
+  font-size: 0.75rem;
+  color: var(--text-faint);
+}
+
+.board-cards {
+  display: grid;
+  gap: 0.35rem;
+  min-height: 8px;
+  overflow-y: auto;
+}
+
+.board-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  box-shadow: 0 1px 2px rgba(var(--ink), 0.08);
+  cursor: grab;
+}
+
+.board-card:hover {
+  border-color: var(--border-strong);
+}
+
+.board-card-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 7px 8px;
+  border: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.88rem;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: inherit;
+}
+
+.board-card-remove {
+  margin: 4px 4px 0 0;
+  opacity: 0;
+}
+
+.board-card:hover .board-card-remove,
+.board-card-remove:focus-visible {
+  opacity: 1;
+}
+
+.board-drop-line {
+  height: 3px;
+  margin: -2px 0;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.board-add {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+  color: var(--text-faint);
+}
+
+.board-add input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border-color: transparent;
+  background: none;
+}
+
+.board-add input:hover,
+.board-add input:focus {
+  border-color: var(--border);
+  background: var(--bg);
+}
+
+.board-add-list {
+  flex: 0 0 220px;
+  margin-top: 0;
+  padding: 0.4rem;
+}

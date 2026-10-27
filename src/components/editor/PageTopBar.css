@@ -1,0 +1,141 @@
+/* ---- the bar over a page: path, favourite and «···» ---- */
+.page-topbar {
+  position: sticky;
+  top: var(--topbar-h, 38px);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 34px;
+  margin: 0 0 0.4rem;
+  padding: 2px 0;
+  background: var(--bg);
+}
+
+.page-crumbs {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  align-items: center;
+  gap: 2px;
+  overflow: hidden;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.page-crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.page-crumb button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 2px 6px;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+
+.page-crumb button:hover {
+  background: rgba(var(--ink), 0.08);
+  color: var(--text);
+}
+
+.page-crumb[aria-current="page"] {
+  padding: 2px 6px;
+  color: var(--text);
+}
+
+.page-crumb-title {
+  min-width: 0;
+  max-width: 18ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.page-crumb[aria-current="page"] .page-crumb-title {
+  max-width: 30ch;
+}
+
+.page-topbar-actions {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 2px;
+}
+
+.page-topbar-actions > button {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-muted);
+}
+
+.page-topbar-actions > button:hover {
+  background: rgba(var(--ink), 0.08);
+  color: var(--text);
+}
+
+.page-topbar-actions > button[aria-pressed="true"] {
+  color: var(--accent);
+}
+
+.page-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 70;
+  display: grid;
+  min-width: 270px;
+  padding: 6px;
+  border-radius: 10px;
+  background: var(--bg-popover);
+  box-shadow: var(--shadow-popover);
+  color: var(--text);
+  animation: pop-in 120ms ease-out;
+}
+
+.page-menu > button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 0.88rem;
+  text-align: left;
+}
+
+.page-menu > button:hover {
+  background: rgba(var(--ink), 0.08);
+}
+
+.page-menu > button[data-danger] {
+  color: var(--danger);
+}
+
+.page-menu-note,
+.page-menu-foot {
+  margin: 4px 8px 2px;
+  font-size: 0.75rem;
+  color: var(--text-faint);
+}
+
+.page-menu-foot {
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}

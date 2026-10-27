@@ -1,0 +1,46 @@
+/* ---- block handles (the «+» and the drag grip left of a hovered block) ---- */
+.block-handle {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding-right: 4px;
+  color: var(--text-faint);
+}
+
+.block-handle[data-hidden] {
+  visibility: hidden;
+}
+
+.block-handle-plus,
+.block-handle-grip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  color: inherit;
+}
+
+.block-handle-plus {
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.block-handle-grip {
+  cursor: grab;
+}
+
+.block-handle-plus:hover,
+.block-handle-grip:hover {
+  background: rgba(var(--ink), 0.08);
+  color: var(--text-muted);
+}
+
+/* The line a dragged block would land on. */
+.ProseMirror .ProseMirror-dropcursor,
+.ProseMirror-dropcursor {
+  background: var(--accent) !important;
+}

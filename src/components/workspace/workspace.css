@@ -1,0 +1,721 @@
+/* start screen, workspace (main zone + companion) and the Gestor's shell. */
+
+/* ---- Start screen ---- */
+.home {
+  position: relative;
+  min-height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 2rem 1.5rem;
+}
+
+.home-theme {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+}
+
+.home-icon {
+  width: 72px;
+  height: 72px;
+}
+
+.home h1 {
+  margin: -0.5rem 0 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.home-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.home-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 15rem;
+  box-sizing: border-box;
+  padding: 1.75rem 1.25rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-sidebar);
+  color: var(--text);
+  text-align: center;
+  transition:
+    box-shadow 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.home-card:hover,
+.home-card:focus-visible {
+  border-color: rgba(var(--accent-rgb), 0.7);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.18);
+}
+
+.home-card strong {
+  font-size: 1.25rem;
+}
+
+.home-card span {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.home-card kbd,
+.companion-search kbd {
+  margin-top: 0.5rem;
+  font: inherit;
+  font-size: 0.75rem;
+  color: var(--text-faint);
+}
+
+.home-version {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-faint);
+}
+
+/* ---- Workspace ---- */
+.workspace {
+  --topbar-h: 38px; /* the sidebar and the companion stick below it */
+}
+
+.workspace-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: var(--topbar-h);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.5rem;
+  background: var(--bg);
+  box-shadow: inset 0 -1px 0 var(--border);
+}
+
+.workspace-bar > .ws-icon-button:last-child {
+  margin-left: auto;
+}
+
+.ws-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.ws-icon-button:hover {
+  background: rgba(var(--ink), 0.08);
+}
+
+.workspace-switch {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 8px;
+  background: rgba(var(--ink), 0.06);
+}
+
+.workspace-switch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 2px 0.7rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.workspace-switch button[aria-pressed="true"] {
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(var(--ink), 0.18);
+}
+
+.workspace-body {
+  display: flex;
+  align-items: flex-start;
+}
+
+/* Widths come from flex-grow (the split) over a zero basis; no overflow here — it would break the sticky sidebar. */
+.workspace-zone {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Folding glides: the zone's grow factor goes to 0 and it then turns invisible; dragging the border has no easing. */
+.workspace-zone {
+  transition:
+    flex-grow 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    visibility 0s linear 0s;
+}
+
+.workspace-zone[data-folded] {
+  overflow: hidden;
+  visibility: hidden;
+  transition:
+    flex-grow 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    visibility 0s linear 260ms;
+}
+
+.workspace-body[data-dragging] .workspace-zone {
+  transition: none;
+}
+
+.workspace-main .app-layout {
+  min-height: calc(100vh - var(--topbar-h));
+}
+
+/* A narrow main zone (see NARROW_ZONE): the sidebar floats over the page, opened and closed as always. */
+.workspace-main[data-narrow="true"] .app-layout {
+  position: relative;
+}
+
+.workspace-main[data-narrow="true"] .sidebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 15;
+  max-width: 85%;
+  box-shadow: var(--shadow-popover);
+}
+
+.workspace-companion {
+  position: sticky;
+  top: var(--topbar-h);
+  height: calc(100vh - var(--topbar-h));
+  overflow-y: auto;
+  box-sizing: border-box;
+  background: var(--bg-sidebar);
+}
+
+.workspace-divider {
+  position: relative;
+  flex: 0 0 6px;
+  align-self: stretch;
+  margin: 0 -3px;
+  z-index: 5;
+  cursor: col-resize;
+  touch-action: none;
+  background: transparent;
+}
+
+/* the visible line is thinner than the grab area */
+.workspace-divider::after {
+  content: "";
+  position: absolute;
+  inset: 0 2px;
+  background: transparent;
+  transition: background 0.1s ease;
+}
+
+.workspace-divider:hover::after,
+.workspace-divider:focus-visible::after,
+.workspace-divider[data-dragging="true"]::after {
+  background: rgba(var(--accent-rgb), 0.6);
+}
+
+.workspace-divider:focus-visible {
+  outline: none;
+}
+
+/* A folded zone leaves a thin rail with a button to bring it back. */
+.workspace-rail {
+  position: sticky;
+  top: var(--topbar-h);
+  flex: 0 0 26px;
+  height: calc(100vh - var(--topbar-h));
+  display: flex;
+  justify-content: center;
+  padding-top: 0.6rem;
+  box-sizing: border-box;
+  border: none;
+  background: var(--bg-sidebar);
+  box-shadow: inset 0 0 0 1px var(--border);
+  color: var(--text-muted);
+}
+
+.workspace-rail:hover {
+  color: var(--text);
+  background: rgba(var(--ink), 0.06);
+}
+
+/* ---- Companion panels ---- */
+.companion {
+  padding: 0.75rem 0.5rem 1.5rem;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.companion-title {
+  margin: 0.1rem 0.5rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.companion-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 0.5rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  text-align: left;
+}
+
+.companion-search kbd {
+  margin: 0 0 0 auto;
+}
+
+.companion-search:hover,
+.companion-item:hover {
+  background: rgba(var(--ink), 0.06);
+}
+
+.companion-section {
+  margin-top: 1rem;
+}
+
+.companion-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 0.5rem 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-faint);
+}
+
+.companion-section ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.companion-fold {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+}
+
+.companion-fold:hover {
+  color: var(--text);
+}
+
+.companion-fold svg {
+  transition: transform 100ms;
+}
+
+.companion-fold[aria-expanded="true"] svg {
+  transform: rotate(90deg);
+}
+
+.companion-empty {
+  margin: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-faint);
+}
+
+.companion-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 28px;
+  box-sizing: border-box;
+  padding: 2px 0.5rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  text-align: left;
+}
+
+.companion-item span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.companion-item svg {
+  flex: 0 0 auto;
+}
+
+.companion-item[data-selected="true"] {
+  background: rgba(var(--ink), 0.08);
+  color: var(--text);
+}
+
+/* ---- The Gestor's main zone ---- */
+.manager {
+  padding: 0 1.5rem 2rem;
+}
+
+.manager-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0.6rem 0;
+  box-shadow: inset 0 -1px 0 var(--border);
+}
+
+.manager-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 4px 0.7rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.manager-tabs button:hover {
+  background: rgba(var(--ink), 0.06);
+}
+
+.manager-tabs button[aria-current="page"] {
+  background: rgba(var(--ink), 0.08);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.manager-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding-top: 18vh;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.manager-empty h2 {
+  margin: 0.5rem 0 0;
+  color: var(--text);
+}
+
+.manager-empty p {
+  margin: 0;
+  max-width: 26rem;
+}
+
+.manager-phase {
+  font-size: 0.8rem;
+  color: var(--text-faint);
+}
+
+/* ---- Tareas ---- */
+.tasks-add {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0 0.5rem;
+  padding: 0 0.5rem;
+  border-radius: 6px;
+  background: rgba(var(--ink), 0.04);
+  color: var(--text-muted);
+}
+
+.tasks-add:focus-within {
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.3);
+}
+
+.tasks-add input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.5rem 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text);
+}
+
+.tasks-add input:focus-visible {
+  box-shadow: none;
+}
+
+.tasks-error,
+.tasks-loading {
+  margin: 1rem 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.tasks-error {
+  color: var(--danger);
+}
+
+/* A task opens as Notion's side peek: over the right of the window, the table still usable behind it. */
+.task-peek-backdrop {
+  position: fixed;
+  inset: 38px 0 0 0; /* below the workspace bar (--topbar-h lives on .workspace, not on body) */
+  z-index: 15;
+  pointer-events: none;
+}
+
+.task-peek {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(680px, 92vw);
+  box-sizing: border-box;
+  background: var(--bg-sidebar); /* a different tone from the table behind it, so it stands out */
+  box-shadow:
+    -1px 0 0 var(--border-strong),
+    -12px 0 32px rgba(0, 0, 0, 0.25);
+  pointer-events: auto;
+  animation: task-peek-in 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes task-peek-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}
+
+/* ---- the task peek's bar, resize edge, full screen and «···» menu ---- */
+.app-layout > .manager {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.task-peek-backdrop {
+  pointer-events: auto; /* a click outside the peek closes it */
+}
+
+.task-peek {
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  padding: 0;
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
+.task-peek {
+  transition: width 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.task-peek[data-resizing] {
+  transition: none;
+}
+
+.task-peek[data-full] {
+  width: 100%;
+  animation: none;
+}
+
+/* Closing: the peek slides out and the click-through is already back. */
+.task-peek-backdrop[data-closing] {
+  pointer-events: none;
+}
+
+.task-peek-backdrop[data-closing] .task-peek {
+  animation: task-peek-out 160ms ease-in forwards;
+}
+
+@keyframes task-peek-out {
+  to {
+    transform: translateX(32px);
+    opacity: 0;
+  }
+}
+
+.task-peek-bar {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0.5rem 0.75rem;
+}
+
+.task-peek-bar-gap {
+  flex: 1 1 auto;
+}
+
+.task-peek-bar > button {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-muted);
+}
+
+.task-peek-bar > button:hover,
+.task-peek-bar > button[aria-expanded="true"] {
+  background: rgba(var(--ink), 0.08);
+  color: var(--text);
+}
+
+.task-peek-bar > button[data-on] {
+  color: #e8a800;
+}
+
+.task-peek-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 1.5rem 2rem;
+}
+
+/* The left edge: drag to resize. */
+.task-peek-resize {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -3px;
+  z-index: 2;
+  width: 6px;
+  cursor: col-resize;
+}
+
+.task-peek-resize:hover,
+.task-peek-resize:focus-visible {
+  background: rgba(var(--accent-rgb), 0.5);
+}
+
+.peek-menu {
+  animation: pop-in 120ms ease-out;
+  position: absolute;
+  top: calc(100% - 4px);
+  right: 0.75rem;
+  z-index: 5;
+  width: 320px;
+  max-width: calc(100% - 1.5rem);
+  box-sizing: border-box;
+  padding: 6px;
+  border-radius: 10px;
+  background: var(--bg-popover);
+  box-shadow: var(--shadow-popover);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.peek-menu-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  padding: 0 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  color: var(--text-muted);
+}
+
+.peek-menu-search:focus-within {
+  border-color: rgba(var(--accent-rgb), 0.7);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.3);
+}
+
+.peek-menu-search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 32px;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text);
+}
+
+.peek-menu-search input:focus-visible {
+  box-shadow: none;
+}
+
+.peek-menu > button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 32px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.peek-menu > button:hover {
+  background: rgba(var(--ink), 0.08);
+}
+
+.peek-menu > button[data-danger] {
+  color: var(--danger);
+}
+
+.peek-menu-note {
+  margin: 4px 8px;
+  font-size: 0.85em;
+  color: var(--text-faint);
+}
+
+.peek-menu-info {
+  display: grid;
+  gap: 2px;
+  margin-top: 6px;
+  padding: 8px 8px 4px;
+  border-top: 1px solid var(--border);
+  font-size: 0.85em;
+  color: var(--text-faint);
+}
+
+.peek-menu-info strong {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.workspace-companion-close {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.6rem;
+  z-index: 1;
+  display: inline-flex;
+  padding: 4px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-muted);
+}
+
+.workspace-companion-close:hover {
+  background: rgba(var(--ink), 0.08);
+  color: var(--text);
+}

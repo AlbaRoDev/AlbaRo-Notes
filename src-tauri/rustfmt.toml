@@ -1,0 +1,2 @@
+# The code was written with wide lines; this keeps `cargo fmt` from reflowing it to 100 columns.
+max_width = 180

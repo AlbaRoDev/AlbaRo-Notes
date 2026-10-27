@@ -1,0 +1,190 @@
+/* Notion's toolbar over selected text: AI first, then formatting. */
+.selection-toolbar {
+  position: fixed;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 3px;
+  border-radius: 8px;
+  background: var(--bg-popover);
+  box-shadow: var(--shadow-popover);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.selection-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 7px;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  color: inherit;
+}
+
+.selection-toolbar button:hover {
+  background: rgba(var(--ink), 0.08);
+}
+
+.selection-toolbar button[aria-pressed="true"] {
+  color: var(--accent);
+}
+
+.selection-toolbar .selection-toolbar-ai {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.selection-toolbar-sep {
+  width: 1px;
+  height: 20px;
+  margin: 0 3px;
+  background: var(--border);
+}
+
+/* The panels under the toolbar: the link's address and the colours. */
+.selection-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  display: grid;
+  gap: 6px;
+  min-width: 260px;
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--bg-popover);
+  box-shadow: var(--shadow-popover);
+}
+
+.selection-popover input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+}
+
+.selection-popover input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.selection-popover p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--danger);
+}
+
+.selection-popover > button {
+  justify-self: start;
+  font-size: 13px;
+}
+
+.selection-colors {
+  display: grid;
+  gap: 4px;
+}
+
+.selection-colors > span {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.selection-colors > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.selection-toolbar .selection-swatch {
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.selection-swatch[aria-pressed="true"] {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.selection-swatch[data-kind="textColor"][data-color="gray"] {
+  color: var(--text-gray);
+}
+
+.selection-swatch[data-kind="backgroundColor"][data-color="gray"] {
+  background: var(--tag-gray);
+}
+
+.selection-swatch[data-kind="textColor"][data-color="brown"] {
+  color: var(--text-brown);
+}
+
+.selection-swatch[data-kind="backgroundColor"][data-color="brown"] {
+  background: var(--tag-brown);
+}
+
+.selection-swatch[data-kind="textColor"][data-color="orange"] {
+  color: var(--text-orange);
+}
+
+.selection-swatch[data-kind="backgroundColor"][data-color="orange"] {
+  background: var(--tag-orange);
+}
+
+.selection-swatch[data-kind="textColor"][data-color="yellow"] {
+  color: var(--text-yellow);
+}
+
+.selection-swatch[data-kind="backgroundColor"][data-color="yellow"] {
+  background: var(--tag-yellow);
+}
+
+.selection-swatch[data-kind="textColor"][data-color="green"] {
+  color: var(--text-green);
+}
+
+.selection-swatch[data-kind="backgroundColor"][data-color="green"] {
+  background: var(--tag-green);
+}
+
+.selection-swatch[data-kind="textColor"][data-color="blue"] {
+  color: var(--text-blue);
+}
+
+.selection-swatch[data-kind="backgroundColor"][data-color="blue"] {
+  background: var(--tag-blue);
+}
+
+.selection-swatch[data-kind="textColor"][data-color="purple"] {
+  color: var(--text-purple);
+}
+
+.selection-swatch[data-kind="backgroundColor"][data-color="purple"] {
+  background: var(--tag-purple);
+}
+
+.selection-swatch[data-kind="textColor"][data-color="pink"] {
+  color: var(--text-pink);
+}
+
+.selection-swatch[data-kind="backgroundColor"][data-color="pink"] {
+  background: var(--tag-pink);
+}
+
+.selection-swatch[data-kind="textColor"][data-color="red"] {
+  color: var(--text-red);
+}
+
+.selection-swatch[data-kind="backgroundColor"][data-color="red"] {
+  background: var(--tag-red);
+}

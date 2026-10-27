@@ -1,0 +1,209 @@
+/* ---- page icon and cover ---- */
+.page-header {
+  position: relative;
+  margin-bottom: 0.25rem;
+}
+
+.page-cover {
+  position: relative;
+  height: 190px;
+  margin-bottom: 0.4rem;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.page-cover-art {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-size: cover;
+}
+
+.page-cover-actions {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.page-cover:hover .page-cover-actions,
+.page-cover-actions:focus-within {
+  opacity: 1;
+}
+
+.page-cover-actions button,
+.page-header-add button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-popover);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.8rem;
+}
+
+.page-cover-actions button:hover,
+.page-header-add button:hover {
+  color: var(--text);
+  background: var(--bg-sidebar);
+}
+
+.page-header-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  min-height: 1.8rem;
+}
+
+/* The icon sits half over the cover, as in Notion. */
+.page-header[data-has-cover] .page-icon {
+  margin-top: -2.4rem;
+}
+
+.page-icon {
+  position: relative;
+  z-index: 1;
+  padding: 0 0.2rem;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  font-size: 4.2rem;
+  line-height: 1.15;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.page-icon:hover {
+  background: rgba(var(--ink), 0.06);
+}
+
+/* «Añadir icono» and «Añadir portada» only show while the pointer is over the top of the page. */
+.page-header-add {
+  display: flex;
+  gap: 0.4rem;
+  padding-bottom: 0.2rem;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.page-header:hover .page-header-add,
+.page-header-add:focus-within {
+  opacity: 1;
+}
+
+.page-popover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 60;
+  display: grid;
+  gap: 0.5rem;
+  width: min(360px, 100%);
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 0.6rem;
+  border-radius: 10px;
+  background: var(--bg-popover);
+  box-shadow: var(--shadow-popover);
+  color: var(--text);
+}
+
+.page-popover input[type="search"] {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.page-popover-section {
+  display: grid;
+  gap: 4px;
+}
+
+.page-popover-section > span {
+  font-size: 0.75rem;
+  color: var(--text-faint);
+}
+
+.page-emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+  gap: 2px;
+}
+
+.page-emoji-grid button {
+  padding: 3px 0;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  font-size: 1.3rem;
+  line-height: 1.3;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.page-emoji-grid button:hover {
+  background: rgba(var(--ink), 0.1);
+}
+
+.page-cover-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.page-cover-swatches button {
+  width: 36px;
+  height: 24px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.page-cover-seasons button {
+  width: 52px;
+}
+
+.page-cover-swatches button:hover {
+  outline: 2px solid var(--accent);
+}
+
+.page-popover-upload,
+.page-popover-remove {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  justify-self: start;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.page-popover-upload:hover,
+.page-popover-remove:hover {
+  color: var(--text);
+  background: rgba(var(--ink), 0.06);
+}
+
+.page-popover-note {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-faint);
+}
+
+.page-popover-note[role="alert"] {
+  color: var(--danger);
+}

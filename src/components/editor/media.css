@@ -1,0 +1,431 @@
+/* multimedia, archivo, miniatura web, bloque de código */
+
+.page-editor .ProseMirror .media-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6em;
+  margin: 0 0 1em;
+  padding: 0.75em 1em;
+  border: 1px dashed rgba(var(--ink), 0.5);
+  border-radius: 6px;
+  background: rgba(var(--ink), 0.06);
+  font-size: 0.9em;
+}
+
+.page-editor .ProseMirror .media-picker-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  flex: 1 0 100%;
+  color: var(--text-muted);
+}
+
+.page-editor .ProseMirror .media-picker-close {
+  margin-left: auto;
+}
+
+.page-editor .ProseMirror .media-picker button,
+.page-editor .ProseMirror .media-picker-upload,
+.page-editor .ProseMirror .file-card button:not(.file-card-name) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.3em 0.7em;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.page-editor .ProseMirror .media-picker button:hover:not(:disabled),
+.page-editor .ProseMirror .media-picker-upload:hover,
+.page-editor .ProseMirror .file-card button:not(.file-card-name):hover {
+  background: rgba(var(--ink), 0.15);
+}
+
+.page-editor .ProseMirror .media-picker button:disabled,
+.page-editor .ProseMirror .media-picker-upload[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: var(--cursor-default, default);
+}
+
+.page-editor .ProseMirror .media-picker .media-picker-close {
+  padding: 0.2em 0.35em;
+  border-color: transparent;
+}
+
+/* The real <input type=file> stays in the DOM (focusable, scriptable) but invisible; the label is its button. */
+.page-editor .ProseMirror .media-picker-upload {
+  position: relative;
+}
+
+.page-editor .ProseMirror .media-picker-upload input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.page-editor .ProseMirror .media-picker-upload:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.page-editor .ProseMirror .media-picker-url {
+  display: flex;
+  flex: 1 1 14em;
+  gap: 0.4em;
+}
+
+.page-editor .ProseMirror .media-picker-url input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.3em 0.5em;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.page-editor .ProseMirror .media-picker-hint,
+.page-editor .ProseMirror .media-picker-status,
+.page-editor .ProseMirror .media-picker-error {
+  flex: 1 0 100%;
+  margin: 0;
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+.page-editor .ProseMirror .media-picker-error,
+.page-editor .ProseMirror .file-card-message,
+.page-editor .ProseMirror .media-broken {
+  color: var(--danger);
+}
+
+.page-editor .ProseMirror .media-block {
+  margin: 0 0 1em;
+}
+
+.page-editor .ProseMirror .media-block img,
+.page-editor .ProseMirror .media-block video {
+  display: block;
+  max-width: 100%;
+  max-height: 32rem;
+  border-radius: 6px;
+}
+
+.page-editor .ProseMirror .media-block audio {
+  width: 100%;
+}
+
+.page-editor .ProseMirror .media-broken {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  margin: 0;
+  padding: 0.6em 0.8em;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  font-size: 0.9em;
+}
+
+.page-editor .ProseMirror .file-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6em;
+  margin: 0 0 1em;
+  padding: 0.6em 0.8em;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.9em;
+}
+
+.page-editor .ProseMirror .file-card-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 10em;
+  min-width: 0;
+}
+
+.page-editor .ProseMirror .file-card-name {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: text;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.page-editor .ProseMirror .file-card-info input {
+  padding: 0.15em 0.4em;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.page-editor .ProseMirror .file-card-size {
+  color: var(--text-muted);
+  font-size: 0.85em;
+}
+
+.page-editor .ProseMirror .file-card-message {
+  flex: 1 0 100%;
+  margin: 0;
+  font-size: 0.85em;
+}
+
+.page-editor .ProseMirror .bookmark {
+  margin: 0 0 1em;
+}
+
+.page-editor .ProseMirror .bookmark a {
+  color: inherit;
+  text-decoration: none;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.page-editor .ProseMirror .bookmark a.bookmark-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  max-width: 100%;
+  color: var(--accent);
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+
+.page-editor .ProseMirror .bookmark-card {
+  display: flex;
+  gap: 1em;
+  justify-content: space-between;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.page-editor .ProseMirror .bookmark-card:hover {
+  background: rgba(var(--ink), 0.08);
+}
+
+.page-editor .ProseMirror .bookmark-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+  min-width: 0;
+  padding: 0.7em 0.9em;
+}
+
+.page-editor .ProseMirror .bookmark-title {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.page-editor .ProseMirror .bookmark-description {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+.page-editor .ProseMirror .bookmark-host {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  font-size: 0.8em;
+  color: var(--text-muted);
+}
+
+.page-editor .ProseMirror .bookmark-image {
+  flex: 0 0 30%;
+  width: 30%;
+  object-fit: cover;
+}
+
+.page-editor .ProseMirror .bookmark-loading {
+  font-size: 0.8em;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.page-editor .ProseMirror .ProseMirror-selectednode.media-block,
+.page-editor .ProseMirror .ProseMirror-selectednode.file-card,
+.page-editor .ProseMirror .ProseMirror-selectednode.bookmark,
+.page-editor .ProseMirror .ProseMirror-selectednode.media-picker {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.page-editor .ProseMirror .code-block {
+  margin: 0 0 1em;
+}
+
+.page-editor .ProseMirror .code-block pre {
+  margin: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.page-editor .ProseMirror .code-block-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25em 0.5em;
+  border-radius: 6px 6px 0 0;
+  background: rgba(var(--ink), 0.18);
+  font-size: 0.8em;
+}
+
+.page-editor .ProseMirror .code-block-toolbar select,
+.page-editor .ProseMirror .code-block-copy {
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.page-editor .ProseMirror .code-block-toolbar select {
+  padding: 0.15em 0.3em;
+}
+
+.page-editor .ProseMirror .code-block-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.15em 0.5em;
+}
+
+.page-editor .ProseMirror .code-block-toolbar select:hover,
+.page-editor .ProseMirror .code-block-copy:hover {
+  background: rgba(var(--ink), 0.2);
+}
+
+.page-editor .ProseMirror .hljs-comment,
+.page-editor .ProseMirror .hljs-quote {
+  color: #6a737d;
+  font-style: italic;
+}
+
+.page-editor .ProseMirror .hljs-keyword,
+.page-editor .ProseMirror .hljs-selector-tag,
+.page-editor .ProseMirror .hljs-literal,
+.page-editor .ProseMirror .hljs-doctag {
+  color: #d73a49;
+}
+
+.page-editor .ProseMirror .hljs-string,
+.page-editor .ProseMirror .hljs-regexp,
+.page-editor .ProseMirror .hljs-addition,
+.page-editor .ProseMirror .hljs-attribute {
+  color: #032f62;
+}
+
+.page-editor .ProseMirror .hljs-number,
+.page-editor .ProseMirror .hljs-symbol,
+.page-editor .ProseMirror .hljs-variable,
+.page-editor .ProseMirror .hljs-template-variable,
+.page-editor .ProseMirror .hljs-built_in {
+  color: #005cc5;
+}
+
+.page-editor .ProseMirror .hljs-title,
+.page-editor .ProseMirror .hljs-section,
+.page-editor .ProseMirror .hljs-selector-id,
+.page-editor .ProseMirror .hljs-selector-class {
+  color: #6f42c1;
+}
+
+.page-editor .ProseMirror .hljs-type,
+.page-editor .ProseMirror .hljs-name,
+.page-editor .ProseMirror .hljs-tag {
+  color: #22863a;
+}
+
+.page-editor .ProseMirror .hljs-deletion {
+  color: #b31d28;
+}
+
+.page-editor .ProseMirror .hljs-meta {
+  color: #735c0f;
+}
+
+.page-editor .ProseMirror .hljs-emphasis {
+  font-style: italic;
+}
+
+.page-editor .ProseMirror .hljs-strong {
+  font-weight: 700;
+}
+
+.editor-notice {
+  margin: 0.5em 0 0;
+  padding: 0.5em 0.8em;
+  border: 1px solid var(--danger);
+  border-radius: 6px;
+  color: var(--danger);
+  font-size: 0.85em;
+}
+
+/* Syntax colours for the dark theme (GitHub dark palette). */
+:root[data-theme="dark"] .page-editor .ProseMirror .hljs-comment,
+:root[data-theme="dark"] .page-editor .ProseMirror .hljs-quote {
+  color: #8b949e;
+}
+
+:root[data-theme="dark"] .page-editor .ProseMirror .hljs-keyword,
+:root[data-theme="dark"] .page-editor .ProseMirror .hljs-selector-tag,
+:root[data-theme="dark"] .page-editor .ProseMirror .hljs-literal,
+:root[data-theme="dark"] .page-editor .ProseMirror .hljs-doctag {
+  color: #ff7b72;
+}
+
+:root[data-theme="dark"] .page-editor .ProseMirror .hljs-string,
+:root[data-theme="dark"] .page-editor .ProseMirror .hljs-regexp,
+:root[data-theme="dark"] .page-editor .ProseMirror .hljs-addition,
+:root[data-theme="dark"] .page-editor .ProseMirror .hljs-attribute {
+  color: #a5d6ff;
+}
+
+:root[data-theme="dark"] .page-editor .ProseMirror .hljs-number,
+:root[data-theme="dark"] .page-editor .ProseMirror .hljs-symbol,
+:root[data-theme="dark"] .page-editor .ProseMirror .hljs-variable,
+:root[data-theme="dark"] .page-editor .ProseMirror .hljs-template-variable,
+:root[data-theme="dark"] .page-editor .ProseMirror .hljs-built_in {
+  color: #79c0ff;
+}
+
+:root[data-theme="dark"] .page-editor .ProseMirror .hljs-title,
+:root[data-theme="dark"] .page-editor .ProseMirror .hljs-section,
+:root[data-theme="dark"] .page-editor .ProseMirror .hljs-selector-id,
+:root[data-theme="dark"] .page-editor .ProseMirror .hljs-selector-class {
+  color: #d2a8ff;
+}
+
+:root[data-theme="dark"] .page-editor .ProseMirror .hljs-type,
+:root[data-theme="dark"] .page-editor .ProseMirror .hljs-name,
+:root[data-theme="dark"] .page-editor .ProseMirror .hljs-tag {
+  color: #7ee787;
+}
+
+:root[data-theme="dark"] .page-editor .ProseMirror .hljs-meta {
+  color: #e3b341;
+}

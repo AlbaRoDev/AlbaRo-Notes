@@ -1,0 +1,1787 @@
+/* database block. Neutral rgba colours so it reads in both themes. */
+
+.page-editor .ProseMirror .db-block {
+  margin: 0 0 1em;
+  padding: 0.5em 0.7em 0.7em;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.page-editor .ProseMirror .db-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.page-editor .ProseMirror .db-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+  margin-left: auto;
+  font-size: 0.8em;
+}
+
+.page-editor .ProseMirror .db-title {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-weight: 600;
+  color: inherit;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  padding: 0.1em 0.3em;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: rgba(var(--ink), 0.5);
+  cursor: var(--cursor-pointer, pointer);
+}
+
+/* A database's own page: the title-only editor and the table below it need no 60vh body. */
+.page-editor.page-editor--database .ProseMirror,
+.page-editor .ProseMirror.db-page {
+  min-height: 0;
+}
+
+.page-editor .ProseMirror.db-page {
+  white-space: normal;
+}
+
+.page-editor .ProseMirror .db-scroll {
+  overflow-x: auto;
+}
+
+/* The table extension's rules style every <table>/<th>/<td> in the editor; these win by specificity.
+   Notion's grid: hairlines between rows and columns, no outer side borders, muted headers.
+   Widths come from the <colgroup> (resizable, saved in the view), hence the fixed layout. */
+.page-editor .ProseMirror table.db-table {
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.page-editor .ProseMirror .db-table th,
+.page-editor .ProseMirror .db-table td {
+  min-width: 0;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  background: none;
+  vertical-align: middle;
+  overflow: hidden;
+}
+
+.page-editor .ProseMirror .db-table th {
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.page-editor .ProseMirror .db-table th:last-child,
+.page-editor .ProseMirror .db-table td:last-child {
+  border-right: none;
+}
+
+.page-editor .ProseMirror .db-table tbody tr:hover > td {
+  background: rgba(var(--ink), 0.025);
+}
+
+.page-editor .ProseMirror .db-table .db-col-action {
+  text-align: center;
+}
+
+/* Drag handle on each header's right edge: a blue line while hovered or dragged, as in Notion. */
+.page-editor .ProseMirror .db-col-resize {
+  position: absolute;
+  top: 0;
+  right: -1px;
+  bottom: 0;
+  z-index: 1;
+  width: 5px;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.page-editor .ProseMirror .db-col-resize:hover,
+.page-editor .ProseMirror .db-col-resize:active {
+  background: linear-gradient(
+    to right,
+    transparent 1px,
+    var(--accent) 1px,
+    var(--accent) 4px,
+    transparent 4px
+  );
+}
+
+/* Cells look like plain text until focused. */
+.page-editor .ProseMirror .db-input {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 1em;
+  color: inherit;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 0.2em 0.45em;
+}
+
+.page-editor .ProseMirror .db-input:hover {
+  background: rgba(var(--ink), 0.04);
+}
+
+.page-editor .ProseMirror .db-input:focus {
+  outline: none;
+  background: var(--bg);
+  border-color: transparent;
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.5);
+}
+
+.page-editor .ProseMirror .db-table .db-input {
+  border-radius: 0;
+  padding: 0.35em 0.5em;
+}
+
+.page-editor .ProseMirror .db-table .db-input:not(.db-select):hover {
+  background: none;
+}
+
+.page-editor .ProseMirror .db-table .db-input:focus {
+  box-shadow: inset 0 0 0 2px rgba(var(--accent-rgb), 0.5);
+}
+
+.page-editor .ProseMirror .db-relation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25em;
+}
+
+.page-editor .ProseMirror .db-relation-add {
+  width: auto;
+  min-width: 2.2em;
+}
+
+.page-editor .ProseMirror .db-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2em;
+  padding: 0 0.4em;
+  border-radius: 999px;
+  background: rgba(var(--ink), 0.18);
+  font-size: 0.9em;
+}
+
+.page-editor .ProseMirror .db-chip button {
+  font: inherit;
+  color: inherit;
+  cursor: var(--cursor-pointer, pointer);
+  background: none;
+  border: none;
+  padding: 0;
+  opacity: 0.6;
+}
+
+.page-editor .ProseMirror .db-chip button:hover {
+  opacity: 1;
+}
+
+.page-editor .ProseMirror .db-row-title-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.1em;
+}
+
+.page-editor .ProseMirror .db-chip-input {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  field-sizing: content;
+}
+
+/* Property panel of a database row — sits between the title and the body. */
+.page-editor .ProseMirror .row-panel-host:empty {
+  display: none;
+}
+
+.page-editor .ProseMirror .row-props {
+  margin: 0 0 1.2em;
+  padding-bottom: 0.8em;
+  border-bottom: 1px solid var(--border);
+  white-space: normal;
+  font-size: 0.9em;
+}
+
+.page-editor .ProseMirror .row-props-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  margin-bottom: 0.4em;
+  font: inherit;
+  font-size: 0.85em;
+  color: inherit;
+  opacity: 0.7;
+  cursor: var(--cursor-pointer, pointer);
+  background: none;
+  border: none;
+  padding: 0.1em 0.2em;
+}
+
+.page-editor .ProseMirror .row-props-source:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.page-editor .ProseMirror .row-props-list {
+  display: grid;
+  gap: 0.15em;
+  margin: 0;
+}
+
+.page-editor .ProseMirror .row-props-row {
+  display: grid;
+  grid-template-columns: minmax(7em, 11em) 1fr;
+  align-items: center;
+  gap: 0.6em;
+}
+
+.page-editor .ProseMirror .row-props-row dt {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  opacity: 0.65;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.page-editor .ProseMirror .row-props-row dd {
+  margin: 0;
+  min-width: 0;
+}
+
+.page-editor .ProseMirror .db-prop-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  width: 100%;
+  height: 100%;
+  min-height: 34px;
+  box-sizing: border-box;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0 0.5em;
+  text-align: left;
+  white-space: nowrap;
+}
+
+button.db-prop-name {
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.page-editor .ProseMirror button.db-prop-name:hover {
+  background: rgba(var(--ink), 0.055);
+}
+
+.page-editor .ProseMirror .db-prop-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.page-editor .ProseMirror .db-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  font: inherit;
+  color: inherit;
+  cursor: var(--cursor-pointer, pointer);
+  background: none;
+  border: none;
+  padding: 0.2em;
+  opacity: 0.6;
+}
+
+.page-editor .ProseMirror .db-icon-btn:hover {
+  opacity: 1;
+}
+
+/* Like Notion's «Abrir», a row's open and delete buttons show while hovering it. */
+.page-editor .ProseMirror .db-table td .db-icon-btn {
+  visibility: hidden;
+  border-radius: 4px;
+}
+
+.page-editor .ProseMirror .db-table tr:hover td .db-icon-btn,
+.page-editor .ProseMirror .db-table td .db-icon-btn:focus-visible {
+  visibility: visible;
+}
+
+.page-editor .ProseMirror .db-table td .db-icon-btn:hover {
+  background: rgba(var(--ink), 0.08);
+}
+
+.page-editor .ProseMirror .db-header-actions button,
+.page-editor .ProseMirror .db-add-row,
+.page-editor .ProseMirror .db-panel button,
+.page-editor .ProseMirror .db-confirm button {
+  font: inherit;
+  font-size: 0.85em;
+  color: inherit;
+  cursor: var(--cursor-pointer, pointer);
+  padding: 0.25em 0.6em;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: rgba(var(--ink), 0.08);
+}
+
+.page-editor .ProseMirror .db-header-actions button:hover,
+.page-editor .ProseMirror .db-add-row:hover,
+.page-editor .ProseMirror .db-panel button:hover:not(:disabled),
+.page-editor .ProseMirror .db-confirm button:hover {
+  background: rgba(var(--ink), 0.18);
+}
+
+.page-editor .ProseMirror .db-panel button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.page-editor .ProseMirror .db-add-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  margin-top: 0.5em;
+}
+
+.page-editor .ProseMirror .db-panel {
+  display: grid;
+  /* minmax(0, …): a select with a long option must not widen the panel past a narrow page. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5em;
+  max-width: 26em;
+  margin-top: 0.6em;
+  padding: 0.7em;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.page-editor .ProseMirror .db-panel select {
+  min-width: 0;
+}
+
+.page-editor .ProseMirror .db-panel label {
+  display: grid;
+  gap: 0.2em;
+  font-size: 0.85em;
+}
+
+.page-editor .ProseMirror .db-panel input,
+.page-editor .ProseMirror .db-panel select {
+  font: inherit;
+  color: inherit;
+  padding: 0.3em 0.5em;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: none;
+}
+
+.page-editor .ProseMirror .db-panel-meta {
+  margin: 0;
+  font-size: 0.8em;
+  opacity: 0.7;
+}
+
+.page-editor .ProseMirror .db-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3em;
+  font-size: 0.85em;
+}
+
+.page-editor .ProseMirror .db-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3em;
+  font-size: 0.85em;
+}
+
+.page-editor .ProseMirror .db-error {
+  margin: 0 0 0.5em;
+  font-size: 0.85em;
+  color: var(--danger);
+}
+
+.page-editor .ProseMirror .db-loading {
+  margin: 0;
+  opacity: 0.6;
+}
+
+/* Saved views: tabs, sort/filter/group toolbar and rules */
+.page-editor .ProseMirror .db-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2em;
+  margin-bottom: 0.3em;
+  border-bottom: 1px solid var(--border);
+}
+
+.page-editor .ProseMirror .db-tab {
+  font: inherit;
+  font-size: 0.9em;
+  color: inherit;
+  cursor: var(--cursor-pointer, pointer);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0.2em 0.6em;
+  opacity: 0.65;
+}
+
+.page-editor .ProseMirror .db-tab[aria-selected="true"] {
+  opacity: 1;
+  font-weight: 600;
+  border-bottom-color: currentColor;
+}
+
+.page-editor .ProseMirror .db-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3em;
+  margin-bottom: 0.4em;
+}
+
+.page-editor .ProseMirror .db-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  font: inherit;
+  font-size: 0.85em;
+  color: inherit;
+  cursor: var(--cursor-pointer, pointer);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0.15em 0.55em;
+  opacity: 0.75;
+}
+
+.page-editor .ProseMirror .db-tool:hover,
+.page-editor .ProseMirror .db-tool[aria-expanded="true"],
+.page-editor .ProseMirror .db-tool[aria-pressed="true"] {
+  opacity: 1;
+  background: rgba(var(--ink), 0.15);
+}
+
+.page-editor .ProseMirror .db-tool[data-active="true"] {
+  opacity: 1;
+  color: var(--accent);
+}
+
+.page-editor .ProseMirror .db-tool-count {
+  font-size: 0.8em;
+  padding: 0 0.4em;
+  border-radius: 999px;
+  background: rgba(var(--ink), 0.2);
+  color: inherit;
+}
+
+.page-editor .ProseMirror .db-rule {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35em;
+}
+
+.page-editor .ProseMirror .db-rule .db-rule-join {
+  min-width: 3.4em;
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.page-editor .ProseMirror .db-rule .db-input {
+  width: auto;
+  min-width: 7em;
+  border-color: var(--border);
+}
+
+.page-editor .ProseMirror .db-panel label.db-check {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.page-editor .ProseMirror .db-group-row td {
+  padding: 0.6em 0.2em 0.2em;
+  border-right: none;
+}
+
+.page-editor .ProseMirror .db-group-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font: inherit;
+  font-weight: 600;
+  color: inherit;
+  cursor: var(--cursor-pointer, pointer);
+  background: none;
+  border: none;
+  padding: 0.15em 0.2em;
+}
+
+/* View kinds: menu, list / gallery / feed / board */
+.page-editor .ProseMirror .db-tab-icon {
+  margin-right: 0.35em;
+  vertical-align: -2px;
+  opacity: 0.7;
+}
+
+.page-editor .ProseMirror .db-tabs {
+  position: relative;
+}
+
+.page-editor .ProseMirror .db-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 20;
+  display: grid;
+  gap: 2px;
+  min-width: 10em;
+  padding: 0.25em;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-popover);
+  box-shadow: var(--shadow-popover);
+}
+
+.page-editor .ProseMirror .db-menu button {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font: inherit;
+  font-size: 0.9em;
+  color: var(--text);
+  text-align: left;
+  cursor: var(--cursor-pointer, pointer);
+  background: none;
+  border: none;
+  border-radius: 4px;
+  padding: 0.3em 0.6em;
+}
+
+.page-editor .ProseMirror .db-menu button:hover {
+  background: rgba(var(--ink), 0.08);
+}
+
+.page-editor .ProseMirror .cards-section + .cards-section {
+  margin-top: 0.8em;
+}
+
+.page-editor .ProseMirror .card {
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(var(--ink), 0.05);
+  overflow: hidden;
+}
+
+.page-editor .ProseMirror .card-body {
+  display: grid;
+  gap: 0.3em;
+  padding: 0.55em 0.7em;
+  min-width: 0;
+}
+
+.page-editor .ProseMirror .card-title {
+  font: inherit;
+  font-weight: 600;
+  color: inherit;
+  text-align: left;
+  cursor: var(--cursor-pointer, pointer);
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.page-editor .ProseMirror .card-title:hover {
+  text-decoration: underline;
+}
+
+.page-editor .ProseMirror .card-fields {
+  display: grid;
+  gap: 0.15em;
+  font-size: 0.85em;
+}
+
+.page-editor .ProseMirror .card-field {
+  display: grid;
+  grid-template-columns: minmax(4.5em, 36%) minmax(0, 1fr);
+  align-items: center;
+  gap: 0.4em;
+}
+
+.page-editor .ProseMirror .card-field-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.55;
+}
+
+/* a list row keeps its fields on the one line, each cell a fixed width */
+.page-editor .ProseMirror .cards-list .card-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2em 0.8em;
+}
+
+.page-editor .ProseMirror .cards-list .card-field {
+  display: inline-flex;
+}
+
+.page-editor .ProseMirror .cards-list .card-field .db-input {
+  width: 9em;
+}
+
+.page-editor .ProseMirror .card-snippet {
+  margin: 0;
+  font-size: 0.85em;
+  opacity: 0.75;
+  overflow-wrap: anywhere;
+}
+
+.page-editor .ProseMirror .card-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: rgba(var(--ink), 0.15);
+}
+
+/* list: one compact line per row */
+.page-editor .ProseMirror .cards-items-list {
+  display: grid;
+}
+
+.page-editor .ProseMirror .cards-list .card {
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: none;
+}
+
+.page-editor .ProseMirror .cards-list .card-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2em 1em;
+  padding: 0.35em 0.2em;
+}
+
+/* gallery: a responsive grid */
+.page-editor .ProseMirror .cards-items-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12em, 1fr));
+  gap: 0.7em;
+}
+
+/* feed: wide entries with the preview image at the side */
+.page-editor .ProseMirror .cards-items-feed {
+  display: grid;
+  gap: 0.6em;
+}
+
+.page-editor .ProseMirror .cards-feed .card {
+  display: flex;
+  align-items: stretch;
+}
+
+.page-editor .ProseMirror .cards-feed .card-body {
+  flex: 1;
+}
+
+.page-editor .ProseMirror .cards-feed .card-image {
+  flex: 0 0 9em;
+  width: 9em;
+  height: auto;
+  aspect-ratio: auto;
+}
+
+/* board: columns of cards, scrolling sideways */
+.page-editor .ProseMirror .board {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7em;
+  overflow-x: auto;
+  padding-bottom: 0.4em;
+}
+
+.page-editor .ProseMirror .board-column {
+  flex: 0 0 15em;
+  display: grid;
+  gap: 0.5em;
+  padding: 0.4em;
+  border-radius: 8px;
+  background: rgba(var(--ink), 0.08);
+}
+
+.page-editor .ProseMirror .board-column-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  font-weight: 600;
+}
+
+.page-editor .ProseMirror .board-column-header .db-icon-btn {
+  margin-left: auto;
+}
+
+.page-editor .ProseMirror .board .card {
+  display: grid;
+  gap: 0.3em;
+  padding: 0.5em 0.6em;
+}
+
+/* Date ranges, calendar and timeline */
+.page-editor .ProseMirror .db-date {
+  display: flex;
+  align-items: center;
+  gap: 0.2em;
+}
+
+.page-editor .ProseMirror .db-date .db-input {
+  width: auto;
+  min-width: 0;
+  flex: 1 1 7.5em;
+}
+
+.page-editor .ProseMirror .db-date-add-end {
+  opacity: 0.35;
+}
+
+.page-editor .ProseMirror .db-date:hover .db-date-add-end,
+.page-editor .ProseMirror .db-date:focus-within .db-date-add-end {
+  opacity: 0.9;
+}
+
+/* Place cell and map view */
+.page-editor .ProseMirror .db-place {
+  display: grid;
+  gap: 0.15em;
+  position: relative;
+}
+
+.page-editor .ProseMirror .db-place-name {
+  display: flex;
+  align-items: center;
+  gap: 0.1em;
+}
+
+.page-editor .ProseMirror .db-place-coords {
+  display: flex;
+  gap: 0.2em;
+}
+
+.page-editor .ProseMirror .db-place-coords .db-input {
+  min-width: 0;
+  width: 50%;
+  font-size: 0.85em;
+}
+
+/* In a table only the address shows, like Notion; the coordinates appear while editing the cell. */
+.page-editor .ProseMirror .db-table .db-place:not(:focus-within) .db-place-coords {
+  display: none;
+}
+
+.page-editor .ProseMirror .db-place-note {
+  font-size: 0.8em;
+  color: var(--danger);
+}
+
+.page-editor .ProseMirror .db-place-results {
+  margin: 0;
+  padding: 0.2em;
+  list-style: none;
+  border-radius: 6px;
+  background: var(--bg-popover);
+  box-shadow: var(--shadow-popover);
+}
+
+.page-editor .ProseMirror .db-place-results button {
+  display: block;
+  width: 100%;
+  font: inherit;
+  font-size: 0.85em;
+  color: inherit;
+  text-align: left;
+  cursor: var(--cursor-pointer, pointer);
+  background: none;
+  border: none;
+  border-radius: 4px;
+  padding: 0.2em 0.4em;
+}
+
+.page-editor .ProseMirror .db-place-results button:hover {
+  background: rgba(var(--ink), 0.08);
+}
+/* Form view */
+.page-editor .ProseMirror .form-view {
+  display: grid;
+  gap: 0.8em;
+  max-width: 34em;
+  margin: 0.4em auto 0.2em;
+  padding: 1em 1.2em;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.page-editor .ProseMirror .form-title {
+  margin: 0;
+  font-size: 1.3em;
+}
+
+.page-editor .ProseMirror .form-description {
+  margin: 0;
+  opacity: 0.75;
+}
+
+.page-editor .ProseMirror .form-field {
+  display: grid;
+  gap: 0.2em;
+}
+
+.page-editor .ProseMirror .form-label {
+  font-weight: 600;
+  font-size: 0.95em;
+}
+
+.page-editor .ProseMirror .form-required {
+  color: var(--danger);
+}
+
+.page-editor .ProseMirror .form-help {
+  font-size: 0.8em;
+  opacity: 0.6;
+}
+
+.page-editor .ProseMirror .form-field .db-input {
+  border-color: var(--border);
+  padding: 0.35em 0.5em;
+}
+
+.page-editor .ProseMirror .form-submit {
+  justify-self: start;
+  font: inherit;
+  font-weight: 600;
+  color: var(--on-accent);
+  cursor: var(--cursor-pointer, pointer);
+  padding: 0.4em 1.2em;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+}
+
+.page-editor .ProseMirror .form-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-editor .ProseMirror .form-done p {
+  margin: 0;
+  font-size: 1.05em;
+}
+
+.page-editor .ProseMirror .form-builder-field {
+  display: grid;
+  gap: 0.25em;
+  padding-bottom: 0.5em;
+  border-bottom: 1px solid var(--border);
+}
+
+.page-editor .ProseMirror .form-builder .db-rule input[type="text"] {
+  flex: 1;
+  min-width: 8em;
+}
+
+/* «+ Nueva fila» is a quiet full-width row under the table, as in Notion. */
+.page-editor .ProseMirror .db-add-row {
+  display: flex;
+  width: 100%;
+  margin-top: 0;
+  padding: 0.45em 0.5em;
+  border: none;
+  border-radius: 0;
+  background: none;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.page-editor .ProseMirror .db-add-row:hover {
+  background: rgba(var(--ink), 0.04);
+}
+
+/* A select cell is a native <select> dressed as a Notion tag: fits its text, coloured by option. */
+.page-editor .ProseMirror .db-select {
+  appearance: none;
+  field-sizing: content;
+  width: auto;
+  max-width: 100%;
+  min-width: 2.5em;
+  cursor: var(--cursor-pointer, pointer);
+  color: var(--text-faint);
+}
+
+.page-editor .ProseMirror .db-select[data-color] {
+  color: var(--text);
+  padding: 0 0.5em;
+  border-radius: 3px;
+}
+
+.page-editor .ProseMirror .db-table .db-select[data-color] {
+  margin-left: 0.5em;
+  padding: 0 0.45em;
+  border-radius: 3px;
+}
+
+/* Tag colours by name, as Rust stores them. Anything with a data-color gets --tag (select cells, chips, swatches). */
+[data-color="default"] {
+  --tag: var(--tag-default);
+}
+
+[data-color="gray"] {
+  --tag: var(--tag-gray);
+}
+
+[data-color="brown"] {
+  --tag: var(--tag-brown);
+}
+
+[data-color="orange"] {
+  --tag: var(--tag-orange);
+}
+
+[data-color="yellow"] {
+  --tag: var(--tag-yellow);
+}
+
+[data-color="green"] {
+  --tag: var(--tag-green);
+}
+
+[data-color="blue"] {
+  --tag: var(--tag-blue);
+}
+
+[data-color="purple"] {
+  --tag: var(--tag-purple);
+}
+
+[data-color="pink"] {
+  --tag: var(--tag-pink);
+}
+
+[data-color="red"] {
+  --tag: var(--tag-red);
+}
+
+.page-editor .ProseMirror .db-select[data-color] {
+  background: var(--tag);
+}
+
+/* Empty cells stay blank in a table, as in Notion: no «dd/mm/aaaa» and no «+ ⌄» on every row.
+   They show up again while the row is hovered or the cell has focus. */
+.page-editor
+  .ProseMirror
+  .db-table
+  tr:not(:hover)
+  .db-date[data-empty="true"]:not(:focus-within)
+  input::-webkit-datetime-edit,
+.page-editor
+  .ProseMirror
+  .db-table
+  tr:not(:hover)
+  .db-date[data-empty="true"]:not(:focus-within)
+  input::-webkit-calendar-picker-indicator {
+  opacity: 0;
+}
+
+.page-editor .ProseMirror .db-table .db-relation-add {
+  appearance: none;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.page-editor .ProseMirror .db-table tr:not(:hover) .db-relation-add:not(:focus) {
+  opacity: 0;
+}
+
+.page-editor .ProseMirror .db-table .db-relation {
+  flex-wrap: nowrap;
+  overflow: hidden;
+  padding-left: 0.5em;
+}
+
+.page-editor .ProseMirror .db-table .db-chip {
+  flex: 0 0 auto;
+  border-radius: 3px;
+  background: rgba(var(--ink), 0.08);
+}
+
+/* A tag shows its option's colour, in the table and out of it. */
+.page-editor .ProseMirror .db-chip.db-tag[data-color],
+.page-editor .ProseMirror .db-table .db-chip.db-tag[data-color] {
+  background: var(--tag);
+}
+
+.page-editor .ProseMirror .db-table tr:not(:hover) .db-select:not([data-color]):not(:focus) {
+  color: transparent;
+}
+
+/* ---- Column menu, like Notion's. It lives in a portal on <body>, outside the editor. ---- */
+.prop-menu {
+  animation: pop-in 120ms ease-out;
+  position: fixed;
+  z-index: 1000;
+  box-sizing: border-box;
+  width: 290px;
+  overflow-y: auto;
+  padding: 6px;
+  border-radius: 10px;
+  background: var(--bg-popover);
+  box-shadow: var(--shadow-popover);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.prop-menu .pm-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 2px 6px;
+}
+
+.prop-menu .pm-type {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: none;
+  color: var(--text-muted);
+}
+
+.prop-menu button.pm-type:hover {
+  background: rgba(var(--ink), 0.055);
+}
+
+.prop-menu .pm-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 32px;
+  box-sizing: border-box;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: rgba(var(--ink), 0.03);
+}
+
+.prop-menu .pm-name-static {
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+}
+
+.prop-menu .pm-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 30px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  text-align: left;
+}
+
+.prop-menu .pm-item:hover,
+.prop-menu .pm-item:focus-visible {
+  background: rgba(var(--ink), 0.08);
+  outline: none;
+}
+
+.prop-menu .pm-item > svg:first-child {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+}
+
+.prop-menu .pm-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prop-menu .pm-chevron,
+.prop-menu .pm-muted {
+  flex: 0 0 auto;
+  color: var(--text-faint);
+}
+
+.prop-menu .pm-item[data-danger] {
+  color: var(--danger);
+}
+
+.prop-menu .pm-item[data-danger] > svg:first-child {
+  color: var(--danger);
+}
+
+.prop-menu .pm-sep {
+  margin: 6px 4px;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+.prop-menu .pm-subhead {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px 6px;
+  font-weight: 600;
+}
+
+.prop-menu .pm-back,
+.prop-menu .pm-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: 3px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-muted);
+}
+
+.prop-menu .pm-back:hover,
+.prop-menu .pm-icon:hover {
+  background: rgba(var(--ink), 0.08);
+}
+
+.prop-menu .pm-note {
+  margin: 6px 8px 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.prop-menu .pm-section {
+  padding: 6px 8px 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.prop-menu .pm-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 4px 2px 8px;
+}
+
+/* The option's name is shown as its tag: same colour as in the table. */
+.prop-menu .pm-option-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 2px 6px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: var(--tag);
+}
+
+.prop-menu .pm-option-name:focus {
+  border-color: rgba(var(--accent-rgb), 0.7);
+  box-shadow: none;
+}
+
+.prop-menu .pm-option-new {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 2px 6px;
+  border: none;
+  background: none;
+}
+
+.prop-menu .pm-swatch {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--tag);
+}
+
+.prop-menu button.pm-swatch:hover {
+  border-color: var(--border-strong);
+}
+
+.prop-menu .pm-colors {
+  margin: 2px 0 4px 26px;
+  padding: 4px;
+  border-radius: 6px;
+  background: rgba(var(--ink), 0.03);
+}
+
+.prop-menu .pm-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  color: var(--danger);
+}
+
+.prop-menu .pm-confirm span {
+  flex: 1 1 100%;
+}
+
+.prop-menu .pm-confirm button {
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+}
+
+.prop-menu .pm-confirm .pm-danger-btn {
+  border-color: transparent;
+  background: var(--danger);
+  color: #fff;
+}
+
+/* ---- Footer calculations, frozen columns, wrapped content ---- */
+.page-editor .ProseMirror .db-table tfoot td {
+  border-bottom: none;
+  border-right: none;
+}
+
+.page-editor .ProseMirror .db-calc-cell {
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 0.4em;
+  width: 100%;
+  height: 34px;
+  padding: 0 0.5em;
+  border: none;
+  background: none;
+  color: var(--text);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.page-editor .ProseMirror .db-calc-cell:not([data-set]) {
+  color: var(--text-faint);
+  opacity: 0;
+}
+
+.page-editor .ProseMirror .db-table:hover .db-calc-cell,
+.page-editor .ProseMirror .db-calc-cell:focus-visible {
+  opacity: 1;
+}
+
+.page-editor .ProseMirror .db-calc-cell:hover {
+  background: rgba(var(--ink), 0.055);
+}
+
+.page-editor .ProseMirror .db-calc-label {
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Sticky cells need an opaque background so the columns scrolling under them are hidden. */
+.page-editor .ProseMirror .db-table .db-frozen {
+  background: var(--bg);
+}
+
+.page-editor .ProseMirror .db-table tbody tr:hover > td.db-frozen {
+  background: color-mix(in srgb, var(--bg), rgb(var(--ink)) 2.5%);
+}
+
+.page-editor .ProseMirror .db-table .db-frozen-edge {
+  box-shadow: inset -2px 0 0 var(--border);
+}
+
+.page-editor .ProseMirror .db-table td[data-wrap] {
+  vertical-align: top;
+}
+
+.page-editor .ProseMirror .db-wrap {
+  display: block;
+  resize: none;
+  field-sizing: content;
+  min-height: 34px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+.page-editor .ProseMirror .db-table td[data-wrap] .db-relation {
+  flex-wrap: wrap;
+}
+
+/* A checkbox cell is just the native box, whatever size the rules above give «.db-input» (cards, forms). */
+.page-editor .ProseMirror .db-input.db-checkbox,
+.page-editor .ProseMirror .cards-list .card-field .db-input.db-checkbox,
+.page-editor .ProseMirror .form-field .db-input.db-checkbox {
+  width: 1.1em;
+  height: 1.1em;
+  min-width: 0;
+  margin: 0.3em 0.45em;
+  padding: 0;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+/* ---- a column's own icon, and link / mail / phone cells ---- */
+.prop-emoji {
+  display: inline-block;
+  line-height: 1;
+}
+
+.row-props-row dt svg,
+.row-props-row dt .prop-emoji {
+  flex: 0 0 auto;
+}
+
+.db-link-cell {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.db-link-cell .db-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.prop-menu .pm-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  padding: 2px;
+}
+
+.prop-menu .pm-icon-grid button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-muted);
+}
+
+.prop-menu .pm-icon-grid button:hover,
+.prop-menu .pm-icon-grid button[aria-selected="true"] {
+  background: rgba(var(--ink), 0.08);
+  color: var(--text);
+}
+
+.prop-menu .pm-icon-emoji {
+  padding: 4px 2px;
+}
+
+.prop-menu .pm-icon-emoji input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: rgba(var(--ink), 0.03);
+  color: var(--text);
+}
+
+.prop-menu .pm-icon-reset {
+  width: 100%;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-muted);
+  text-align: left;
+}
+
+.prop-menu .pm-icon-reset:hover {
+  background: rgba(var(--ink), 0.06);
+}
+
+/* A view tab with its own «×» (shown on hover or focus, as in Notion's tab menu). */
+.page-editor .ProseMirror .db-tab-wrap {
+  display: inline-flex;
+  align-items: center;
+}
+
+.page-editor .ProseMirror .db-tab-close {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  margin-left: -4px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-muted);
+  opacity: 0;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.page-editor .ProseMirror .db-tab-wrap:hover .db-tab-close,
+.page-editor .ProseMirror .db-tab-close:focus-visible {
+  opacity: 1;
+}
+
+.page-editor .ProseMirror .db-tab-close:hover {
+  background: rgba(var(--ink), 0.1);
+  color: var(--danger);
+}
+
+/* A select cell opens its options wherever it is pressed; the chip inside is only how the current option looks. */
+.page-editor .ProseMirror .db-select-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 35px;
+  padding: 0 0.6em;
+}
+
+/* The option's colour is a pill around its name, not the whole cell (the cell stays plain, like a text one). */
+.page-editor .ProseMirror .db-select-cell[data-color] .db-select-chip {
+  padding: 0 0.45em;
+  border-radius: 3px;
+  background: var(--tag);
+}
+
+.page-editor .ProseMirror .db-select-chip {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--text-faint);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.page-editor .ProseMirror .db-select-cell[data-color] .db-select-chip {
+  color: var(--text);
+}
+
+.page-editor .ProseMirror .db-table tr:not(:hover) .db-select-chip[data-empty] {
+  color: transparent;
+}
+
+.page-editor .ProseMirror .db-select-cell:not([data-color]):hover {
+  background: rgba(var(--ink), 0.04);
+}
+
+.page-editor .ProseMirror .db-select-cell:focus-within {
+  box-shadow: inset 0 0 0 2px rgba(var(--accent-rgb), 0.5);
+}
+
+/* Tags and relations: the «+» takes the rest of the cell, so pressing anywhere in it opens the options. */
+.page-editor .ProseMirror .db-relation {
+  min-height: 35px;
+}
+
+.page-editor .ProseMirror .db-relation .db-relation-add {
+  flex: 1 1 2.2em;
+  align-self: stretch;
+  min-height: 35px;
+}
+
+/* The «Abrir» pill of a row, over the end of its title (Notion's). */
+.page-editor .ProseMirror .db-row-title-cell {
+  position: relative;
+}
+
+.page-editor .ProseMirror .db-open-btn {
+  position: absolute;
+  right: 6px;
+  gap: 0.25em;
+  padding: 0.1em 0.5em;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--bg);
+  font-size: 0.85em;
+  opacity: 1;
+}
+
+.page-editor .ProseMirror .db-open-btn:hover {
+  background: var(--bg-sidebar);
+}
+
+/* ---- Option cells (select, status, tags): the whole cell opens the list; empty ones show nothing ---- */
+.page-editor .ProseMirror .db-option-cell {
+  cursor: var(--cursor-pointer, pointer);
+  outline: none;
+}
+
+.page-editor .ProseMirror .db-tags.db-option-cell {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 35px;
+  align-content: center;
+  padding: 0.2em 0.5em;
+}
+
+.page-editor .ProseMirror .db-tags.db-option-cell:focus-visible,
+.page-editor .ProseMirror .db-select-cell.db-option-cell:focus-visible {
+  box-shadow: inset 0 0 0 2px rgba(var(--accent-rgb), 0.5);
+}
+
+.page-editor .ProseMirror .db-tags.db-option-cell:hover {
+  background: rgba(var(--ink), 0.04);
+}
+
+.option-pop {
+  position: fixed;
+  z-index: 1000;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  border-radius: 8px;
+  background: var(--bg-popover);
+  box-shadow: var(--shadow-popover);
+  color: var(--text);
+  font-size: 14px;
+  animation: pop-in 120ms ease-out;
+}
+
+.option-pop-search {
+  flex: 0 0 auto;
+  height: 30px;
+  box-sizing: border-box;
+  padding: 0 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: rgba(var(--ink), 0.03);
+  color: var(--text);
+}
+
+.option-pop-error {
+  margin: 4px 6px 0;
+  font-size: 0.85em;
+  color: var(--danger);
+}
+
+.option-pop-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 4px;
+  overflow-y: auto;
+}
+
+.option-pop-heading {
+  padding: 6px 8px 2px;
+  font-size: 0.8em;
+  font-weight: 600;
+  color: var(--text-faint);
+}
+
+.option-pop-empty {
+  margin: 6px 8px;
+  font-size: 0.85em;
+  color: var(--text-faint);
+}
+
+.option-pop-list > button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 30px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.option-pop-list > button[data-active] {
+  background: rgba(var(--ink), 0.08);
+}
+
+.option-pop .opt-chip {
+  padding: 0 0.5em;
+  border-radius: 3px;
+  background: rgba(var(--ink), 0.08);
+}
+
+.option-pop .opt-chip[data-color] {
+  background: var(--tag);
+}
+
+.option-pop .opt-check {
+  margin-left: auto;
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
+.prop-menu .pm-option-group {
+  flex: 0 0 auto;
+  max-width: 7.5em;
+  height: 26px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: rgba(var(--ink), 0.03);
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* ---- dropping a page on a task row, and the pages linked to a task ---- */
+.page-editor .ProseMirror .db-table tr[data-drop] > td {
+  background: rgba(var(--accent-rgb), 0.12);
+  box-shadow:
+    inset 0 1px 0 rgba(var(--accent-rgb), 0.6),
+    inset 0 -1px 0 rgba(var(--accent-rgb), 0.6);
+}
+
+.linked-pages {
+  margin-top: 0.5em;
+  padding: 0.5em;
+  border-radius: 6px;
+}
+
+.linked-pages[data-over] {
+  background: rgba(var(--accent-rgb), 0.12);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.6);
+}
+
+.linked-pages-title {
+  display: block;
+  margin-bottom: 0.3em;
+  font-size: 0.85em;
+  opacity: 0.65;
+}
+
+.linked-pages-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3em;
+}
+
+.linked-chip {
+  background: rgba(var(--ink), 0.08);
+}
+
+.linked-chip .linked-chip-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  opacity: 1;
+}
+
+.page-editor .ProseMirror .linked-add {
+  width: auto;
+  max-width: 100%;
+  appearance: none;
+  color: var(--text-muted);
+}
+
+/* «Tareas relacionadas», under a page */
+.related-tasks {
+  margin-top: 2.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.related-tasks h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-faint);
+}
+
+.related-tasks ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.related-tasks button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+}
+
+.related-tasks button:hover {
+  background: rgba(var(--ink), 0.06);
+  color: var(--text);
+}
+
+/* A column header being dragged over another: a bar on the side it would land. */
+.page-editor .ProseMirror .db-table th[data-col-drop="left"] {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.page-editor .ProseMirror .db-table th[data-col-drop="right"] {
+  box-shadow: inset -3px 0 0 var(--accent);
+}
+
+/* The view bar's panels float under their button, as Notion's menus do, instead of pushing the table down. */
+.page-editor .ProseMirror .db-toolbar-wrap {
+  position: relative;
+}
+
+.page-editor .ProseMirror .db-toolbar-wrap > .db-panel:not(.form-builder) {
+  position: absolute;
+  top: calc(100% - 0.2em);
+  left: 0;
+  z-index: 50;
+  box-sizing: border-box;
+  width: min(28em, 100%);
+  max-height: 70vh;
+  margin-top: 0;
+  overflow-y: auto;
+  border: none;
+  background: var(--bg-popover);
+  box-shadow: var(--shadow-popover);
+  animation: pop-in 120ms ease-out;
+}

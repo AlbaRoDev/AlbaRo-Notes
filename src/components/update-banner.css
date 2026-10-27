@@ -1,0 +1,77 @@
+/* ---- «Hay una versión nueva»: a note in the bottom right corner ---- */
+.update-note {
+  position: fixed;
+  right: 1.2rem;
+  bottom: 1.2rem;
+  z-index: 1500;
+  display: flex;
+  gap: 0.6rem;
+  max-width: min(380px, 92vw);
+  padding: 0.75rem 0.8rem 0.75rem 1rem;
+  border-radius: 10px;
+  background: var(--bg-popover);
+  box-shadow: var(--shadow-popover);
+  color: var(--text);
+  font-size: 0.88rem;
+  animation: pop-in 120ms ease-out;
+}
+
+.update-icon {
+  flex: none;
+  margin-top: 2px;
+  color: var(--accent);
+}
+
+.update-text p {
+  margin: 0 0 0.5rem;
+}
+
+.update-error {
+  color: var(--danger);
+}
+
+.update-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.update-install,
+.update-later {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.update-install {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.update-install:disabled,
+.update-later:disabled,
+.update-close:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.update-close {
+  flex: none;
+  align-self: flex-start;
+  display: inline-flex;
+  padding: 3px;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  color: var(--text-faint);
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.update-close:hover:not(:disabled) {
+  background: rgba(var(--ink), 0.08);
+  color: var(--text);
+}
