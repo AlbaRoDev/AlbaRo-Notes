@@ -21,7 +21,7 @@ dependencies = [
 name = "albaro-notes"
 version = "0.6.0"
 dependencies = [
- "base64 0.22.1",
+ "base64 0.23.1",
  "keyring",
  "minisign-verify",
  "rusqlite",
