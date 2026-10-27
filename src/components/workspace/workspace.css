@@ -430,11 +430,6 @@
   max-width: 26rem;
 }
 
-.manager-phase {
-  font-size: 0.8rem;
-  color: var(--text-faint);
-}
-
 /* ---- Tareas ---- */
 .tasks-add {
   display: flex;

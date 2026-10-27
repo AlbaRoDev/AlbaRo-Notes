@@ -12,31 +12,36 @@ const SECTIONS = [
   {
     id: "calendar",
     label: "Calendario",
-    Icon: CalendarDays,
+    Icon: CalendarDays,
+
     blurb: "Día, semana y mes con horas; arrastra tareas desde cualquier vista.",
   },
   {
     id: "tasks",
     label: "Tareas",
-    Icon: ListChecks,
+    Icon: ListChecks,
+
     blurb: "Tu base de tareas, con las categorías que quieras.",
   },
   {
     id: "boards",
     label: "Tableros",
-    Icon: Columns3,
+    Icon: Columns3,
+
     blurb: "Listas y tarjetas como en Trello; una tarea puede estar en varios tableros.",
   },
   {
     id: "families",
     label: "Familias",
-    Icon: Shapes,
+    Icon: Shapes,
+
     blurb: "Agrupa las tareas por lo que tienen en común, en burbujas o en orden.",
   },
 ] as const satisfies readonly {
   id: string;
   label: string;
-  Icon: LucideIcon;
+  Icon: LucideIcon;
+
   blurb: string;
 }[];
 
@@ -79,7 +84,7 @@ export function ManagerMain({ host }: { host: TaskHost }) {
         <div className="manager-empty">
           <current.Icon size={40} strokeWidth={1.25} aria-hidden />
           <h2>{current.label}</h2>
-          <p>{current.blurb}</p>
+          <p>{current.blurb}</p>
         </div>
       )}
     </div>

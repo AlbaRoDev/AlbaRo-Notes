@@ -2883,9 +2883,29 @@ mod tests {
         let url = format!("http://127.0.0.1:{}/v1/chat", listener.local_addr().unwrap().port());
         let server = std::thread::spawn(move || {
             let (mut stream, _) = listener.accept().unwrap();
+            // The whole request, body included, is read before answering: closing a socket with unread
+            // data makes Windows reset the connection and the client never sees the answer.
+            let mut raw = Vec::new();
             let mut buf = [0u8; 4096];
-            let n = stream.read(&mut buf).unwrap();
-            let request = String::from_utf8_lossy(&buf[..n]).to_string();
+            loop {
+                let n = stream.read(&mut buf).unwrap();
+                raw.extend_from_slice(&buf[..n]);
+                let text = String::from_utf8_lossy(&raw).to_string();
+                let Some(end) = text.find("\r\n\r\n") else {
+                    if n == 0 {
+                        break;
+                    }
+                    continue;
+                };
+                let wanted = text[..end]
+                    .lines()
+                    .find_map(|l| l.to_ascii_lowercase().strip_prefix("content-length:").and_then(|v| v.trim().parse::<usize>().ok()))
+                    .unwrap_or(0);
+                if raw.len() >= end + 4 + wanted || n == 0 {
+                    break;
+                }
+            }
+            let request = String::from_utf8_lossy(&raw).to_string();
             let echoed = request.lines().find(|l| l.to_ascii_lowercase().starts_with("authorization:")).unwrap_or("").to_string();
             let body = json!({ "error": { "message": format!("invalid credentials ({echoed})") } }).to_string();
             let _ = stream.write_all(

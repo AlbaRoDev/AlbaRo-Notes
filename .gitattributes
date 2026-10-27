@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# The update fixtures are signed byte for byte: a CRLF conversion on a Windows checkout breaks the signature.
+src-tauri/tests/fixtures/** -text
