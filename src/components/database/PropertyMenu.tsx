@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 import {
   ArrowDownWideNarrow,
@@ -98,7 +104,11 @@ export function PropertyMenu(props: PropertyMenuProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [relationPick, setRelationPick] = useState<DatabaseSummary[] | null>(null);
   const [colorFor, setColorFor] = useState<string | null>(null);
+  const [flyout, setFlyout] = useState<{ view: MenuView; top: number; left: number } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const flyRef = useRef<HTMLDivElement>(null);
+  const inMenu = (el: Element | null) =>
+    !!el && (menuRef.current?.contains(el) || flyRef.current?.contains(el));
 
   const isTitle = column === TITLE_ID;
   const prop = isTitle ? null : (data.properties.find((p) => p.id === column) ?? null);
@@ -108,19 +118,19 @@ export function PropertyMenu(props: PropertyMenuProps) {
 
   // A click outside closes; a click on another column header is handled by the table (it switches menus).
   useEffect(() => {
-    const onDown = (e: MouseEvent) => {
+    const onDown = (e: globalThis.MouseEvent) => {
       const target = e.target as Element;
-      if (menuRef.current?.contains(target) || target.closest(".db-prop-name, .db-calc-cell"))
-        return;
+      if (inMenu(target) || target.closest(".db-prop-name, .db-calc-cell")) return;
       // commit a name or option being edited before the menu unmounts under it
       const active = document.activeElement;
-      if (active instanceof HTMLElement && menuRef.current?.contains(active)) active.blur();
+      if (active instanceof HTMLElement && inMenu(active)) active.blur();
       onClose();
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       e.preventDefault();
-      if (view === "main") onClose();
+      if (flyout) setFlyout(null);
+      else if (view === "main") onClose();
       else setView("main");
     };
     document.addEventListener("mousedown", onDown);
@@ -129,7 +139,7 @@ export function PropertyMenu(props: PropertyMenuProps) {
       document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
     };
-  }, [onClose, view]);
+  }, [onClose, view, flyout]);
 
   // The property was deleted (or not loaded yet after being created): nothing to show.
   if (!isTitle && !prop) return null;
@@ -185,6 +195,11 @@ export function PropertyMenu(props: PropertyMenuProps) {
     }).then((ok) => ok && props.onOpenColumn(created));
   };
 
+  const back = () => {
+    setView("main");
+    setFlyout(null);
+  };
+
   const changeType = (choice: TypeChoice, target?: string) => {
     if (!prop) return;
     const config = target
@@ -196,7 +211,7 @@ export function PropertyMenu(props: PropertyMenuProps) {
           : {};
     void run(() => changePropertyType(prop.id, choice.kind, config)).then(() => {
       setRelationPick(null);
-      setView("main");
+      back();
     });
   };
 
@@ -209,268 +224,310 @@ export function PropertyMenu(props: PropertyMenuProps) {
     </div>
   );
 
-  let body: ReactNode;
+  // `fly`: the options hanging beside the menu (hover), which need no «back» header.
+  const render = (v: MenuView, fly: boolean): ReactNode => {
+    let body: ReactNode;
 
-  if (view === "type" && prop) {
-    body = (
-      <>
-        {header("Cambiar tipo")}
-        {relationPick ? (
-          <>
-            <p className="pm-note">¿Con qué base de datos se relaciona?</p>
-            {relationPick.map((d) => (
-              <Item
-                key={d.id}
-                icon={TYPE_ICONS.relation}
-                label={d.name || "Sin título"}
-                onClick={() =>
-                  changeType(
-                    TYPE_CHOICES.find((c) => c.kind === "relation")!,
-                    d.id,
-                  )
-                }
-              />
-            ))}
-          </>
-        ) : (
-          <>
-            {TYPE_CHOICES.map((c) => (
-              <Item
-                key={c.id}
-                icon={c.icon}
-                label={c.label}
-                checked={c.id === typeChoiceOf(prop).id}
-                onClick={() => {
-                  if (c.id === typeChoiceOf(prop).id) return setView("main");
-                  if (c.kind === "relation") return void listDatabases().then(setRelationPick);
-                  changeType(c);
+    if (v === "type" && prop) {
+      body = (
+        <>
+          {!fly && header("Cambiar tipo")}
+          {relationPick ? (
+            <>
+              <p className="pm-note">¿Con qué base de datos se relaciona?</p>
+              {relationPick.map((d) => (
+                <Item
+                  key={d.id}
+                  icon={TYPE_ICONS.relation}
+                  label={d.name || "Sin título"}
+                  onClick={() =>
+                    changeType(
+                      TYPE_CHOICES.find((c) => c.kind === "relation")!,
+                      d.id,
+                    )
+                  }
+                />
+              ))}
+            </>
+          ) : (
+            <>
+              {TYPE_CHOICES.map((c) => (
+                <Item
+                  key={c.id}
+                  icon={c.icon}
+                  label={c.label}
+                  checked={c.id === typeChoiceOf(prop).id}
+                  onClick={() => {
+                    if (c.id === typeChoiceOf(prop).id) return back();
+                    if (c.kind === "relation") return void listDatabases().then(setRelationPick);
+                    changeType(c);
+                  }}
+                />
+              ))}
+              <p className="pm-note">
+                Los valores se convierten al tipo nuevo; los que no encajen se vacían.
+              </p>
+            </>
+          )}
+        </>
+      );
+    } else if (v === "edit" && prop) {
+      body = (
+        <>
+          {!fly && header("Editar propiedad")}
+          {prop.type === "select" || prop.type === "tags" ? (
+            <OptionsEditor prop={prop} run={run} colorFor={colorFor} setColorFor={setColorFor} />
+          ) : (
+            <RelationInfo target={prop.config.target} />
+          )}
+        </>
+      );
+    } else if (v === "icon" && prop) {
+      body = (
+        <>
+          {header("Icono")}
+          <IconPicker
+            current={prop.icon}
+            onPick={(icon) =>
+              void run(() => setPropertyIcon(prop.id, icon)).then(() => setView("main"))
+            }
+          />
+        </>
+      );
+    } else if (v === "sort") {
+      body = (
+        <>
+          {!fly && header("Ordenar")}
+          <Item
+            icon={ArrowUpNarrowWide}
+            label="Ascendente"
+            checked={sortDirection === "asc"}
+            onClick={() => sortBy("asc")}
+          />
+          <Item
+            icon={ArrowDownWideNarrow}
+            label="Descendente"
+            checked={sortDirection === "desc"}
+            onClick={() => sortBy("desc")}
+          />
+          {sortDirection && <Item icon={X} label="Quitar orden" onClick={() => sortBy(null)} />}
+        </>
+      );
+    } else if (v === "calc") {
+      body = (
+        <>
+          {!fly && props.startView !== "calc" && header("Calcular")}
+          <Item icon={X} label="Ninguno" checked={!calc} onClick={() => setCalc(null)} />
+          {calcsFor(kind).map((c) => (
+            <Item
+              key={c}
+              icon={Sigma}
+              label={calcLabel(c, kind).menu}
+              checked={calc === c}
+              onClick={() => setCalc(c)}
+            />
+          ))}
+        </>
+      );
+    } else {
+      body = (
+        <>
+          <div className="pm-head">
+            {prop ? (
+              <button
+                type="button"
+                className="pm-type"
+                title="Cambiar el icono"
+                aria-label="Cambiar el icono"
+                onClick={() => setView("icon")}
+              >
+                <PropIcon prop={prop} size={16} />
+              </button>
+            ) : (
+              <span className="pm-type" aria-hidden="true">
+                <Type size={16} />
+              </span>
+            )}
+            {prop ? (
+              <input
+                key={prop.name}
+                className="pm-name"
+                type="text"
+                maxLength={60}
+                defaultValue={prop.name}
+                aria-label="Nombre de la propiedad"
+                autoFocus
+                onFocus={(e) => props.fresh && e.currentTarget.select()}
+                onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+                onBlur={(e) => {
+                  const name = e.currentTarget.value.trim();
+                  if (name && name !== prop.name) void run(() => renameProperty(prop.id, name));
+                  else e.currentTarget.value = prop.name;
                 }}
               />
-            ))}
-            <p className="pm-note">
-              Los valores se convierten al tipo nuevo; los que no encajen se vacían.
-            </p>
-          </>
-        )}
-      </>
-    );
-  } else if (view === "edit" && prop) {
-    body = (
-      <>
-        {header("Editar propiedad")}
-        {prop.type === "select" || prop.type === "tags" ? (
-          <OptionsEditor prop={prop} run={run} colorFor={colorFor} setColorFor={setColorFor} />
-        ) : (
-          <RelationInfo target={prop.config.target} />
-        )}
-      </>
-    );
-  } else if (view === "icon" && prop) {
-    body = (
-      <>
-        {header("Icono")}
-        <IconPicker
-          current={prop.icon}
-          onPick={(icon) =>
-            void run(() => setPropertyIcon(prop.id, icon)).then(() => setView("main"))
-          }
-        />
-      </>
-    );
-  } else if (view === "sort") {
-    body = (
-      <>
-        {header("Ordenar")}
-        <Item
-          icon={ArrowUpNarrowWide}
-          label="Ascendente"
-          checked={sortDirection === "asc"}
-          onClick={() => sortBy("asc")}
-        />
-        <Item
-          icon={ArrowDownWideNarrow}
-          label="Descendente"
-          checked={sortDirection === "desc"}
-          onClick={() => sortBy("desc")}
-        />
-        {sortDirection && <Item icon={X} label="Quitar orden" onClick={() => sortBy(null)} />}
-      </>
-    );
-  } else if (view === "calc") {
-    body = (
-      <>
-        {props.startView !== "calc" && header("Calcular")}
-        <Item icon={X} label="Ninguno" checked={!calc} onClick={() => setCalc(null)} />
-        {calcsFor(kind).map((c) => (
-          <Item
-            key={c}
-            icon={Sigma}
-            label={calcLabel(c, kind).menu}
-            checked={calc === c}
-            onClick={() => setCalc(c)}
-          />
-        ))}
-      </>
-    );
-  } else {
-    body = (
-      <>
-        <div className="pm-head">
-          {prop ? (
-            <button
-              type="button"
-              className="pm-type"
-              title="Cambiar el icono"
-              aria-label="Cambiar el icono"
-              onClick={() => setView("icon")}
-            >
-              <PropIcon prop={prop} size={16} />
-            </button>
-          ) : (
-            <span className="pm-type" aria-hidden="true">
-              <Type size={16} />
-            </span>
+            ) : (
+              <span className="pm-name pm-name-static">Nombre</span>
+            )}
+          </div>
+          {(prop?.type === "select" || prop?.type === "tags" || prop?.type === "relation") && (
+            <Item icon={SlidersHorizontal} label="Editar propiedad" sub="edit" onClick={openSub} />
           )}
-          {prop ? (
-            <input
-              key={prop.name}
-              className="pm-name"
-              type="text"
-              maxLength={60}
-              defaultValue={prop.name}
-              aria-label="Nombre de la propiedad"
-              autoFocus
-              onFocus={(e) => props.fresh && e.currentTarget.select()}
-              onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-              onBlur={(e) => {
-                const name = e.currentTarget.value.trim();
-                if (name && name !== prop.name) void run(() => renameProperty(prop.id, name));
-                else e.currentTarget.value = prop.name;
+          {prop && <Item icon={Repeat} label="Cambiar tipo" sub="type" onClick={openSub} />}
+          <hr className="pm-sep" />
+          {viewTools && (
+            <Item
+              icon={ListFilter}
+              label="Filtrar"
+              onClick={() => {
+                const rule = { property: column, operator: OPERATORS[kind][0] };
+                setConfig({
+                  ...config,
+                  filter: { ...config.filter, rules: [...config.filter.rules, rule] },
+                });
+                props.onOpenFilter();
+                onClose();
               }}
             />
-          ) : (
-            <span className="pm-name pm-name-static">Nombre</span>
           )}
-        </div>
-        {(prop?.type === "select" || prop?.type === "tags" || prop?.type === "relation") && (
+          {viewTools && <Item icon={ArrowUpDown} label="Ordenar" sub="sort" onClick={openSub} />}
+          {viewTools && prop && (
+            <Item
+              icon={Rows3}
+              label={grouped ? "Desagrupar" : "Agrupar"}
+              onClick={() =>
+                done({
+                  ...config,
+                  group: grouped ? undefined : { property: column, hideEmpty: false },
+                })
+              }
+            />
+          )}
+          <Item icon={Sigma} label="Calcular" sub="calc" onClick={openSub} />
           <Item
-            icon={SlidersHorizontal}
-            label="Editar propiedad"
-            chevron
-            onClick={() => setView("edit")}
+            icon={frozen ? PinOff : Pin}
+            label={frozen ? "Desfijar" : "Fijar"}
+            onClick={() => done({ ...config, frozenUpTo: frozen ? undefined : column })}
           />
-        )}
-        {prop && (
-          <Item icon={Repeat} label="Cambiar tipo" chevron onClick={() => setView("type")} />
-        )}
-        <hr className="pm-sep" />
-        {viewTools && (
+          {viewTools && prop && (
+            <Item
+              icon={EyeOff}
+              label="Ocultar"
+              onClick={() =>
+                done({ ...config, hiddenProperties: [...(config.hiddenProperties ?? []), column] })
+              }
+            />
+          )}
           <Item
-            icon={ListFilter}
-            label="Filtrar"
-            onClick={() => {
-              const rule = { property: column, operator: OPERATORS[kind][0] };
-              setConfig({
-                ...config,
-                filter: { ...config.filter, rules: [...config.filter.rules, rule] },
-              });
-              props.onOpenFilter();
-              onClose();
-            }}
-          />
-        )}
-        {viewTools && (
-          <Item icon={ArrowUpDown} label="Ordenar" chevron onClick={() => setView("sort")} />
-        )}
-        {viewTools && prop && (
-          <Item
-            icon={Rows3}
-            label={grouped ? "Desagrupar" : "Agrupar"}
+            icon={WrapText}
+            label="Ajustar contenido"
+            checked={wrapped}
             onClick={() =>
               done({
                 ...config,
-                group: grouped ? undefined : { property: column, hideEmpty: false },
+                wrapped: wrapped
+                  ? config.wrapped!.filter((c) => c !== column)
+                  : [...(config.wrapped ?? []), column],
               })
             }
           />
-        )}
-        <Item icon={Sigma} label="Calcular" chevron onClick={() => setView("calc")} />
-        <Item
-          icon={frozen ? PinOff : Pin}
-          label={frozen ? "Desfijar" : "Fijar"}
-          onClick={() => done({ ...config, frozenUpTo: frozen ? undefined : column })}
-        />
-        {viewTools && prop && (
-          <Item
-            icon={EyeOff}
-            label="Ocultar"
-            onClick={() =>
-              done({ ...config, hiddenProperties: [...(config.hiddenProperties ?? []), column] })
-            }
-          />
-        )}
-        <Item
-          icon={WrapText}
-          label="Ajustar contenido"
-          checked={wrapped}
-          onClick={() =>
-            done({
-              ...config,
-              wrapped: wrapped
-                ? config.wrapped!.filter((c) => c !== column)
-                : [...(config.wrapped ?? []), column],
-            })
-          }
-        />
-        <hr className="pm-sep" />
-        {prop && (
-          <Item icon={ArrowLeftToLine} label="Insertar a la izquierda" onClick={() => insert(-1)} />
-        )}
-        <Item icon={ArrowRightToLine} label="Insertar a la derecha" onClick={() => insert(1)} />
-        {prop && (
-          <Item
-            icon={Copy}
-            label="Duplicar propiedad"
-            onClick={() => void run(() => duplicateProperty(prop.id)).then(onClose)}
-          />
-        )}
-        {prop &&
-          (confirmDelete ? (
-            <div className="pm-confirm" role="alert">
-              <span>¿Eliminar «{prop.name}» y todos sus valores?</span>
-              <button
-                type="button"
-                className="pm-danger-btn"
-                onClick={() => void run(() => deleteProperty(prop.id)).then(onClose)}
-              >
-                Eliminar
-              </button>
-              <button type="button" onClick={() => setConfirmDelete(false)}>
-                Cancelar
-              </button>
-            </div>
-          ) : (
+          <hr className="pm-sep" />
+          {prop && (
             <Item
-              icon={Trash2}
-              label="Eliminar propiedad"
-              danger
-              onClick={() => setConfirmDelete(true)}
+              icon={ArrowLeftToLine}
+              label="Insertar a la izquierda"
+              onClick={() => insert(-1)}
             />
-          ))}
-      </>
-    );
-  }
+          )}
+          <Item icon={ArrowRightToLine} label="Insertar a la derecha" onClick={() => insert(1)} />
+          {prop && (
+            <Item
+              icon={Copy}
+              label="Duplicar propiedad"
+              onClick={() => void run(() => duplicateProperty(prop.id)).then(onClose)}
+            />
+          )}
+          {prop &&
+            (confirmDelete ? (
+              <div className="pm-confirm" role="alert">
+                <span>¿Eliminar «{prop.name}» y todos sus valores?</span>
+                <button
+                  type="button"
+                  className="pm-danger-btn"
+                  onClick={() => void run(() => deleteProperty(prop.id)).then(onClose)}
+                >
+                  Eliminar
+                </button>
+                <button type="button" onClick={() => setConfirmDelete(false)}>
+                  Cancelar
+                </button>
+              </div>
+            ) : (
+              <Item
+                icon={Trash2}
+                label="Eliminar propiedad"
+                danger
+                onClick={() => setConfirmDelete(true)}
+              />
+            ))}
+        </>
+      );
+    }
+
+    return body;
+  };
+
+  // Hovering (or clicking) a row with a submenu hangs its options beside the menu, as in Notion;
+  // hovering any other row folds them away again.
+  const openSub = (e: ReactMouseEvent<HTMLElement>) => {
+    const row = (e.target as Element).closest<HTMLElement>(".pm-item[data-sub]");
+    const menu = menuRef.current;
+    if (!row || !menu) return;
+    const sub = row.dataset.sub as MenuView;
+    if (flyout?.view === sub) return;
+    const menuBox = menu.getBoundingClientRect();
+    const top = Math.max(8, row.getBoundingClientRect().top - 6);
+    const right = menuBox.right + 4;
+    setFlyout({
+      view: sub,
+      top,
+      // to the right of the menu, or to its left when the window has no room
+      left: right + MENU_WIDTH + 8 > window.innerWidth ? menuBox.left - MENU_WIDTH - 4 : right,
+    });
+  };
+  const hover = (e: ReactMouseEvent<HTMLElement>) => {
+    if (view !== "main") return;
+    if ((e.target as Element).closest(".pm-item[data-sub]")) openSub(e);
+    else if (flyout) setFlyout(null);
+  };
 
   return createPortal(
-    <div
-      ref={menuRef}
-      className="prop-menu"
-      role="menu"
-      aria-label={`Propiedad ${prop?.name ?? "Nombre"}`}
-      style={style}
-    >
-      {body}
-    </div>,
+    <>
+      <div
+        ref={menuRef}
+        className="prop-menu"
+        role="menu"
+        aria-label={`Propiedad ${prop?.name ?? "Nombre"}`}
+        style={style}
+        onMouseOver={hover}
+      >
+        {render(view, false)}
+      </div>
+      {flyout && view === "main" && (
+        <div
+          ref={flyRef}
+          className="prop-menu"
+          role="menu"
+          aria-label={flyout.view}
+          style={{
+            left: flyout.left,
+            top: flyout.top,
+            maxHeight: window.innerHeight - flyout.top - 8,
+          }}
+        >
+          {render(flyout.view, true)}
+        </div>
+      )}
+    </>,
     document.body,
   );
 }
@@ -479,14 +536,15 @@ function Item({
   icon: Icon,
   label,
   onClick,
-  chevron,
+  sub,
   checked,
   danger,
 }: {
   icon: LucideIcon;
   label: string;
-  onClick: () => void;
-  chevron?: boolean;
+  onClick: (e: ReactMouseEvent<HTMLButtonElement>) => void;
+  /** Opens this submenu beside the menu while hovered. */
+  sub?: MenuView;
   checked?: boolean;
   danger?: boolean;
 }) {
@@ -496,12 +554,13 @@ function Item({
       role="menuitem"
       className="pm-item"
       data-danger={danger || undefined}
+      data-sub={sub}
       onClick={onClick}
     >
       <Icon size={16} strokeWidth={1.75} aria-hidden="true" />
       <span className="pm-label">{label}</span>
       {checked && <Check size={16} aria-label="activo" />}
-      {chevron && <ChevronRight size={16} className="pm-chevron" aria-hidden="true" />}
+      {sub && <ChevronRight size={16} className="pm-chevron" aria-hidden="true" />}
     </button>
   );
 }
