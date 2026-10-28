@@ -54,7 +54,8 @@ pub fn start(app: AppHandle) {
     });
 }
 
-async fn check(app: &AppHandle) -> Result<(), String> {
+/// Looks now, at the user's request (the "check for updates" button), and says what it found.
+pub async fn check(app: &AppHandle) -> Result<Option<UpdateInfo>, String> {
     #[allow(unused_mut)] // only changed by the debug override below
     let mut builder = app.updater_builder();
     // To try an update by hand: a local `latest.json` in a debug build. Release builds only ever
@@ -65,7 +66,7 @@ async fn check(app: &AppHandle) -> Result<(), String> {
         builder = builder.endpoints(vec![url]).map_err(|e| e.to_string())?;
     }
     let update = builder.build().map_err(|e| e.to_string())?.check().await.map_err(|e| e.to_string())?;
-    let Some(update) = update else { return Ok(()) };
+    let Some(update) = update else { return Ok(None) };
     if !download_allowed(&update.download_url) {
         return Err(format!(
             "the update is served from {}, which is not on the list of servers the app may use",
@@ -77,8 +78,8 @@ async fn check(app: &AppHandle) -> Result<(), String> {
         *pending = Some(update);
     }
     // The page may not be listening yet; it asks with `get_app_update` when it starts.
-    let _ = app.emit("app-update-available", info);
-    Ok(())
+    let _ = app.emit("app-update-available", info.clone());
+    Ok(Some(info))
 }
 
 /// Whether the installer's address is one the app may fetch from. A debug build trying an update

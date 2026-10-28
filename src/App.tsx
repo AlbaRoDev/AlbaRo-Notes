@@ -8,6 +8,7 @@ import {
   CalendarCheck,
   Circle,
   Database,
+  Download,
   FileDown,
   FilePlus,
   FileText,
@@ -38,6 +39,7 @@ import { Workspace } from "./components/workspace/Workspace";
 import { setCursorPref, setStylePref, setThemePref, toggleTheme } from "./lib/theme";
 import { createDatabasePage, createPage, deletePage, dbPing, listPages } from "./lib/db-client";
 import { UpdateBanner } from "./components/UpdateBanner";
+import { requestUpdateCheck } from "./lib/app-update";
 import type { PageSummary } from "./types";
 import "./App.css";
 
@@ -304,6 +306,13 @@ function App() {
       run: () => setCursorPref("system"),
     },
     {
+      id: "check-updates",
+      label: "Buscar actualizaciones",
+      keywords: "versión nueva actualizar update instalar",
+      icon: Download,
+      run: requestUpdateCheck,
+    },
+    {
       id: "theme-system",
       label: "Tema del sistema",
       keywords: "modo apariencia automático",
@@ -377,7 +386,10 @@ function App() {
             className="app-footer"
             title={dbSchema === null ? undefined : `Base de datos: esquema v${dbSchema}`}
           >
-            AlbaRo Notes v{version}
+            AlbaRo Notes v{version} ·{" "}
+            <button type="button" className="app-footer-link" onClick={requestUpdateCheck}>
+              Buscar actualizaciones
+            </button>
           </p>
         )}
       </main>

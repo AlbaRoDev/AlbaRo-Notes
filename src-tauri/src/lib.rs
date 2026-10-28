@@ -159,6 +159,7 @@ pub fn run() {
             commands::open_attachment,
             commands::save_attachment_as,
             commands::get_app_update,
+            commands::check_app_update,
             commands::install_app_update,
         ])
         .run(tauri::generate_context!())

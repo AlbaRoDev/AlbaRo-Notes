@@ -590,6 +590,13 @@ pub fn get_app_update(app: AppHandle) -> Option<crate::app_update::UpdateInfo> {
     crate::app_update::pending(&app)
 }
 
+/// Looks for an update now (the button), instead of waiting for the background check. Returns the
+/// version found, or `None` when the app is up to date; installing still needs its own button.
+#[tauri::command]
+pub async fn check_app_update(app: AppHandle) -> Result<Option<crate::app_update::UpdateInfo>, String> {
+    crate::app_update::check(&app).await
+}
+
 /// Downloads, verifies the signature of and installs the update, then restarts. Only when the user
 /// presses the button.
 #[tauri::command]

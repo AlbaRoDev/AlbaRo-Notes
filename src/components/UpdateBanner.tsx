@@ -1,10 +1,18 @@
 import { useEffect, useState } from "react";
 import { Download, X } from "lucide-react";
-import { getAppUpdate, installAppUpdate, onAppUpdateAvailable } from "../lib/app-update";
+import {
+  checkAppUpdate,
+  getAppUpdate,
+  installAppUpdate,
+  onAppUpdateAvailable,
+  onUpdateCheckRequested,
+} from "../lib/app-update";
 import "./update-banner.css";
 
 /** Longer than the autosave waits (800 ms the page, 600 ms a synced block): whatever was being typed is written first. */
 const SETTLE_MS = 1000;
+/** How long «Ya tienes la última versión» stays up. */
+const UP_TO_DATE_MS = 4000;
 
 /**
  * «Hay una versión nueva». Rust looks for it in the background and only tells; nothing is downloaded or installed
@@ -15,6 +23,8 @@ export function UpdateBanner() {
   const [hidden, setHidden] = useState(false);
   const [installing, setInstalling] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
+  /** The outcome of a manual «Buscar actualizaciones» while there is no new version to offer. */
+  const [check, setCheck] = useState<{ text: string; busy: boolean; error?: boolean } | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -23,11 +33,57 @@ export function UpdateBanner() {
       console.error,
     );
     const unlisten = onAppUpdateAvailable((update) => alive && setVersion(update.version));
+    const offCheck = onUpdateCheckRequested(() => {
+      setHidden(false);
+      setCheck({ text: "Buscando actualizaciones…", busy: true });
+      checkAppUpdate().then(
+        (update) => {
+          if (!alive) return;
+          if (update) {
+            setVersion(update.version);
+            setCheck(null);
+          } else {
+            setCheck({ text: "Ya tienes la última versión.", busy: false });
+          }
+        },
+        (err) =>
+          alive && setCheck({ text: `No se pudo comprobar: ${err}`, busy: false, error: true }),
+      );
+    });
     return () => {
       alive = false;
+      offCheck();
       void unlisten.then((off) => off()).catch(console.error);
     };
   }, []);
+
+  // «Ya tienes la última versión» fades by itself; an error stays until it is closed.
+  useEffect(() => {
+    if (check === null || check.busy || check.error) return;
+    const timer = setTimeout(() => setCheck(null), UP_TO_DATE_MS);
+    return () => clearTimeout(timer);
+  }, [check]);
+
+  if ((version === null || hidden) && check !== null) {
+    return (
+      <div className="update-note" role="status">
+        <Download size={16} aria-hidden className="update-icon" />
+        <div className="update-text">
+          <p className={check.error ? "update-error" : undefined}>{check.text}</p>
+        </div>
+        {!check.busy && (
+          <button
+            type="button"
+            className="update-close"
+            aria-label="Cerrar el aviso"
+            onClick={() => setCheck(null)}
+          >
+            <X size={14} />
+          </button>
+        )}
+      </div>
+    );
+  }
 
   if (version === null || hidden) return null;
 
