@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { getDatabase, queryView } from "../../lib/db-client";
-import { emitDatabaseChange, subscribeDatabaseChanges } from "../../lib/database-bus";
+import { ANY_DATABASE, emitDatabaseChange, subscribeDatabaseChanges } from "../../lib/database-bus";
 import type { DatabaseData, DatabaseRow, Property, ViewInfo, ViewResult } from "../../types";
 import { useEditorAppContext } from "../editor/editor-app-context";
 
@@ -87,7 +87,7 @@ export function useDatabase(databaseId: string, viewId?: string | null) {
   useEffect(() => {
     const related = new Set([databaseId, ...(targetIds ? targetIds.split(",") : [])]);
     return subscribeDatabaseChanges((id, source) => {
-      if (source !== token && related.has(id)) void reload();
+      if (source !== token && (id === ANY_DATABASE || related.has(id))) void reload();
     });
   }, [databaseId, targetIds, token, reload]);
 

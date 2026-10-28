@@ -143,6 +143,11 @@ export async function reorderProperties(databaseId: string, orderedIds: string[]
   return invoke("reorder_properties", { databaseId, orderedIds });
 }
 
+/** Sets the order of the rows; `orderedIds` must be every row of the database, once each. */
+export async function reorderRows(databaseId: string, orderedIds: string[]): Promise<void> {
+  return invoke("reorder_rows", { databaseId, orderedIds });
+}
+
 /** Renames a database row (rewrites the first heading of its page). */
 export async function setRowTitle(pageId: string, title: string): Promise<void> {
   return invoke("set_row_title", { pageId, title });

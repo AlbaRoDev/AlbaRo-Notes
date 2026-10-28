@@ -236,6 +236,12 @@ pub fn reorder_properties(state: State<DbState>, database_id: String, ordered_id
 }
 
 #[tauri::command]
+pub fn reorder_rows(state: State<DbState>, database_id: String, ordered_ids: Vec<String>) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    databases::reorder_rows(&conn, &database_id, &ordered_ids)
+}
+
+#[tauri::command]
 pub fn list_calendar_entries(state: State<DbState>, from: String, to: String) -> Result<Vec<calendar::CalendarEntry>, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     calendar::list_entries(&conn, &from, &to)

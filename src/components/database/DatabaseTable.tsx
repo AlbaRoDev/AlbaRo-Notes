@@ -4,6 +4,7 @@ import {
   ChevronDown,
   ChevronRight,
   Database as DatabaseIcon,
+  GripVertical,
   Plus,
   Trash2,
   Type,
@@ -19,6 +20,7 @@ import {
   renameSelectOption,
   renameView,
   reorderProperties,
+  reorderRows,
   setRowTitle,
   setSelectOptions,
   setValue,
@@ -39,6 +41,8 @@ import { Cell } from "./DatabaseCells";
 import { handleGridKeyDown } from "./grid-nav";
 import { hasDragItem, readDragItem, type DragItem } from "../../lib/drag-item";
 import { cellKey, commitOnBlur } from "./cell-commit";
+import { useDragReorder } from "./drag-reorder";
+import { fitColumn } from "./fit-column";
 import { AddPropertyPanel, PropertyPanel } from "./DatabaseProperties";
 import { DatabaseCalendar } from "./DatabaseCalendar";
 import { ChartPanel, DatabaseChart } from "./DatabaseChart";
@@ -116,6 +120,7 @@ export function DatabaseTable({
   const [dropRow, setDropRow] = useState<string | null>(null);
   // The view bar's panels float over the table (Notion's menus): a press outside them closes the open one.
   const toolbarWrap = useRef<HTMLDivElement>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
   const [columnDrop, setColumnDrop] = useState<{ id: string; side: "left" | "right" } | null>(null);
   const { currentPageId, onNavigate, onPagesChanged } = useEditorAppContext();
 
@@ -151,6 +156,11 @@ export function DatabaseTable({
     view?: MenuView;
     fresh?: boolean;
   } | null>(null);
+
+  // Dragging a row by its grip reorders the database's rows (when no sort or group overrides that order).
+  const rowReorder = useDragReorder(data?.rows.map((r) => r.pageId) ?? [], (next) => {
+    void run(() => reorderRows(databaseId, next));
+  });
 
   if (data === undefined) {
     return (
@@ -313,33 +323,46 @@ export function DatabaseTable({
         (raw) => raw,
       ),
     };
+    // A sort or a group decides the order on screen, so there is nothing to drag into.
+    const reorderRow =
+      kind === "table" && config.sorts.length === 0 && !config.group
+        ? rowReorder.row(row.pageId)
+        : null;
     return (
       <tr
         key={key}
         data-grid-row
-        data-drop={dropRow === row.pageId || undefined}
-        onDragOver={
-          onDropItem &&
-          ((e) => {
-            if (!hasDragItem(e)) return;
-            e.preventDefault(); // this row accepts it
-            setDropRow(row.pageId);
-          })
-        }
+        data-reorder-row={reorderRow ? "" : undefined}
+        data-drop={dropRow === row.pageId ? "true" : reorderRow?.["data-drop"]}
+        onDragOver={(e) => {
+          reorderRow?.onDragOver(e);
+          if (!onDropItem || !hasDragItem(e)) return;
+          e.preventDefault(); // this row accepts it
+          setDropRow(row.pageId);
+        }}
         onDragLeave={onDropItem && (() => setDropRow((r) => (r === row.pageId ? null : r)))}
-        onDrop={
-          onDropItem &&
-          ((e) => {
-            const item = readDragItem(e);
-            setDropRow(null);
-            if (!item) return;
-            e.preventDefault();
-            onDropItem(row.pageId, item);
-          })
-        }
+        onDrop={(e) => {
+          reorderRow?.onDrop(e);
+          if (!onDropItem) return;
+          const item = readDragItem(e);
+          setDropRow(null);
+          if (!item) return;
+          e.preventDefault();
+          onDropItem(row.pageId, item);
+        }}
       >
         <td {...stickyOf(0)} data-wrap={wrappedIds.has(TITLE_ID) || undefined}>
           <div className="db-row-title-cell">
+            {reorderRow && (
+              <span
+                className="db-row-grip"
+                title="Arrastrar para reordenar"
+                aria-label={`Mover ${row.title}`}
+                {...rowReorder.handle(row.pageId)}
+              >
+                <GripVertical size={14} aria-hidden="true" />
+              </span>
+            )}
             {wrappedIds.has(TITLE_ID) ? (
               <textarea key={row.title} className="db-input db-wrap" rows={1} {...titleField} />
             ) : (
@@ -442,13 +465,26 @@ export function DatabaseTable({
     handle.addEventListener("pointerup", onUp);
     handle.addEventListener("pointercancel", onUp);
   };
+  // A double click on the edge fits the column to its widest content (and writes it once, like a drag).
+  const fitColumnTo = (id: string) => {
+    const table = tableRef.current;
+    if (!view || !table) return;
+    const width = clampColumn(
+      fitColumn(table, [TITLE_ID, ...tableProps.map((p) => p.id)].indexOf(id)),
+    );
+    if (width === widthOf(id)) return;
+    const next = { ...config, columnWidths: { ...config.columnWidths, [id]: width } };
+    void run(() => updateViewConfig(view.id, next));
+  };
   const resizeHandle = (id: string, name: string) => (
     <span
       className="db-col-resize"
       role="separator"
       aria-orientation="vertical"
       aria-label={`Ancho de la columna ${name}`}
+      title="Arrastrar para cambiar el ancho; doble clic para ajustarlo al contenido"
       onPointerDown={startColumnResize(id)}
+      onDoubleClick={() => fitColumnTo(id)}
     />
   );
 
@@ -740,7 +776,12 @@ export function DatabaseTable({
         )}
       {(kind === "table" || responses) && (
         <div className="db-scroll">
-          <table className="db-table" style={{ width: tableWidth }} onKeyDown={handleGridKeyDown}>
+          <table
+            ref={tableRef}
+            className="db-table"
+            style={{ width: tableWidth }}
+            onKeyDown={handleGridKeyDown}
+          >
             <colgroup>
               <col style={{ width: widthOf(TITLE_ID) }} />
               {tableProps.map((p) => (

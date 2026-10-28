@@ -87,6 +87,7 @@ pub fn run() {
             commands::set_select_options,
             commands::rename_select_option,
             commands::reorder_properties,
+            commands::reorder_rows,
             commands::set_option_color,
             commands::set_property_icon,
             commands::set_option_group,

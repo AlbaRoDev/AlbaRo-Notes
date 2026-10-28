@@ -395,6 +395,13 @@ pub(crate) fn run_migrations_up_to(conn: &Connection, target: i64) -> rusqlite::
         conn.pragma_update(None, "user_version", 21)?;
     }
 
+    if current_version < 22 && target >= 22 {
+        // the order of a database's rows, once someone drags one: NULL = never placed (creation order,
+        // after every placed row), so new rows still go last and nothing existing has to be renumbered.
+        conn.execute_batch("ALTER TABLE pages ADD COLUMN row_position INTEGER;")?;
+        conn.pragma_update(None, "user_version", 22)?;
+    }
+
     Ok(())
 }
 
@@ -1245,7 +1252,7 @@ mod tests {
 
         let conn = init(&dir).unwrap();
         let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0)).unwrap();
-        assert_eq!(version, 21);
+        assert_eq!(version, 22);
         let secure: i64 = conn.query_row("PRAGMA secure_delete", [], |r| r.get(0)).unwrap();
         assert_eq!(secure, 1, "secure_delete is on for the app's own connection");
         drop(conn);

@@ -253,20 +253,6 @@ select optgroup {
   text-align: right;
 }
 
-.app-footer-link {
-  padding: 0;
-  border: none;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-decoration: underline;
-  cursor: var(--cursor-pointer, pointer);
-}
-
-.app-footer-link:hover {
-  color: var(--text);
-}
-
 .app-footer + .app-footer {
   margin-top: 0.25rem;
 }

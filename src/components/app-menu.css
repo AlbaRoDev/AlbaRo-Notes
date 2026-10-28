@@ -1,0 +1,204 @@
+/* ---- The app's menu: the app's own icon in the corner, and what opens from it ---- */
+.app-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.app-menu-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.app-menu-button:hover,
+.app-menu-button[aria-expanded="true"] {
+  background: rgba(var(--ink), 0.08);
+}
+
+/* The icon without its colours: it reads as part of the bar, like the other monochrome buttons. */
+.app-menu-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  filter: grayscale(1);
+  opacity: 0.8;
+}
+
+.app-menu-button:hover .app-menu-icon {
+  opacity: 1;
+}
+
+.app-menu-pop {
+  position: absolute;
+  z-index: 1000;
+  top: calc(100% + 4px);
+  left: 0;
+  display: flex;
+  align-items: flex-start;
+  animation: pop-in 120ms ease-out;
+}
+
+.app-menu-categories,
+.app-menu-items {
+  box-sizing: border-box;
+  padding: 6px;
+  border-radius: 10px;
+  background: var(--bg-popover);
+  box-shadow: var(--shadow-popover);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.app-menu-categories {
+  width: 150px;
+}
+
+.app-menu-items {
+  width: max-content;
+  min-width: 250px;
+  max-width: min(360px, 80vw);
+  margin-left: 4px;
+}
+
+.app-menu-pop button[role="menuitem"] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 30px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.app-menu-categories button[role="menuitem"] {
+  justify-content: space-between;
+}
+
+.app-menu-pop button[role="menuitem"]:hover,
+.app-menu-pop button[role="menuitem"]:focus-visible,
+.app-menu-categories button[data-active] {
+  background: rgba(var(--ink), 0.08);
+  outline: none;
+}
+
+.app-menu-items button > svg {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+}
+
+.app-menu-items button > span {
+  flex: 1 1 auto;
+  white-space: nowrap;
+}
+
+.app-menu-items kbd {
+  margin-left: 1.5rem;
+  color: var(--text-faint);
+  font: inherit;
+  font-size: 0.85em;
+}
+
+.app-menu-items hr {
+  margin: 6px 4px;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+/* ---- «Acerca de» ---- */
+.about-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.about {
+  position: relative;
+  box-sizing: border-box;
+  width: min(340px, 92vw);
+  padding: 1.5rem 1.5rem 1.25rem;
+  border-radius: 12px;
+  background: var(--bg-popover);
+  box-shadow: var(--shadow-popover);
+  color: var(--text);
+  text-align: center;
+  animation: pop-in 120ms ease-out;
+}
+
+.about-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+}
+
+.about h2 {
+  margin: 0.6rem 0 0.2rem;
+  font-size: 1.15rem;
+}
+
+.about p {
+  margin: 0.2rem 0;
+}
+
+.about .about-faint {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.about-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.about-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.about-actions button:hover {
+  background: rgba(var(--ink), 0.08);
+}
+
+.about-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: inline-flex;
+  padding: 3px;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  color: var(--text-faint);
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.about-close:hover {
+  background: rgba(var(--ink), 0.08);
+  color: var(--text);
+}

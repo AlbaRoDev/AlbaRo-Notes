@@ -423,7 +423,9 @@ pub fn get_database(conn: &Connection, id: &str) -> Result<Option<DatabaseData>,
     }
 
     let page_ids: Vec<String> = {
-        let mut stmt = conn.prepare("SELECT id FROM pages WHERE database_id = ?1 ORDER BY created_at, rowid").map_err(sql)?;
+        let mut stmt = conn
+            .prepare("SELECT id FROM pages WHERE database_id = ?1 ORDER BY row_position IS NULL, row_position, created_at, rowid")
+            .map_err(sql)?;
         let rows = stmt.query_map([id], |r| r.get(0)).map_err(sql)?;
         rows.collect::<rusqlite::Result<_>>().map_err(sql)?
     };
@@ -960,6 +962,26 @@ pub fn reorder_properties(conn: &Connection, database_id: &str, ordered_ids: &[S
     let tx = conn.unchecked_transaction().map_err(sql)?;
     for (position, id) in ordered_ids.iter().enumerate() {
         tx.execute("UPDATE properties SET position = ?1 WHERE id = ?2", params![position as i64, id]).map_err(sql)?;
+    }
+    tx.commit().map_err(sql)
+}
+
+/// Sets the order of a database's rows (the order every view starts from before sorting); `ordered_ids` must be
+/// every row of the database, once each. Rows made afterwards go last.
+pub fn reorder_rows(conn: &Connection, database_id: &str, ordered_ids: &[String]) -> Result<(), String> {
+    need_uuid(database_id, "database")?;
+    let current: HashSet<String> = {
+        let mut stmt = conn.prepare("SELECT id FROM pages WHERE database_id = ?1").map_err(sql)?;
+        let rows = stmt.query_map([database_id], |r| r.get(0)).map_err(sql)?;
+        rows.collect::<rusqlite::Result<_>>().map_err(sql)?
+    };
+    let given: HashSet<&String> = ordered_ids.iter().collect();
+    if given.len() != ordered_ids.len() || given.len() != current.len() || !ordered_ids.iter().all(|i| current.contains(i)) {
+        return Err("El orden debe incluir cada fila exactamente una vez".to_string());
+    }
+    let tx = conn.unchecked_transaction().map_err(sql)?;
+    for (position, id) in ordered_ids.iter().enumerate() {
+        tx.execute("UPDATE pages SET row_position = ?1 WHERE id = ?2", params![position as i64, id]).map_err(sql)?;
     }
     tx.commit().map_err(sql)
 }
@@ -1767,6 +1789,27 @@ mod tests {
         assert!(reorder_properties(&fx.conn, &fx.db, &[a.clone(), a.clone(), b.clone(), c.clone()]).is_err()); // dup
         assert!(reorder_properties(&fx.conn, &fx.db, &[a.clone(), b.clone(), c.clone(), uuid::Uuid::new_v4().to_string()]).is_err()); // foreign
         assert_eq!(names(&fx), ["C", "A", "B", "D"]); // rejected calls change nothing
+    }
+
+    #[test]
+    fn rows_can_be_reordered_only_with_the_exact_set_and_new_rows_go_last() {
+        let fx = fixture();
+        let a = create_row(&fx.conn, &fx.db).unwrap().id;
+        let b = create_row(&fx.conn, &fx.db).unwrap().id;
+        let c = create_row(&fx.conn, &fx.db).unwrap().id;
+        let order = |fx: &Fx| -> Vec<String> { get_database(&fx.conn, &fx.db).unwrap().unwrap().rows.into_iter().map(|r| r.page_id).collect() };
+        assert_eq!(order(&fx), [a.clone(), b.clone(), c.clone()]); // creation order until someone drags
+
+        reorder_rows(&fx.conn, &fx.db, &[c.clone(), a.clone(), b.clone()]).unwrap();
+        assert_eq!(order(&fx), [c.clone(), a.clone(), b.clone()]);
+        let d = create_row(&fx.conn, &fx.db).unwrap().id;
+        assert_eq!(order(&fx), [c.clone(), a.clone(), b.clone(), d.clone()]);
+
+        assert!(reorder_rows(&fx.conn, &fx.db, &[a.clone(), b.clone(), c.clone()]).is_err()); // missing one
+        assert!(reorder_rows(&fx.conn, &fx.db, &[a.clone(), a.clone(), b.clone(), c.clone(), d.clone()]).is_err()); // dup
+        assert!(reorder_rows(&fx.conn, &fx.db, &[a.clone(), b.clone(), c.clone(), uuid::Uuid::new_v4().to_string()]).is_err()); // foreign
+        assert!(reorder_rows(&fx.conn, "not-a-uuid", &[]).is_err());
+        assert_eq!(order(&fx), [c, a, b, d]); // rejected calls change nothing
     }
 
     #[test]

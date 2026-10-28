@@ -38,6 +38,7 @@ import { useLayout } from "./components/workspace/use-layout";
 import { Workspace } from "./components/workspace/Workspace";
 import { setCursorPref, setStylePref, setThemePref, toggleTheme } from "./lib/theme";
 import { createDatabasePage, createPage, deletePage, dbPing, listPages } from "./lib/db-client";
+import { AppMenu } from "./components/AppMenu";
 import { UpdateBanner } from "./components/UpdateBanner";
 import { requestUpdateCheck } from "./lib/app-update";
 import type { PageSummary } from "./types";
@@ -333,6 +334,15 @@ function App() {
       onAskAi={openAi}
     />
   );
+  const appMenu = (
+    <AppMenu
+      commands={commands}
+      hasSidebar={layout.main !== null}
+      version={version}
+      dbSchema={dbSchema}
+      onSearch={openSearch}
+    />
+  );
   const notesMain = (
     <div className="app-layout">
       {sidebar}
@@ -386,10 +396,7 @@ function App() {
             className="app-footer"
             title={dbSchema === null ? undefined : `Base de datos: esquema v${dbSchema}`}
           >
-            AlbaRo Notes v{version} ·{" "}
-            <button type="button" className="app-footer-link" onClick={requestUpdateCheck}>
-              Buscar actualizaciones
-            </button>
+            AlbaRo Notes v{version}
           </p>
         )}
       </main>
@@ -399,7 +406,7 @@ function App() {
   return (
     <>
       {layout.main === null ? (
-        <Home onEnter={enter} version={version} />
+        <Home onEnter={enter} version={version} menu={appMenu} />
       ) : (
         <Workspace
           layout={{ ...layout, main: layout.main }}
@@ -431,6 +438,7 @@ function App() {
           onEnter={enter}
           onSplit={setSplit}
           onHome={goHome}
+          menu={appMenu}
         />
       )}
       <AiPanel

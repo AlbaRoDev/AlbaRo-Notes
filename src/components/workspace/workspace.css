@@ -13,6 +13,12 @@
   padding: 2rem 1.5rem;
 }
 
+.home-menu {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+}
+
 .home-theme {
   position: absolute;
   top: 0.75rem;

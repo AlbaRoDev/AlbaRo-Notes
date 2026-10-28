@@ -241,7 +241,7 @@ mod tests {
 
         db::run_migrations(&conn).unwrap();
         let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0)).unwrap();
-        assert_eq!(version, 21);
+        assert_eq!(version, 22);
         assert_eq!(found("fontanero"), [row.as_str()], "the index was rebuilt, not lost");
         let role: Option<String> = conn.query_row("SELECT role FROM databases WHERE id = ?1", [&database_id], |r| r.get(0)).unwrap();
         assert_eq!(role, None);

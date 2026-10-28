@@ -17,6 +17,7 @@ import {
   ChevronRight,
   Copy,
   EyeOff,
+  GripVertical,
   ListFilter,
   Pin,
   PinOff,
@@ -56,6 +57,7 @@ import type {
   ViewKind,
 } from "../../types";
 import { calcLabel, calcsFor } from "./calculations";
+import { useDragReorder } from "./drag-reorder";
 import { IconPicker, PropIcon } from "./PropIcon";
 import {
   STATUS_GROUPS,
@@ -578,12 +580,24 @@ function OptionsEditor({
   setColorFor: (option: string | null) => void;
 }) {
   const options = prop.config.options ?? [];
+  const reorder = useDragReorder(
+    options,
+    (next) => void run(() => setSelectOptions(prop.id, next)),
+  );
   return (
     <>
       <div className="pm-section">Opciones</div>
       {options.map((o) => (
         <div key={o}>
-          <div className="pm-option">
+          <div className="pm-option" {...reorder.row(o)}>
+            <span
+              className="pm-grip"
+              title="Arrastrar para reordenar"
+              aria-label={`Mover ${o}`}
+              {...reorder.handle(o)}
+            >
+              <GripVertical size={14} aria-hidden="true" />
+            </span>
             <button
               type="button"
               className="pm-swatch"

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { HALVES } from "./halves";
 import { ThemeToggle } from "./ThemeToggle";
 import type { Half } from "../../lib/workspace";
@@ -8,12 +9,16 @@ import "./workspace.css";
 export function Home({
   onEnter,
   version,
+  menu,
 }: {
   onEnter: (half: Half) => void;
   version: string | null;
+  /** The app's menu, in the top-left corner. */
+  menu: ReactNode;
 }) {
   return (
     <div className="home">
+      <div className="home-menu">{menu}</div>
       <div className="home-theme">
         <ThemeToggle />
       </div>

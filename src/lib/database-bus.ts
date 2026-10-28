@@ -16,6 +16,17 @@ export function subscribeDatabaseChanges(listener: Listener): () => void {
   };
 }
 
+/** What `emitAnyDatabaseChange` announces: no database in particular, so every view reloads. */
+export const ANY_DATABASE = "*";
+
+/**
+ * For a change that does not know its database (an option edited from the list of a cell, which only has the
+ * property): every mounted view reloads, the emitter's own included.
+ */
+export function emitAnyDatabaseChange(): void {
+  emitDatabaseChange(ANY_DATABASE, Symbol("any-database"));
+}
+
 /** `source` is the emitter's own token, so it can skip the echo of its own write. */
 export function emitDatabaseChange(databaseId: string, source: symbol): void {
   for (const listener of listeners) listener(databaseId, source);

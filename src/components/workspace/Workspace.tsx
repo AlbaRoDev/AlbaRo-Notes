@@ -31,6 +31,7 @@ export function Workspace({
   onEnter,
   onSplit,
   onHome,
+  menu,
 }: {
   layout: Layout & { main: Half };
   main: ReactNode;
@@ -39,6 +40,8 @@ export function Workspace({
   onEnter: (half: Half) => void;
   onSplit: (split: number) => void;
   onHome: () => void;
+  /** The app's menu, first in the bar. */
+  menu: ReactNode;
 }) {
   const bodyRef = useRef<HTMLDivElement>(null);
   const { split } = layout;
@@ -129,6 +132,7 @@ export function Workspace({
   return (
     <div className="workspace">
       <header className="workspace-bar">
+        {menu}
         <button
           type="button"
           className="ws-icon-button"
