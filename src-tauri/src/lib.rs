@@ -3,6 +3,7 @@ mod app_update;
 mod attachments;
 mod boards;
 mod calendar;
+mod checklist;
 mod commands;
 mod databases;
 mod db;
@@ -113,6 +114,10 @@ pub fn run() {
             commands::move_board_card,
             commands::remove_board_card,
             commands::boards_of_task,
+            commands::get_task_checklist,
+            commands::set_checklist_item,
+            commands::remove_checklist_item,
+            commands::add_checklist_item,
             commands::list_families,
             commands::add_cards_to_board,
             commands::calendar_scheduled_tasks,

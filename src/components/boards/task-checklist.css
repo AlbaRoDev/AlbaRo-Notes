@@ -1,0 +1,107 @@
+/* A task's checklist outside its page: on a board card and in the calendar's entry panel. */
+.task-checklist {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  cursor: default;
+}
+
+.task-checklist ul {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.task-checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.2rem;
+  border-radius: 4px;
+}
+
+.task-checklist li:hover {
+  background: rgba(var(--ink), 0.05);
+}
+
+.task-checklist li label {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding: 2px 4px;
+}
+
+.task-checklist li input {
+  margin-top: 0.2em;
+}
+
+.task-checklist li span {
+  overflow-wrap: anywhere;
+}
+
+.task-checklist li[data-checked] span {
+  color: var(--text-faint);
+  text-decoration: line-through;
+}
+
+.task-checklist li button {
+  display: inline-flex;
+  padding: 3px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-muted);
+  opacity: 0;
+}
+
+.task-checklist li:hover button,
+.task-checklist li button:focus-visible {
+  opacity: 1;
+}
+
+.task-checklist li button:hover {
+  background: rgba(var(--ink), 0.1);
+  color: var(--danger);
+}
+
+.task-checklist-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.task-checklist-progress div {
+  flex: 1 1 auto;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(var(--ink), 0.12);
+  overflow: hidden;
+}
+
+.task-checklist-progress i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.task-checklist-add {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+}
+
+.task-checklist-error {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--danger);
+}

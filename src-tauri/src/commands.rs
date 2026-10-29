@@ -2,6 +2,7 @@ use crate::ai::{self, AiReply, AiSettings, AiSettingsInput, AiStatus, Applied, W
 use crate::attachments::{self, AttachmentInfo, AttachmentsDir, LinkPreview};
 use crate::boards;
 use crate::calendar;
+use crate::checklist;
 use crate::databases::{self, DatabaseData, DatabaseSummary, PropertyInfo};
 use crate::db::{self, DbState, PageSummary};
 use crate::families;
@@ -402,6 +403,31 @@ pub fn remove_board_card(state: State<DbState>, card_id: String) -> Result<(), S
 pub fn boards_of_task(state: State<DbState>, task_id: String) -> Result<Vec<boards::BoardInfo>, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     boards::boards_of_task(&conn, &task_id)
+}
+
+/// a task's checklist (the «[ ]» items of its page), from a board card or a calendar entry.
+#[tauri::command]
+pub fn get_task_checklist(state: State<DbState>, task_id: String) -> Result<Vec<checklist::Item>, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    checklist::get(&conn, &task_id)
+}
+
+#[tauri::command]
+pub fn set_checklist_item(state: State<DbState>, task_id: String, index: usize, checked: bool) -> Result<Vec<checklist::Item>, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    checklist::set_checked(&conn, &task_id, index, checked)
+}
+
+#[tauri::command]
+pub fn remove_checklist_item(state: State<DbState>, task_id: String, index: usize) -> Result<Vec<checklist::Item>, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    checklist::remove(&conn, &task_id, index)
+}
+
+#[tauri::command]
+pub fn add_checklist_item(state: State<DbState>, task_id: String, text: String) -> Result<Vec<checklist::Item>, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    checklist::add(&conn, &task_id, &text)
 }
 
 /// the task families, and a whole family onto a board.

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { GripVertical, Plus, Trash2, X } from "lucide-react";
+import { GripVertical, ListChecks, Plus, Trash2, X } from "lucide-react";
 import {
   addBoardCard,
   addBoardList,
@@ -20,7 +20,9 @@ import {
   startCardDrag,
   startListDrag,
 } from "../../lib/drag-item";
-import type { BoardData, BoardList } from "../../types";
+import type { BoardData, BoardList, CellValue, Property } from "../../types";
+import { CardFields } from "./CardFields";
+import { TaskChecklist } from "./TaskChecklist";
 
 /** A name that reads as text and saves when it loses the focus (Enter too; Esc or a refusal put the old one back). */
 export function EditableName({
@@ -82,6 +84,11 @@ interface BoardViewProps {
   /** A task was created from a card: the page list must learn about it. */
   onTaskCreated: () => void;
   onNotice: (message: string) => void;
+  /** The task properties this board shows on its cards (labels for options, plain text for the rest). */
+  fields: Property[];
+  valuesOf: (taskId: string) => Record<string, CellValue>;
+  /** A field was written from a card: the task rows must be read again. */
+  onFieldWritten: () => void;
 }
 
 /**
@@ -89,7 +96,24 @@ interface BoardViewProps {
  * and a task dragged in from the tray, the task table or another board adds a card (the same task can be on many
  * boards, once on each). Lists drag by their grip.
  */
-export function BoardView({ board, write, onOpenTask, onTaskCreated, onNotice }: BoardViewProps) {
+export function BoardView({
+  board,
+  write,
+  onOpenTask,
+  onTaskCreated,
+  onNotice,
+  fields,
+  valuesOf,
+  onFieldWritten,
+}: BoardViewProps) {
+  // the cards whose checklist is unfolded (a view state, not saved)
+  const [checklistOpen, setChecklistOpen] = useState<Set<string>>(() => new Set());
+  const toggleChecklist = (id: string) =>
+    setChecklistOpen((open) => {
+      const next = new Set(open);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
   // where a dragged card or list would land: shown as a line (card) or a bar (list)
   const [cardDrop, setCardDrop] = useState<{ listId: string; index: number } | null>(null);
   const [listDrop, setListDrop] = useState<number | null>(null);
@@ -301,6 +325,33 @@ export function BoardView({ board, write, onOpenTask, onTaskCreated, onNotice }:
                   >
                     <X size={13} aria-hidden />
                   </button>
+                  <div className="board-card-extra">
+                    <CardFields
+                      props={fields}
+                      values={valuesOf(card.taskId)}
+                      taskId={card.taskId}
+                      onWritten={onFieldWritten}
+                      onError={onNotice}
+                    />
+                    <button
+                      type="button"
+                      className="board-checkbtn"
+                      data-empty={card.checklist.total === 0 || undefined}
+                      aria-expanded={checklistOpen.has(card.id)}
+                      aria-label={`Lista de comprobación de ${card.title}`}
+                      title="Lista de comprobación"
+                      onClick={() => toggleChecklist(card.id)}
+                    >
+                      <ListChecks size={13} aria-hidden />
+                      {card.checklist.total > 0 && `${card.checklist.done}/${card.checklist.total}`}
+                    </button>
+                    {checklistOpen.has(card.id) && (
+                      <TaskChecklist
+                        taskId={card.taskId}
+                        onChanged={() => void write(async () => null)}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
             ))}

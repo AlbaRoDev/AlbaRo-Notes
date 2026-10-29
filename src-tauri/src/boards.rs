@@ -3,6 +3,7 @@
 //! removing a card never touches the task, and deleting the task (or the list, or the board) deletes its cards.
 //! Every rule is checked here, whoever asks; the page only draws what comes back.
 
+use crate::checklist;
 use crate::db;
 use crate::tasks;
 use rusqlite::{params, Connection, OptionalExtension, Transaction};
@@ -33,6 +34,8 @@ pub struct Card {
     pub task_id: String,
     /// The task's own title (a card has none).
     pub title: String,
+    /// How far the task's checklist is (0 of 0 when it has none).
+    pub checklist: checklist::Progress,
 }
 
 #[derive(Serialize, Debug, PartialEq)]
@@ -96,16 +99,7 @@ pub fn get_board(conn: &Connection, id: &str) -> Result<BoardData, String> {
             let rows = stmt.query_map([&list_id], |r| Ok((r.get(0)?, r.get(1)?))).map_err(sql)?;
             rows.collect::<rusqlite::Result<_>>().map_err(sql)?
         };
-        let cards = cards
-            .into_iter()
-            .map(|(id, task_id)| {
-                Ok(Card {
-                    title: db::derive_page_title(conn, &task_id).map_err(sql)?,
-                    id,
-                    task_id,
-                })
-            })
-            .collect::<Result<Vec<_>, String>>()?;
+        let cards = cards.into_iter().map(|(id, task_id)| card_title(conn, &id, task_id)).collect::<Result<Vec<_>, String>>()?;
         out.push(BoardList {
             id: list_id,
             name: list_name,
@@ -225,6 +219,7 @@ pub fn move_list(conn: &Connection, id: &str, index: usize) -> Result<(), String
 fn card_title(conn: &Connection, id: &str, task_id: String) -> Result<Card, String> {
     Ok(Card {
         title: db::derive_page_title(conn, &task_id).map_err(sql)?,
+        checklist: checklist::progress(conn, &task_id),
         id: id.to_string(),
         task_id,
     })

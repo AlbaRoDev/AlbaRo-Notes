@@ -13,6 +13,7 @@ import {
 } from "../../lib/calendar";
 import { dayNumber } from "../../lib/date-utils";
 import type { CalendarEntry, EntryInput, Scope, TagColor } from "../../types";
+import { TaskChecklist } from "../boards/TaskChecklist";
 import { RepeatField } from "./RepeatField";
 import { TAG_COLORS } from "../database/property-types";
 import { leaveOnEnter, toInput } from "./entry-input";
@@ -107,19 +108,23 @@ export function EntryEditor({
       </header>
 
       {entry.taskId ? (
-        <div className="cal-editor-task">
-          <strong>{entry.title}</strong>
-          <button type="button" onClick={() => onOpenTask(entry.taskId!)}>
-            <ArrowUpRight size={13} aria-hidden="true" /> Abrir la tarea
-          </button>
-          <button
-            type="button"
-            onClick={onUnlink}
-            title="Deja una cita suelta con el mismo título; la tarea no se toca"
-          >
-            Desligar de la tarea
-          </button>
-        </div>
+        <>
+          <div className="cal-editor-task">
+            <strong>{entry.title}</strong>
+            <button type="button" onClick={() => onOpenTask(entry.taskId!)}>
+              <ArrowUpRight size={13} aria-hidden="true" /> Abrir la tarea
+            </button>
+            <button
+              type="button"
+              onClick={onUnlink}
+              title="Deja una cita suelta con el mismo título; la tarea no se toca"
+            >
+              Desligar de la tarea
+            </button>
+          </div>
+          {/* the task's own checklist: ticked here, it is ticked in its page and on its board cards */}
+          <TaskChecklist key={entry.taskId} taskId={entry.taskId} />
+        </>
       ) : (
         <label>
           Título

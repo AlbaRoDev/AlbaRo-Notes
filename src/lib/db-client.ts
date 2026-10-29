@@ -3,6 +3,7 @@ import type { JSONContent } from "@tiptap/react";
 import type {
   BoardCard,
   BoardData,
+  ChecklistItem,
   BoardInfo,
   BoardList,
   CalendarEntry,
@@ -380,6 +381,27 @@ export async function moveBoardCard(cardId: string, listId: string, index: numbe
 /** Removes the card; the task is untouched. */
 export async function removeBoardCard(cardId: string): Promise<void> {
   return invoke("remove_board_card", { cardId });
+}
+
+/** A task's checklist; each change returns the whole list as it is stored. Items are addressed by position. */
+export async function getTaskChecklist(taskId: string): Promise<ChecklistItem[]> {
+  return invoke<ChecklistItem[]>("get_task_checklist", { taskId });
+}
+
+export async function setChecklistItem(
+  taskId: string,
+  index: number,
+  checked: boolean,
+): Promise<ChecklistItem[]> {
+  return invoke<ChecklistItem[]>("set_checklist_item", { taskId, index, checked });
+}
+
+export async function removeChecklistItem(taskId: string, index: number): Promise<ChecklistItem[]> {
+  return invoke<ChecklistItem[]>("remove_checklist_item", { taskId, index });
+}
+
+export async function addChecklistItem(taskId: string, text: string): Promise<ChecklistItem[]> {
+  return invoke<ChecklistItem[]>("add_checklist_item", { taskId, text });
 }
 
 /** The boards a task is on. */

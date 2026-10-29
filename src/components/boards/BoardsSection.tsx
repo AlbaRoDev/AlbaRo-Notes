@@ -1,16 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Tag, Trash2 } from "lucide-react";
+import { subscribeDatabaseChanges } from "../../lib/database-bus";
 import {
   createBoard,
   deleteBoard,
   ensureTaskBase,
   getBoard,
+  getDatabase,
   listBoards,
   renameBoard,
   type TaskBase,
 } from "../../lib/db-client";
 import { readPref, writePref } from "../../lib/prefs";
-import type { BoardData, BoardInfo } from "../../types";
+import type { BoardData, BoardInfo, DatabaseData } from "../../types";
 import { TaskTray } from "../calendar/TaskTray";
 import { PageEditor } from "../editor/PageEditor";
 import { TaskPeek } from "../workspace/TaskPeek";
@@ -19,6 +21,7 @@ import { BoardView, EditableName } from "./BoardView";
 import "./boards.css";
 
 const CURRENT_KEY = "boards.current";
+const FIELDS_KEY = "boards.fields.";
 
 const TRAY_LABELS = {
   pending: "Fuera del tablero",
@@ -101,6 +104,35 @@ export function BoardsSection({ host }: { host: TaskHost }) {
     () => new Set(board?.lists.flatMap((l) => l.cards.map((c) => c.taskId))),
     [board],
   );
+
+  // The task table's properties and the tasks' values: what a card can show as labels (read again after any change).
+  const [db, setDb] = useState<DatabaseData | null>(null);
+  const loadDb = useCallback(() => {
+    if (base) getDatabase(base.databaseId).then(setDb, () => {});
+  }, [base]);
+  useEffect(loadDb, [loadDb, pages, board]);
+  useEffect(() => subscribeDatabaseChanges(loadDb), [loadDb]);
+  const valuesByTask = useMemo(() => new Map(db?.rows.map((r) => [r.pageId, r.values])), [db]);
+
+  // Which properties each board shows on its cards: a preference of this window, like the board that was open.
+  const [fieldsRev, setFieldsRev] = useState(0);
+  const chosenIds = useMemo(() => {
+    try {
+      const parsed: unknown = JSON.parse(readPref(FIELDS_KEY + currentId) ?? "null");
+      return Array.isArray(parsed) ? (parsed as string[]) : null;
+    } catch {
+      return null;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fieldsRev re-reads the preference after it is written
+  }, [currentId, fieldsRev]);
+  const pickable = db?.properties.filter((p) => p.type !== "relation") ?? [];
+  const shown = pickable.filter((p) => (chosenIds ? chosenIds.includes(p.id) : p.type === "tags"));
+  const toggleField = (id: string) => {
+    const now = new Set(shown.map((p) => p.id));
+    if (!now.delete(id)) now.add(id);
+    writePref(FIELDS_KEY + currentId, JSON.stringify([...now]));
+    setFieldsRev((r) => r + 1);
+  };
 
   const makeBoard = async (name: string) => {
     const made = await write(() => createBoard(name));
@@ -190,6 +222,23 @@ export function BoardsSection({ host }: { host: TaskHost }) {
                 label="Nombre del tablero"
                 onCommit={(name) => void write(() => renameBoard(board.id, name))}
               />
+              <details className="board-fields">
+                <summary title="Qué propiedades de la tarea se ven en las tarjetas">
+                  <Tag size={14} aria-hidden /> Etiquetas y campos
+                </summary>
+                <div className="board-fields-menu" role="group" aria-label="Campos de las tarjetas">
+                  {pickable.map((p) => (
+                    <label key={p.id}>
+                      <input
+                        type="checkbox"
+                        checked={shown.some((s) => s.id === p.id)}
+                        onChange={() => toggleField(p.id)}
+                      />
+                      {p.name}
+                    </label>
+                  ))}
+                </div>
+              </details>
               {confirmDelete ? (
                 <span className="board-confirm">
                   ¿Borrar el tablero con sus listas y tarjetas? Las tareas se conservan.
@@ -224,6 +273,9 @@ export function BoardsSection({ host }: { host: TaskHost }) {
               onOpenTask={setOpenTask}
               onTaskCreated={onPagesChanged}
               onNotice={setError}
+              fields={shown}
+              valuesOf={(taskId) => valuesByTask.get(taskId) ?? {}}
+              onFieldWritten={loadDb}
             />
           </>
         ) : (

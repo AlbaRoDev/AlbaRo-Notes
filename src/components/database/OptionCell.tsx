@@ -111,7 +111,7 @@ function OptionEditor({
  * to search the options or, when none matches, create the one you typed. A select takes one and closes;
  * tags toggle and stay open. A status property lists its options under their groups.
  */
-function OptionPopover({
+export function OptionPopover({
   prop,
   selected,
   multi,

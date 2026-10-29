@@ -78,10 +78,17 @@ export interface BoardInfo {
   name: string;
 }
 
+/** An item of a task's checklist (the «[ ]» list of its page). */
+export interface ChecklistItem {
+  text: string;
+  checked: boolean;
+}
+
 export interface BoardCard {
   id: string;
   taskId: string;
   title: string;
+  checklist: { done: number; total: number };
 }
 
 export interface BoardList {

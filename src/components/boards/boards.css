@@ -205,9 +205,135 @@
   overflow-y: auto;
 }
 
+/* what a card shows besides its title: labels / fields chosen from the task table, and the checklist */
+.board-card-extra {
+  flex: 1 1 100%;
+  display: grid;
+  gap: 0.3rem;
+  padding: 0 8px 7px;
+}
+
+.board-card-extra:empty {
+  display: none;
+}
+
+.board-card-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.board-labels {
+  display: contents;
+}
+
+.board-label {
+  padding: 0 0.5em;
+  border-radius: 3px;
+  background: var(--tag, rgba(var(--ink), 0.1));
+  color: var(--text);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.board-field {
+  padding: 0 0.4em;
+  border-radius: 3px;
+  background: rgba(var(--ink), 0.06);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.board-label-add,
+.board-checkbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  justify-self: start;
+  padding: 1px 5px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.75rem;
+}
+
+.board-label-add:hover,
+.board-checkbtn:hover {
+  background: rgba(var(--ink), 0.08);
+  color: var(--text);
+}
+
+/* an empty «+» and a checklist button with nothing in it appear when the card is hovered */
+.board-label-add,
+.board-checkbtn[data-empty] {
+  opacity: 0;
+}
+
+.board-card:hover .board-label-add,
+.board-card:hover .board-checkbtn[data-empty],
+.board-label-add:focus-visible,
+.board-checkbtn:focus-visible {
+  opacity: 1;
+}
+
+.board-fields {
+  position: relative;
+  font-size: 0.8rem;
+}
+
+.board-fields summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 2px 8px;
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: var(--cursor-pointer, pointer);
+  list-style: none;
+  white-space: nowrap;
+}
+
+.board-fields summary:hover,
+.board-fields[open] summary {
+  background: rgba(var(--ink), 0.08);
+  color: var(--text);
+}
+
+.board-fields-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 10;
+  display: grid;
+  gap: 2px;
+  min-width: 12rem;
+  padding: 6px;
+  border-radius: 8px;
+  background: var(--bg-popover);
+  box-shadow: var(--shadow-popover);
+}
+
+.board-fields-menu label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 3px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.board-fields-menu label:hover {
+  background: rgba(var(--ink), 0.06);
+}
+
 .board-card {
   position: relative;
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   border: 1px solid var(--border);
   border-radius: 6px;
