@@ -32,6 +32,9 @@ export const SlashCommand = Extension.create({
           return {
             onStart: (props) => {
               component = new ReactRenderer(SlashMenu, { props, editor: props.editor });
+              // The popup mounts in <body>, outside any stacking context: without a z-index it
+              // sits under the task peek (a fixed layer) and the menu looked empty there.
+              (component.element as HTMLElement).style.zIndex = "1300";
               unmount = props.mount(component.element as HTMLElement);
             },
             onUpdate: (props) => {
