@@ -24,6 +24,7 @@ import {
 } from "../../lib/attachments";
 import { useAttachmentUrl } from "../../hooks/useAttachmentUrl";
 import { focusLineAfterNode } from "./media-commands";
+import { ImageView } from "./ImageView";
 
 const KIND_LABEL: Record<MediaKind, { noun: string; Icon: typeof ImageIcon; accept?: string }> = {
   image: { noun: "imagen", Icon: ImageIcon, accept: "image/*" },
@@ -36,16 +37,21 @@ export function MediaView(props: NodeViewProps) {
   // Node names ("image", "video", "audio", "fileBlock") map 1:1 onto kinds.
   const kind: MediaKind =
     props.node.type.name === "fileBlock" ? "file" : (props.node.type.name as MediaKind);
-  return props.node.attrs.file ? (
-    <MediaResolved {...props} kind={kind} />
-  ) : (
-    <MediaPicker {...props} kind={kind} />
-  );
+  if (!props.node.attrs.file) return <MediaPicker {...props} kind={kind} />;
+  return kind === "image" ? <ImageView {...props} /> : <MediaResolved {...props} kind={kind} />;
 }
 
 type Props = NodeViewProps & { kind: MediaKind };
 
-function MediaPicker({ kind, updateAttributes, deleteNode, editor, getPos }: Props) {
+/** `onClose` is the replace flow of an existing block: cancelling (or finishing) closes the picker instead of deleting the block. */
+export function MediaPicker({
+  kind,
+  updateAttributes,
+  deleteNode,
+  editor,
+  getPos,
+  onClose,
+}: Props & { onClose?: () => void }) {
   const { noun, Icon, accept } = KIND_LABEL[kind];
   // The URL field's own text. Only a *finished* download writes to the node;
   // nothing typed here ever reaches Tiptap or SQLite.
@@ -66,6 +72,7 @@ function MediaPicker({ kind, updateAttributes, deleteNode, editor, getPos }: Pro
       // <body>; hand it back to the document, caret on the line after the
       // block (see focusLineAfterNode), so typing can continue.
       focusLineAfterNode(editor, getPos());
+      onClose?.();
     } catch (e) {
       setError(errorMessage(e));
       setBusy(null);
@@ -74,7 +81,8 @@ function MediaPicker({ kind, updateAttributes, deleteNode, editor, getPos }: Pro
 
   // Removing the node unmounts the focused input — hand focus back to the doc.
   const cancel = () => {
-    deleteNode();
+    if (onClose) onClose();
+    else deleteNode();
     editor.commands.focus();
   };
 
@@ -191,9 +199,7 @@ function MediaResolved({ kind, node, updateAttributes, editor, getPos }: Props) 
         </p>
       ) : (
         src &&
-        (kind === "image" ? (
-          <img src={src} alt={name} onError={() => setBroken(true)} />
-        ) : kind === "video" ? (
+        (kind === "video" ? (
           <video src={src} controls preload="metadata" onError={() => setBroken(true)} />
         ) : (
           <audio src={src} controls preload="metadata" onError={() => setBroken(true)} />

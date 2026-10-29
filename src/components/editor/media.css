@@ -123,6 +123,266 @@
   width: 100%;
 }
 
+/* Image: the frame is as wide as the picture (or its chosen width, capped at the column) and holds handles, toolbar and caption. */
+.page-editor .ProseMirror .image-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.page-editor .ProseMirror .image-block[data-align="center"] {
+  align-items: center;
+}
+
+.page-editor .ProseMirror .image-block[data-align="right"] {
+  align-items: flex-end;
+}
+
+.page-editor .ProseMirror .image-frame {
+  position: relative;
+  max-width: 100%;
+}
+
+/* Handles and toolbar sit on the picture, not on the caption below it. */
+.page-editor .ProseMirror .image-media {
+  position: relative;
+}
+
+.page-editor .ProseMirror .image-frame img {
+  max-width: 100%;
+}
+
+/* A chosen width sets the height from the aspect ratio; the default cap would squash it. */
+.page-editor .ProseMirror .image-frame img[data-sized] {
+  width: 100%;
+  max-height: none;
+}
+
+.page-editor .ProseMirror .image-handle,
+.page-editor .ProseMirror .image-toolbar {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s;
+}
+
+.page-editor .ProseMirror .image-frame:hover .image-handle,
+.page-editor .ProseMirror .image-frame:hover .image-toolbar,
+.page-editor .ProseMirror .image-frame:focus-within .image-handle,
+.page-editor .ProseMirror .image-frame:focus-within .image-toolbar,
+.page-editor .ProseMirror .image-frame[data-selected] .image-handle,
+.page-editor .ProseMirror .image-frame[data-selected] .image-toolbar,
+.page-editor .ProseMirror .image-frame[data-resizing] .image-handle {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.page-editor .ProseMirror .image-handle {
+  position: absolute;
+  top: 50%;
+  width: 8px;
+  height: 44px;
+  max-height: 60%;
+  transform: translateY(-50%);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--bg-popover);
+  box-shadow: var(--shadow-popover);
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.page-editor .ProseMirror .image-handle[data-side="left"] {
+  left: 6px;
+}
+
+.page-editor .ProseMirror .image-handle[data-side="right"] {
+  right: 6px;
+}
+
+.page-editor .ProseMirror .image-toolbar {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 3px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-popover);
+  box-shadow: var(--shadow-popover);
+}
+
+.page-editor .ProseMirror .image-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--text);
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.page-editor .ProseMirror .image-toolbar button:hover {
+  background: rgba(var(--ink), 0.08);
+}
+
+.page-editor .ProseMirror .image-toolbar button[aria-pressed="true"] {
+  color: var(--accent);
+}
+
+.page-editor .ProseMirror .image-toolbar-sep {
+  align-self: stretch;
+  width: 1px;
+  margin: 3px 3px;
+  background: var(--border);
+}
+
+.page-editor .ProseMirror .image-frame[data-cropping] .image-handle,
+.page-editor .ProseMirror .image-frame[data-cropping] .image-toolbar {
+  display: none;
+}
+
+.page-editor .ProseMirror .image-crop {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  outline: none;
+}
+
+/* The shadow darkens everything outside the box; the overlay's overflow clips it to the picture. */
+.page-editor .ProseMirror .image-crop-box {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+  cursor: move;
+  touch-action: none;
+}
+
+.page-editor .ProseMirror .image-crop-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  margin: -7px 0 0 -7px;
+  border: 2px solid var(--accent);
+  border-radius: 3px;
+  background: var(--bg-popover);
+  touch-action: none;
+}
+
+.page-editor .ProseMirror .image-crop-handle[data-h^="n"] {
+  top: 0;
+}
+.page-editor .ProseMirror .image-crop-handle[data-h^="s"] {
+  top: 100%;
+}
+.page-editor .ProseMirror .image-crop-handle[data-h="w"],
+.page-editor .ProseMirror .image-crop-handle[data-h="e"] {
+  top: 50%;
+}
+.page-editor .ProseMirror .image-crop-handle[data-h$="w"],
+.page-editor .ProseMirror .image-crop-handle[data-h="w"] {
+  left: 0;
+}
+.page-editor .ProseMirror .image-crop-handle[data-h$="e"],
+.page-editor .ProseMirror .image-crop-handle[data-h="e"] {
+  left: 100%;
+}
+.page-editor .ProseMirror .image-crop-handle[data-h="n"],
+.page-editor .ProseMirror .image-crop-handle[data-h="s"] {
+  left: 50%;
+}
+.page-editor .ProseMirror .image-crop-handle[data-h="nw"],
+.page-editor .ProseMirror .image-crop-handle[data-h="se"] {
+  cursor: nwse-resize;
+}
+.page-editor .ProseMirror .image-crop-handle[data-h="ne"],
+.page-editor .ProseMirror .image-crop-handle[data-h="sw"] {
+  cursor: nesw-resize;
+}
+.page-editor .ProseMirror .image-crop-handle[data-h="n"],
+.page-editor .ProseMirror .image-crop-handle[data-h="s"] {
+  cursor: ns-resize;
+}
+.page-editor .ProseMirror .image-crop-handle[data-h="w"],
+.page-editor .ProseMirror .image-crop-handle[data-h="e"] {
+  cursor: ew-resize;
+}
+
+.page-editor .ProseMirror .image-crop-actions {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  display: flex;
+  gap: 6px;
+  transform: translateX(-50%);
+}
+
+.page-editor .ProseMirror .image-toolbar-input {
+  width: 16rem;
+  max-width: 60vw;
+}
+
+.page-editor .ProseMirror .image-caption {
+  margin: 4px 0 0;
+  padding: 2px 0;
+  font-size: 0.85em;
+  color: var(--text-muted);
+  cursor: text;
+}
+
+.page-editor .ProseMirror .image-caption-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.page-editor .ProseMirror .image-broken-actions {
+  margin-left: auto;
+}
+
+.image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.8); /* a scrim is dark in both themes, unlike --ink */
+  cursor: zoom-out;
+}
+
+.image-lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+  background: var(--bg);
+}
+
+.image-lightbox-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-popover);
+  color: var(--text);
+  cursor: var(--cursor-pointer, pointer);
+}
+
 .page-editor .ProseMirror .media-broken {
   display: flex;
   align-items: center;

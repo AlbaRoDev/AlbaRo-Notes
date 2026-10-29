@@ -13,6 +13,10 @@ pub const MAX_TABLE_COLS: usize = 30;
 pub const MAX_TABS: usize = 8;
 pub const MAX_TAB_TITLE: usize = 60;
 pub const MAX_BUTTON_LABEL: usize = 80;
+/// Mirrors the limits in ImageView.tsx.
+const MIN_IMAGE_WIDTH: f64 = 40.0;
+const MAX_IMAGE_WIDTH: f64 = 4_000.0;
+const MAX_IMAGE_TEXT: usize = 500;
 /// Entries a standalone calendar / timeline / map block may hold.
 pub const MAX_VIEW_ITEMS: usize = 500;
 pub const MAX_ITEM_TITLE: usize = 200;
@@ -146,6 +150,26 @@ fn check_button(node: &Value) -> Result<(), String> {
         Some("openPage" | "insertBlock") => Err("Button action is missing its target".to_string()),
         Some(other) => Err(format!("Unknown button action: {other}")),
     }
+}
+
+/// Display attrs of an image block (`file` is checked with the other attachment references):
+/// width in px (CSS still caps it at the column), alignment from a closed set, caption and alt text.
+fn check_image(node: &Value) -> Result<(), String> {
+    if let Some(w) = attr(node, "width") {
+        if !w.as_f64().is_some_and(|w| (MIN_IMAGE_WIDTH..=MAX_IMAGE_WIDTH).contains(&w)) {
+            return Err(format!("An image width must be a number from {MIN_IMAGE_WIDTH} to {MAX_IMAGE_WIDTH}"));
+        }
+    }
+    match opt_str(node, "align")? {
+        None | Some("left" | "center" | "right") => {}
+        Some(other) => return Err(format!("Unknown image alignment: {other}")),
+    }
+    for key in ["caption", "alt"] {
+        if opt_str(node, key)?.is_some_and(|s| s.chars().count() > MAX_IMAGE_TEXT) {
+            return Err(format!("An image {key} can have at most {MAX_IMAGE_TEXT} characters"));
+        }
+    }
+    Ok(())
 }
 
 fn check_equation(node: &Value) -> Result<(), String> {
@@ -319,6 +343,7 @@ pub fn validate_blocks(node: &Value, in_synced: bool) -> Result<(), String> {
         Some("tabs") => check_tabs(node)?,
         Some("tab") => check_tab(node)?,
         Some("buttonBlock") => check_button(node)?,
+        Some("image") => check_image(node)?,
         Some("equationBlock" | "equationInline") => check_equation(node)?,
         Some("calendarView" | "timelineView") => check_events(node)?,
         Some("mapView") => check_pins(node)?,
@@ -475,6 +500,25 @@ mod tests {
             .map(|n| json!({ "id": format!("3f0c2a9e-6b1d-4c1a-9d7e-{n:012}"), "title": "", "value": 1 }))
             .collect();
         assert!(!ok(chart(json!({ "entries": many }))));
+    }
+
+    #[test]
+    fn image_display_attrs_are_validated() {
+        let image = |attrs: Value| json!({ "type": "image", "attrs": attrs });
+        assert!(ok(image(json!({ "file": null }))));
+        assert!(ok(image(json!({ "width": null, "align": null, "caption": null, "alt": null }))));
+        assert!(ok(image(json!({ "width": 320.5, "align": "right", "caption": "Pie", "alt": "Texto" }))));
+        for bad in [
+            json!({ "width": 10 }),
+            json!({ "width": 99999 }),
+            json!({ "width": "300" }),
+            json!({ "align": "justify" }),
+            json!({ "align": 1 }),
+            json!({ "caption": "x".repeat(501) }),
+            json!({ "alt": 5 }),
+        ] {
+            assert!(!ok(image(bad.clone())), "{bad}");
+        }
     }
 
     #[test]

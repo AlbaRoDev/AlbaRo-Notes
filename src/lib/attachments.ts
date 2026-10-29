@@ -6,6 +6,13 @@ export type MediaKind = "image" | "video" | "audio" | "file";
 /** Keep in sync with MAX_ATTACHMENT_BYTES in src-tauri/src/attachments.rs — Rust enforces it regardless. */
 const MAX_ATTACHMENT_BYTES = 50 * 1024 * 1024;
 
+/** Image display limits — keep in sync with `check_image` in src-tauri/src/validate.rs. */
+export const MIN_IMAGE_WIDTH = 40;
+export const MAX_IMAGE_WIDTH = 4000;
+export const MAX_IMAGE_TEXT = 500;
+export const IMAGE_ALIGNS = ["left", "center", "right"] as const;
+export type ImageAlign = (typeof IMAGE_ALIGNS)[number];
+
 export interface AttachmentInfo {
   file: string;
   size: number;
