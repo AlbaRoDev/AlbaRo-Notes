@@ -1,7 +1,7 @@
 // Run with: node --test tests/   (Node 22.18+ loads the .ts module directly, stripping its types)
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { moveItem } from "../src/lib/reorder.ts";
+import { moveItem, moveItems } from "../src/lib/reorder.ts";
 
 const abcd = ["a", "b", "c", "d"];
 
@@ -21,4 +21,13 @@ test("a drop that changes nothing hands back the same array", () => {
 test("an item that is not in the list is ignored", () => {
   assert.equal(moveItem(abcd, "x", "b", false), abcd);
   assert.equal(moveItem(abcd, "a", "x", false), abcd);
+});
+
+test("several items move together, keeping their order", () => {
+  assert.deepEqual(moveItems(abcd, ["d", "a"], "c", false), ["b", "a", "d", "c"]);
+  assert.deepEqual(moveItems(abcd, ["a", "b"], "d", true), ["c", "d", "a", "b"]);
+  assert.equal(moveItems(abcd, ["b", "c"], "c", true), abcd); // dropped inside the block
+  assert.equal(moveItems(abcd, ["a", "b"], "c", false), abcd); // already there
+  assert.deepEqual(moveItems(abcd, ["d"], "a", false), ["d", "a", "b", "c"]);
+  assert.equal(moveItems(abcd, ["x"], "a", false), abcd);
 });

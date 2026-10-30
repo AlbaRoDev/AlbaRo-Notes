@@ -349,7 +349,8 @@ select optgroup {
 
 /* Notion-style checkbox: a rounded square that fills with the accent and shows a check. */
 .page-editor .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"],
-.task-checklist li input[type="checkbox"] {
+.task-checklist li input[type="checkbox"],
+.db-row-check {
   appearance: none;
   position: relative;
   flex: 0 0 auto;
@@ -366,19 +367,22 @@ select optgroup {
 }
 
 .page-editor .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"]:hover,
-.task-checklist li input[type="checkbox"]:hover {
+.task-checklist li input[type="checkbox"]:hover,
+.db-row-check:hover {
   border-color: var(--text-muted);
   background: rgba(var(--ink), 0.06);
 }
 
 .page-editor .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"]:checked,
-.task-checklist li input[type="checkbox"]:checked {
+.task-checklist li input[type="checkbox"]:checked,
+.db-row-check:checked {
   border-color: var(--accent);
   background: var(--accent);
 }
 
 .page-editor .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"]:checked::after,
-.task-checklist li input[type="checkbox"]:checked::after {
+.task-checklist li input[type="checkbox"]:checked::after,
+.db-row-check:checked::after {
   content: "";
   position: absolute;
   left: 4px;

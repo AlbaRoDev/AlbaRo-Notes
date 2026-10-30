@@ -1938,3 +1938,47 @@ button.db-prop-name {
   box-shadow: var(--shadow-popover);
   animation: pop-in 120ms ease-out;
 }
+
+/* ---- selecting several rows: a tick beside the grip, a bar with what to do with them ---- */
+.page-editor .ProseMirror .db-table .db-row-check {
+  margin: 0 2px 0 0;
+  opacity: 0;
+}
+
+.page-editor .ProseMirror .db-table tr:hover .db-row-check,
+.page-editor .ProseMirror .db-table .db-row-check:checked,
+.page-editor .ProseMirror .db-table .db-row-check:focus-visible,
+.page-editor .ProseMirror .db-scroll[data-picking] .db-row-check {
+  opacity: 1;
+}
+
+.page-editor .ProseMirror .db-table tr[data-selected] > td {
+  background: rgba(var(--accent-rgb), 0.1);
+}
+
+.page-editor .ProseMirror .db-bulk {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 4px 8px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  background: rgba(var(--accent-rgb), 0.1);
+  font-size: 0.85rem;
+}
+
+.page-editor .ProseMirror .db-bulk button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  padding: 2px 8px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+}
+
+.page-editor .ProseMirror .db-bulk button:hover {
+  background: rgba(var(--ink), 0.1);
+}

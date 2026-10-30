@@ -13,7 +13,8 @@ import type { KeyboardEvent } from "react";
  * A native date keeps ← / → (they move between its day, month and year) and a select keeps ↑ / ↓ unless Alt is held.
  */
 
-const CELL_TARGET = "input:not([type=hidden]):not([disabled]), textarea, [role=combobox], select";
+const CELL_TARGET =
+  "input:not([type=hidden]):not([disabled]):not(.db-row-check), textarea, [role=combobox], select";
 
 type Field = HTMLInputElement | HTMLTextAreaElement;
 

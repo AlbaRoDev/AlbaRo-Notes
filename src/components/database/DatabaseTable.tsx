@@ -158,9 +158,17 @@ export function DatabaseTable({
   } | null>(null);
 
   // Dragging a row by its grip reorders the database's rows (when no sort or group overrides that order).
-  const rowReorder = useDragReorder(data?.rows.map((r) => r.pageId) ?? [], (next) => {
-    void run(() => reorderRows(databaseId, next));
-  });
+  // A selection of rows travels together when one of them is grabbed.
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [confirmBulk, setConfirmBulk] = useState(false);
+  const lastPicked = useRef<string | null>(null);
+  const rowReorder = useDragReorder(
+    data?.rows.map((r) => r.pageId) ?? [],
+    (next) => {
+      void run(() => reorderRows(databaseId, next));
+    },
+    (id) => (selected.has(id) ? [...selected] : [id]),
+  );
 
   if (data === undefined) {
     return (
@@ -224,6 +232,38 @@ export function DatabaseTable({
   const addRow = () =>
     run(async () => {
       await createRow(databaseId);
+      onPagesChanged();
+    });
+
+  // Only rows that still exist count as selected (a deleted row may linger in the set).
+  const picked = data.rows.map((r) => r.pageId).filter((id) => selected.has(id));
+  const clearPicked = () => {
+    setSelected(new Set());
+    setConfirmBulk(false);
+    lastPicked.current = null;
+  };
+  // Ticks a row; with Shift, everything between it and the last ticked row, in the order on screen.
+  const pick = (id: string, on: boolean, range: boolean) => {
+    const shownIds =
+      groups && kind !== "form"
+        ? groups.flatMap((g) => (collapsed.has(g.key) ? [] : g.rows.map((r) => r.pageId)))
+        : tableRows.map((r) => r.pageId);
+    const a = range && lastPicked.current ? shownIds.indexOf(lastPicked.current) : -1;
+    const b = shownIds.indexOf(id);
+    const ids = a >= 0 && b >= 0 ? shownIds.slice(Math.min(a, b), Math.max(a, b) + 1) : [id];
+    const next = new Set(selected);
+    for (const i of ids) {
+      if (on) next.add(i);
+      else next.delete(i);
+    }
+    lastPicked.current = id;
+    setSelected(next);
+    setConfirmBulk(false);
+  };
+  const removePicked = () =>
+    run(async () => {
+      for (const id of picked) await deletePage(id);
+      clearPicked();
       onPagesChanged();
     });
 
@@ -334,6 +374,7 @@ export function DatabaseTable({
         data-grid-row
         data-reorder-row={reorderRow ? "" : undefined}
         data-drop={dropRow === row.pageId ? "true" : reorderRow?.["data-drop"]}
+        data-selected={selected.has(row.pageId) || undefined}
         onDragOver={(e) => {
           reorderRow?.onDragOver(e);
           if (!onDropItem || !hasDragItem(e)) return;
@@ -353,6 +394,14 @@ export function DatabaseTable({
       >
         <td {...stickyOf(0)} data-wrap={wrappedIds.has(TITLE_ID) || undefined}>
           <div className="db-row-title-cell">
+            <input
+              type="checkbox"
+              className="db-row-check"
+              checked={selected.has(row.pageId)}
+              readOnly
+              aria-label={`Seleccionar ${row.title}`}
+              onClick={(e) => pick(row.pageId, e.currentTarget.checked, e.shiftKey)}
+            />
             {reorderRow && (
               <span
                 className="db-row-grip"
@@ -774,8 +823,35 @@ export function DatabaseTable({
             board={{ property: boardProp, onAdd: (key) => void addToColumn(key) }}
           />
         )}
+      {(kind === "table" || responses) && picked.length > 0 && (
+        <div className="db-bulk" role="toolbar" aria-label="Filas seleccionadas">
+          <span>
+            {picked.length} {picked.length === 1 ? "fila seleccionada" : "filas seleccionadas"}
+          </span>
+          {confirmBulk ? (
+            <span className="db-confirm">
+              ¿Borrar {picked.length === 1 ? "la fila" : `las ${picked.length} filas`}?
+              <button type="button" onClick={() => void removePicked()}>
+                Borrar
+              </button>
+              <button type="button" onClick={() => setConfirmBulk(false)}>
+                No
+              </button>
+            </span>
+          ) : (
+            <>
+              <button type="button" onClick={() => setConfirmBulk(true)}>
+                <Trash2 size={13} strokeWidth={1.75} aria-hidden="true" /> Borrar
+              </button>
+              <button type="button" onClick={clearPicked}>
+                Deseleccionar
+              </button>
+            </>
+          )}
+        </div>
+      )}
       {(kind === "table" || responses) && (
-        <div className="db-scroll">
+        <div className="db-scroll" data-picking={picked.length > 0 || undefined}>
           <table
             ref={tableRef}
             className="db-table"

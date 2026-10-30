@@ -1,14 +1,19 @@
 import { useRef, useState, type DragEvent } from "react";
-import { moveItem } from "../../lib/reorder";
+import { moveItems } from "../../lib/reorder";
 
 const TYPE = "application/x-albaro-reorder";
 
 /**
  * Drag-to-reorder for a list of ids (the options of a select, the rows of a table). Spread
  * `handle(id)` on the grip and `row(id)` on its row; a line shows where the id will land, and
- * `onReorder` gets the new order once, when it is dropped (never when nothing would move).
+ * `onReorder` gets the new order once, when it is dropped (never when nothing would move). `withDragged`
+ * lists the ids that travel with the grabbed one (a multi-row selection); they land together.
  */
-export function useDragReorder(ids: string[], onReorder: (next: string[]) => void) {
+export function useDragReorder(
+  ids: string[],
+  onReorder: (next: string[]) => void,
+  withDragged?: (id: string) => string[],
+) {
   const dragged = useRef<string | null>(null);
   const [over, setOver] = useState<{ id: string; after: boolean } | null>(null);
 
@@ -48,7 +53,7 @@ export function useDragReorder(ids: string[], onReorder: (next: string[]) => voi
         const after = isAfter(e);
         reset();
         if (from === null) return;
-        const next = moveItem(ids, from, id, after);
+        const next = moveItems(ids, withDragged?.(from) ?? [from], id, after);
         if (next !== ids) onReorder(next);
       },
     }),

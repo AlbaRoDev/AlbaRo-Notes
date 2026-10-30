@@ -9,3 +9,19 @@ export function moveItem(items: string[], from: string, target: string, after: b
   rest.splice(rest.indexOf(target) + (after ? 1 : 0), 0, from);
   return rest.every((o, i) => o === items[i]) ? items : rest;
 }
+
+/** `moveItem` for several ids at once: `moved` keep their relative order and land together next to `target`. */
+export function moveItems(
+  items: string[],
+  moved: string[],
+  target: string,
+  after: boolean,
+): string[] {
+  const block = items.filter((o) => moved.includes(o));
+  if (block.length < 2)
+    return block.length === 1 ? moveItem(items, block[0], target, after) : items;
+  if (block.includes(target) || !items.includes(target)) return items;
+  const rest = items.filter((o) => !block.includes(o));
+  rest.splice(rest.indexOf(target) + (after ? 1 : 0), 0, ...block);
+  return rest.every((o, i) => o === items[i]) ? items : rest;
+}
