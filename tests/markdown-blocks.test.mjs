@@ -93,3 +93,20 @@ test("only plain text blocks may be replaced", () => {
     false,
   );
 });
+
+test("Notion's <aside> is a callout whose first line is its icon", () => {
+  const blocks = markdownToBlocks(
+    "<aside>\n📝\n\nNotas de formato\n\n⚠️, 💡: Callouts (/callout).\n</aside>\n\nDespués",
+  );
+  assert.deepEqual(
+    blocks.map((b) => b.type),
+    ["callout", "paragraph"],
+  );
+  assert.equal(blocks[0].attrs.icon, "📝");
+  assert.equal(blocks[0].content.length, 2, "the icon line is not a paragraph of the callout");
+  assert.equal(markdownToBlocks("<aside>\nSolo texto\n</aside>")[0].attrs.icon, null);
+  assert.equal(markdownToBlocks("<aside>\n💡\n</aside>")[0].content[0].type, "paragraph");
+  // and back: the icon first, alone, then the blocks
+  assert.match(blocksToMarkdown(blocks.slice(0, 1)), /^<aside>\n📝\n\nNotas de formato\n\n/);
+  assert.match(blocksToMarkdown(blocks.slice(0, 1)), /\n<\/aside>$/);
+});

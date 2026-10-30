@@ -1,4 +1,6 @@
 import { Extension, InputRule, markInputRule, textInputRule } from "@tiptap/core";
+import { Plugin } from "@tiptap/pm/state";
+import { markdownToBlocks } from "../../lib/markdown-blocks";
 import { lastColors } from "./ColorMarks";
 import { blockSelection } from "./BlockSelect";
 import {
@@ -24,6 +26,9 @@ const TURN_KEYS: Record<string, TurnKind> = {
   "7": "toggle",
   "8": "code",
 };
+
+/** A line that is Markdown: a heading, a list item, a quote, a fence, a table row or a to-do. */
+const MARKDOWN_LINE = /^(#{1,6}\s|\s*[-*+]\s|\s*\d+\.\s|\s*>\s|```|\|.+\|)/m;
 
 /** `$latex$` and `$$latex$$` (no space just inside the dollars, so prices like «$5 and $6» are left alone). */
 const LATEX_BODY = String.raw`([^$\s](?:[^$]*[^$\s])?)`;
@@ -99,6 +104,31 @@ export const NotionShortcuts = Extension.create({
     for (const [digit, kind] of Object.entries(TURN_KEYS))
       shortcuts[`Mod-Shift-${digit}`] = turn(kind);
     return shortcuts;
+  },
+
+  // Pasting several lines of Markdown (Notion's own copy writes callouts as `<aside>`) makes the blocks they describe.
+  // Rich text from a web page is left to the editor, unless it carries an `<aside>`; code is never converted.
+  addProseMirrorPlugins() {
+    const editor = this.editor;
+    return [
+      new Plugin({
+        props: {
+          handlePaste: (view, event) => {
+            const text = event.clipboardData?.getData("text/plain") ?? "";
+            if (!text.includes("\n") || view.state.selection.$from.parent.type.spec.code)
+              return false;
+            const aside = /^\s*<aside>\s*$/im.test(text);
+            const rich = !!event.clipboardData?.getData("text/html");
+            if (!aside && (rich || !MARKDOWN_LINE.test(text))) return false;
+            const blocks = markdownToBlocks(text);
+            if (blocks.length === 0) return false;
+            event.preventDefault();
+            editor.chain().focus().insertContent(blocks).run();
+            return true;
+          },
+        },
+      }),
+    ];
   },
 
   addInputRules() {

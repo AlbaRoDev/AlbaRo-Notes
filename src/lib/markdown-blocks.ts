@@ -111,6 +111,16 @@ const tableCells = (line: string) =>
     .split("|")
     .map((c) => c.trim());
 
+/** A line that is only emoji: how Notion writes a callout's icon, alone on the first line inside `<aside>`. */
+function isEmojiLine(line: string) {
+  // the joiners and skin tones that make up a sequence are not counted, only the pictures
+  const bare = line
+    .replace(/\u200D/g, "")
+    .replace(/\uFE0F/g, "")
+    .replace(/[\u{1F3FB}-\u{1F3FF}]/gu, "");
+  return bare.length > 0 && bare.length <= 12 && /^\p{Extended_Pictographic}+$/u.test(bare);
+}
+
 /** Markdown (as models write it) to editor blocks. Each plain line is its own paragraph, as in Notion. */
 export function markdownToBlocks(markdown: string): JSONContent[] {
   const lines = markdown.replace(/\r\n?/g, "\n").split("\n");
@@ -134,6 +144,22 @@ export function markdownToBlocks(markdown: string): JSONContent[] {
         type: "codeBlock",
         attrs: { language: fence[1] || "plaintext" },
         ...(text ? { content: [{ type: "text", text }] } : {}),
+      });
+      continue;
+    }
+    // Notion exports a callout as `<aside>`, its icon on the first line, and the content after
+    if (/^<aside>$/i.test(trimmed)) {
+      const inner: string[] = [];
+      i++;
+      while (i < lines.length && !/^<\/aside>$/i.test(lines[i].trim())) inner.push(lines[i++]);
+      i++; // the closing tag (or the end, if it is missing)
+      const at = inner.findIndex((l) => l.trim());
+      const icon = at >= 0 && isEmojiLine(inner[at].trim()) ? inner.splice(at, 1)[0].trim() : null;
+      const content = markdownToBlocks(inner.join("\n"));
+      blocks.push({
+        type: "callout",
+        attrs: { icon },
+        content: content.length ? content : [{ type: "paragraph" }],
       });
       continue;
     }
@@ -277,6 +303,13 @@ export function blocksToMarkdown(nodes: JSONContent[]): string {
       case "horizontalRule":
         out.push("---");
         break;
+      case "callout": {
+        const icon = typeof node.attrs?.icon === "string" ? node.attrs.icon : "";
+        out.push(
+          `<aside>\n${isEmojiLine(icon) ? `${icon}\n\n` : ""}${blocksToMarkdown(node.content ?? [])}\n</aside>`,
+        );
+        break;
+      }
       case "table": {
         const rows = (node.content ?? []).map(
           (row) =>

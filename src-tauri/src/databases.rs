@@ -672,7 +672,7 @@ pub fn rename_select_option(conn: &Connection, id: &str, old: &str, new: &str) -
     tx.commit().map_err(sql)
 }
 
-const MAX_ICON: usize = 32;
+const MAX_ICON: usize = 64;
 
 /// An icon (of a column or of a page): trimmed, or `None` when empty; a name or an emoji with no markup or spaces.
 pub(crate) fn check_icon(icon: Option<&str>) -> Result<Option<&str>, String> {
@@ -1366,8 +1366,10 @@ mod tests {
         let data = || get_database(&fx.conn, &fx.db).unwrap().unwrap().properties.into_iter().find(|p| p.id == note).unwrap();
         set_property_icon(&fx.conn, &note, Some("Star")).unwrap();
         assert_eq!(data().icon.as_deref(), Some("Star"));
+        set_property_icon(&fx.conn, &note, Some("lucide:Rocket")).unwrap();
+        assert_eq!(data().icon.as_deref(), Some("lucide:Rocket"), "an icon of the library");
         set_property_icon(&fx.conn, &note, Some("🚀")).unwrap();
-        for bad in ["<b>", "a b", "x\"y", &"a".repeat(33)] {
+        for bad in ["<b>", "a b", "x\"y", &"a".repeat(65)] {
             assert!(set_property_icon(&fx.conn, &note, Some(bad)).is_err(), "{bad}");
         }
         assert_eq!(data().icon.as_deref(), Some("🚀"), "a refused icon changes nothing");

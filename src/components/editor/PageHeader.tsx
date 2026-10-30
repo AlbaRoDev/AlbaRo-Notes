@@ -7,6 +7,9 @@ import { SEASONS, type Season } from "../../lib/seasons";
 import { useAttachmentUrl } from "../../hooks/useAttachmentUrl";
 import type { PageSummary } from "../../types";
 import { MARK_COLORS } from "./ColorMarks";
+import { IconGrid } from "../IconGrid";
+import { PageIcon } from "../PageIcon";
+import { parseIcon } from "../../lib/icon-library";
 import {
   EMOJI_CATEGORIES,
   addRecentEmoji,
@@ -78,17 +81,21 @@ function Popover({
   );
 }
 
-const MAX_SHOWN = 160;
+const MAX_FOUND = 400;
 
-function IconPicker({
-  hasIcon,
+export function IconPicker({
+  current,
   onPick,
   onClose,
 }: {
-  hasIcon: boolean;
+  current: string | null;
   onPick: (icon: string | null) => void;
   onClose: () => void;
 }) {
+  // Emoji or the icon library (with colours), as Notion's two tabs
+  const [tab, setTab] = useState<"emoji" | "icons">(() =>
+    current && parseIcon(current).kind === "lucide" ? "icons" : "emoji",
+  );
   const [emoji, setEmoji] = useState<EmojiEntry[] | null>(null);
   const [query, setQuery] = useState("");
   const [recent] = useState(getRecentEmoji);
@@ -100,72 +107,104 @@ function IconPicker({
     };
   }, []);
 
-  const shown = useMemo(() => {
-    if (!emoji) return [];
-    const needle = query.trim().toLowerCase();
-    if (!needle)
-      return emoji
-        .filter(
-          (e) =>
-            e.group === EMOJI_CATEGORIES[0].group ||
-            e.group === 3 ||
-            e.group === 4 ||
-            e.group === 6 ||
-            e.group === 5,
-        )
-        .slice(0, MAX_SHOWN);
-    return emoji
-      .filter(
-        (e) =>
-          e.label.toLowerCase().includes(needle) ||
-          e.tags.some((t) => t.toLowerCase().includes(needle)),
-      )
-      .slice(0, MAX_SHOWN);
-  }, [emoji, query]);
+  const needle = query.trim().toLowerCase();
+  const found = useMemo(
+    () =>
+      emoji && needle
+        ? emoji
+            .filter(
+              (e) =>
+                e.label.toLowerCase().includes(needle) ||
+                e.tags.some((t) => t.toLowerCase().includes(needle)),
+            )
+            .slice(0, MAX_FOUND)
+        : [],
+    [emoji, needle],
+  );
+  const sections = useMemo(
+    () =>
+      emoji
+        ? EMOJI_CATEGORIES.map((c) => ({ ...c, items: emoji.filter((e) => e.group === c.group) }))
+        : [],
+    [emoji],
+  );
 
   const choose = (char: string) => {
     addRecentEmoji(char);
     onPick(char);
   };
+  const button = (e: EmojiEntry) => (
+    <button
+      key={e.hexcode}
+      type="button"
+      title={e.label}
+      aria-label={e.label}
+      onClick={() => choose(e.char)}
+    >
+      {e.char}
+    </button>
+  );
 
   return (
     <Popover label="Elegir un icono" onClose={onClose}>
-      <input
-        autoFocus
-        type="search"
-        placeholder="Busca un emoji…"
-        aria-label="Buscar un emoji"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
-      {!query && recent.length > 0 && (
-        <div className="page-popover-section">
-          <span>Recientes</span>
-          <div className="page-emoji-grid">
-            {recent.slice(0, 16).map((char) => (
-              <button key={char} type="button" onClick={() => choose(char)} aria-label={char}>
-                {char}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      <div className="page-emoji-grid" role="listbox" aria-label="Emojis">
-        {!emoji && <p className="page-popover-note">Cargando…</p>}
-        {emoji && shown.length === 0 && <p className="page-popover-note">Ningún emoji coincide.</p>}
-        {shown.map((e) => (
+      <div className="page-popover-tabs" role="tablist">
+        {(["emoji", "icons"] as const).map((t) => (
           <button
-            key={e.hexcode}
+            key={t}
             type="button"
-            title={e.label}
-            aria-label={e.label}
-            onClick={() => choose(e.char)}
+            role="tab"
+            aria-selected={tab === t}
+            onClick={() => setTab(t)}
           >
-            {e.char}
+            {t === "emoji" ? "Emoji" : "Iconos"}
           </button>
         ))}
       </div>
-      {hasIcon && (
+      {tab === "icons" ? (
+        <IconGrid current={current} withColor onPick={onPick} />
+      ) : (
+        <>
+          <input
+            autoFocus
+            type="search"
+            placeholder="Busca un emoji…"
+            aria-label="Buscar un emoji"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          {!emoji && <p className="page-popover-note">Cargando…</p>}
+          {!needle && recent.length > 0 && (
+            <div className="page-popover-section">
+              <span>Recientes</span>
+              <div className="page-emoji-grid">
+                {recent.slice(0, 16).map((char) => (
+                  <button key={char} type="button" onClick={() => choose(char)} aria-label={char}>
+                    {char}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {needle ? (
+            <div className="page-emoji-grid" role="listbox" aria-label="Emojis">
+              {emoji && found.length === 0 && (
+                <p className="page-popover-note">Ningún emoji coincide.</p>
+              )}
+              {found.map(button)}
+            </div>
+          ) : (
+            sections.map((section) => (
+              <div key={section.group} className="page-popover-section">
+                <span>{section.label}</span>
+                <div className="page-emoji-grid" role="listbox" aria-label={section.label}>
+                  {section.items.map(button)}
+                </div>
+              </div>
+            ))
+          )}
+        </>
+      )}
+      {current && (
         <button type="button" className="page-popover-remove" onClick={() => onPick(null)}>
           Quitar el icono
         </button>
@@ -298,7 +337,7 @@ export function PageHeader({ page, onChanged }: { page: PageSummary; onChanged: 
             aria-label="Cambiar el icono"
             onClick={() => setOpen(open === "icon" ? null : "icon")}
           >
-            {page.icon}
+            <PageIcon icon={page.icon} size={60} />
           </button>
         )}
         <div className="page-header-add">
@@ -316,7 +355,7 @@ export function PageHeader({ page, onChanged }: { page: PageSummary; onChanged: 
       </div>
       {open === "icon" && (
         <IconPicker
-          hasIcon={!!page.icon}
+          current={page.icon ?? null}
           onClose={close}
           onPick={(icon) => save(setPageIcon(page.id, icon))}
         />

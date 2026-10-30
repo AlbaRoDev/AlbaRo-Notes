@@ -172,6 +172,14 @@ fn check_image(node: &Value) -> Result<(), String> {
     Ok(())
 }
 
+/// A callout's icon: an emoji or an icon of the library (`lucide:Name:colour`), or none; never markup.
+fn check_callout(node: &Value) -> Result<(), String> {
+    match opt_str(node, "icon")? {
+        Some(icon) if crate::databases::check_icon(Some(icon)).is_err() => Err("A callout's icon is not valid".to_string()),
+        _ => Ok(()),
+    }
+}
+
 fn check_equation(node: &Value) -> Result<(), String> {
     match opt_str(node, "latex")? {
         Some(s) if s.chars().count() > MAX_LATEX_LEN => Err(format!("An equation can have at most {MAX_LATEX_LEN} characters")),
@@ -345,6 +353,7 @@ pub fn validate_blocks(node: &Value, in_synced: bool) -> Result<(), String> {
         Some("buttonBlock") => check_button(node)?,
         Some("image") => check_image(node)?,
         Some("equationBlock" | "equationInline") => check_equation(node)?,
+        Some("callout") => check_callout(node)?,
         Some("calendarView" | "timelineView") => check_events(node)?,
         Some("mapView") => check_pins(node)?,
         Some("chartView") => check_chart(node)?,
@@ -395,6 +404,17 @@ mod tests {
     use serde_json::json;
 
     const ID: &str = "3f0c2a9e-6b1d-4c1a-9d7e-2b8f5a1c4e60";
+
+    #[test]
+    fn a_callout_icon_is_plain() {
+        let callout = |icon: Value| json!({ "type": "callout", "attrs": { "icon": icon }, "content": [{ "type": "paragraph" }] });
+        for good in [json!("💡"), json!("⚠️"), json!("lucide:Rocket:blue"), Value::Null] {
+            assert!(validate_blocks(&callout(good.clone()), false).is_ok(), "{good}");
+        }
+        for bad in [json!("<b>"), json!("a b"), json!(5), json!("x".repeat(65))] {
+            assert!(validate_blocks(&callout(bad.clone()), false).is_err(), "{bad}");
+        }
+    }
 
     fn ok(v: Value) -> bool {
         validate_blocks(&v, false).is_ok()

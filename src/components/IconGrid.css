@@ -1,0 +1,109 @@
+/* ---- the icon library picker (pages and columns) ---- */
+.icon-grid-box {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.icon-grid-box input[type="search"] {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.icon-colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.icon-color {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--text-color, var(--bg));
+}
+
+.icon-color[data-color="none"] {
+  background: linear-gradient(135deg, transparent 45%, var(--text-muted) 45% 55%, transparent 55%);
+}
+
+.icon-color[data-color="gray"] {
+  --text-color: var(--text-gray);
+}
+.icon-color[data-color="brown"] {
+  --text-color: var(--text-brown);
+}
+.icon-color[data-color="orange"] {
+  --text-color: var(--text-orange);
+}
+.icon-color[data-color="yellow"] {
+  --text-color: var(--text-yellow);
+}
+.icon-color[data-color="green"] {
+  --text-color: var(--text-green);
+}
+.icon-color[data-color="blue"] {
+  --text-color: var(--text-blue);
+}
+.icon-color[data-color="purple"] {
+  --text-color: var(--text-purple);
+}
+.icon-color[data-color="pink"] {
+  --text-color: var(--text-pink);
+}
+.icon-color[data-color="red"] {
+  --text-color: var(--text-red);
+}
+
+.icon-color[aria-pressed="true"] {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 32px);
+  gap: 2px;
+}
+
+.icon-grid button,
+.icon-grid-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text);
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.icon-grid button:hover,
+.icon-grid-more:hover {
+  background: rgba(var(--ink), 0.1);
+}
+
+.icon-grid button[aria-selected="true"] {
+  background: rgba(var(--accent-rgb), 0.2);
+}
+
+.icon-grid-more {
+  width: 100%;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.icon-grid-note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}

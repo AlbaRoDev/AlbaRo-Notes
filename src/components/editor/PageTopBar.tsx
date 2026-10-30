@@ -12,6 +12,7 @@ import {
 import { getPageContent, pageInfo, setPageFavorite } from "../../lib/db-client";
 import { blocksToMarkdown } from "../../lib/markdown-blocks";
 import type { PageInfo, PageSummary } from "../../types";
+import { PageIcon } from "../PageIcon";
 import "./PageTopBar.css";
 
 interface Action {
@@ -44,7 +45,11 @@ function ancestorsOf(page: PageSummary, pages: PageSummary[]): PageSummary[] {
 function Crumb({ page }: { page: PageSummary }) {
   return (
     <>
-      {page.icon && <span aria-hidden="true">{page.icon}</span>}
+      {page.icon && (
+        <span aria-hidden="true">
+          <PageIcon icon={page.icon} size={14} />
+        </span>
+      )}
       <span className="page-crumb-title">{page.title || "Sin título"}</span>
     </>
   );

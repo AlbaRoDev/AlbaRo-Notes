@@ -12,6 +12,7 @@ import { RowPanelAnchor, setRowPanelContainer } from "../database/RowPanelAnchor
 import { databasePageExtensions } from "../database/database-page-extensions";
 import { BlockSelect, EscapeSelectsBlock } from "./BlockSelect";
 import { FindBar } from "./FindBar";
+import { PageOutline } from "./PageOutline";
 import { FIND_EVENT, PageSearch } from "./PageSearch";
 import { ItemDrop } from "./ItemDrop";
 import { MediaDrop } from "./MediaDrop";
@@ -320,6 +321,7 @@ export function PageEditor({
               <FindBar editor={editor} focusToken={find.token} onClose={closeFind} />
             </div>
           ))}
+        {!ownDatabaseId && editor && <PageOutline editor={editor} wrapperRef={wrapperRef} />}
         {rowDatabaseId &&
           createPortal(
             <RowProperties key={pageId} pageId={pageId} databaseId={rowDatabaseId} />,

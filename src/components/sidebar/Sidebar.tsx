@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { PageIcon } from "../PageIcon";
 import { createPortal } from "react-dom";
 import {
   ChevronRight,
@@ -262,7 +263,7 @@ export function Sidebar({
           </button>
           {page.icon ? (
             <span className="sidebar-item-icon sidebar-item-emoji" aria-hidden="true">
-              {page.icon}
+              <PageIcon icon={page.icon} size={16} />
             </span>
           ) : page.kind === "database" ? (
             <Database

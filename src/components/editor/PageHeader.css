@@ -224,3 +224,26 @@
 .page-popover-note[role="alert"] {
   color: var(--danger);
 }
+
+/* Emoji | Iconos, as Notion's picker has them */
+.page-popover-tabs {
+  display: flex;
+  gap: 4px;
+  box-shadow: inset 0 -1px 0 var(--border);
+}
+
+.page-popover-tabs button {
+  padding: 4px 10px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.page-popover-tabs button[aria-selected="true"] {
+  border-bottom-color: var(--accent);
+  color: var(--text);
+}

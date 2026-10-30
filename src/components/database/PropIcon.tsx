@@ -1,9 +1,12 @@
 import { useState } from "react";
 import type { Property } from "../../types";
+import { parseIcon } from "../../lib/icon-library";
+import { IconGrid } from "../IconGrid";
+import { LucideByName } from "../PageIcon";
 import { PROP_ICONS } from "./prop-icons";
 import { typeChoiceOf } from "./property-types";
 
-/** A column's icon: the one the user picked (a lucide name or an emoji), else its type's. */
+/** A column's icon: the one the user picked (an icon of the library or an emoji), else its type's. */
 export function PropIcon({
   prop,
   size = 14,
@@ -11,19 +14,30 @@ export function PropIcon({
   prop: Pick<Property, "type" | "config" | "icon">;
   size?: number;
 }) {
-  const custom = prop.icon ? PROP_ICONS[prop.icon] : undefined;
-  if (prop.icon && !custom) {
+  const parsed = prop.icon ? parseIcon(prop.icon, true) : null;
+  if (parsed?.kind === "emoji") {
     return (
       <span className="prop-emoji" style={{ fontSize: size }} aria-hidden="true">
-        {prop.icon}
+        {parsed.text}
       </span>
     );
   }
-  const Icon = custom ?? typeChoiceOf(prop).icon;
+  if (parsed?.kind === "lucide") {
+    // the few icons columns could wear before the library are already in the bundle
+    return (
+      <LucideByName
+        name={parsed.name}
+        size={size}
+        color={parsed.color}
+        known={PROP_ICONS[parsed.name]}
+      />
+    );
+  }
+  const Icon = typeChoiceOf(prop).icon;
   return <Icon size={size} strokeWidth={1.75} aria-hidden="true" />;
 }
 
-/** The picker behind a column's icon button: a grid of icons, a box for an emoji and «Quitar». */
+/** The picker behind a column's icon button: the icon library, a box for an emoji and «Quitar». */
 export function IconPicker({
   current,
   onPick,
@@ -34,21 +48,7 @@ export function IconPicker({
   const [emoji, setEmoji] = useState("");
   return (
     <div className="pm-icons">
-      <div className="pm-icon-grid" role="listbox" aria-label="Iconos">
-        {Object.entries(PROP_ICONS).map(([name, Icon]) => (
-          <button
-            key={name}
-            type="button"
-            role="option"
-            aria-selected={current === name}
-            aria-label={name}
-            title={name}
-            onClick={() => onPick(name)}
-          >
-            <Icon size={16} strokeWidth={1.75} aria-hidden="true" />
-          </button>
-        ))}
-      </div>
+      <IconGrid current={current} withColor={false} onPick={onPick} />
       <form
         className="pm-icon-emoji"
         onSubmit={(e) => {

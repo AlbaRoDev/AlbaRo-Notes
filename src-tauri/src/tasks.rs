@@ -327,7 +327,9 @@ mod tests {
 
         db::set_page_icon(&conn, &page.id, Some(" 🚀 ")).unwrap();
         assert_eq!(find(&conn).icon.as_deref(), Some("🚀"));
-        for bad in ["a b", "<b>", "x\"y", &"é".repeat(33)] {
+        // an icon of the library, with its colour, is long but plain
+        db::set_page_icon(&conn, &page.id, Some("lucide:TrianglesCenterlineDashedHorizontal:purple")).unwrap();
+        for bad in ["a b", "<b>", "x\"y", &"é".repeat(65)] {
             assert!(db::set_page_icon(&conn, &page.id, Some(bad)).is_err(), "{bad}");
         }
         db::set_page_icon(&conn, &page.id, Some("")).unwrap();
