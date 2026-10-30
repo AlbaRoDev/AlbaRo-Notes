@@ -145,12 +145,11 @@
 }
 
 .sidebar-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  z-index: 20;
+  position: fixed;
+  z-index: 70;
   display: grid;
-  min-width: 13rem;
+  box-sizing: border-box;
+  width: 13rem;
   padding: 0.3rem;
   border-radius: 8px;
   background: var(--bg-popover);
@@ -227,6 +226,17 @@
   white-space: nowrap;
   flex: 1 1 auto;
   min-width: 0;
+}
+
+.sidebar-item-rename {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0 4px;
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
 }
 
 .sidebar-item-delete {

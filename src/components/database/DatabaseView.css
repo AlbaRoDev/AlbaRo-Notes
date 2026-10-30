@@ -1960,10 +1960,16 @@ button.db-prop-name {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  box-sizing: border-box;
+  height: 34px;
   padding: 4px 8px;
-  margin-bottom: 4px;
+  /* Laid over the view bar instead of pushing the table down: rows must not move under a drag. */
+  margin: -34px 0 0;
+  position: relative;
+  z-index: 5;
   border-radius: 4px;
-  background: rgba(var(--accent-rgb), 0.1);
+  background:
+    linear-gradient(rgba(var(--accent-rgb), 0.1), rgba(var(--accent-rgb), 0.1)), var(--bg);
   font-size: 0.85rem;
 }
 
@@ -1981,4 +1987,34 @@ button.db-prop-name {
 
 .page-editor .ProseMirror .db-bulk button:hover {
   background: rgba(var(--ink), 0.1);
+}
+
+/* ---- row handle: «+» (add a row under) and the grip (drag; click for the menu) ---- */
+.page-editor .ProseMirror .db-table .db-row-add {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  padding: 4px 2px;
+  border: none;
+  background: none;
+  color: var(--text-faint);
+  opacity: 0;
+}
+
+.page-editor .ProseMirror .db-table tr:hover .db-row-add,
+.page-editor .ProseMirror .db-table .db-row-add:focus-visible {
+  opacity: 1;
+}
+
+.page-editor .ProseMirror .db-row-add:hover,
+.page-editor .ProseMirror .db-row-grip:hover {
+  color: var(--text-muted);
+}
+
+.page-editor .ProseMirror .db-row-grip:not([draggable="true"]) {
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.page-editor .ProseMirror .db-scroll:focus {
+  outline: none;
 }

@@ -41,6 +41,7 @@ import { createDatabasePage, createPage, deletePage, dbPing, listPages } from ".
 import { AppMenu } from "./components/AppMenu";
 import { UpdateBanner } from "./components/UpdateBanner";
 import { requestUpdateCheck } from "./lib/app-update";
+import { renamePage } from "./lib/rename";
 import type { PageSummary } from "./types";
 import "./App.css";
 
@@ -137,6 +138,12 @@ function App() {
   // from SQLite and resetting the editor's selection mid-keystroke: the exact
   // "cursor jumps while typing" bug in toggle/columns.
   const handleTitleChange = useCallback((pageId: string, title: string) => {
+    setPages((prev) => prev.map((p) => (p.id === pageId ? { ...p, title } : p)));
+  }, []);
+
+  // The sidebar's rename; the open page's title also comes back through its editor's autosave.
+  const handleRename = useCallback(async (pageId: string, title: string) => {
+    await renamePage(pageId, title);
     setPages((prev) => prev.map((p) => (p.id === pageId ? { ...p, title } : p)));
   }, []);
 
@@ -330,6 +337,7 @@ function App() {
       onSelect={openPage}
       onCreate={handleCreate}
       onDelete={handleDelete}
+      onRename={handleRename}
       onSearch={openSearch}
       onAskAi={openAi}
     />
@@ -347,59 +355,61 @@ function App() {
     <div className="app-layout">
       {sidebar}
       {/* Like Notion, a database page uses the full width; text pages keep a readable column. */}
-      <main className={selectedPage?.ownDatabaseId ? "container container--wide" : "container"}>
-        {selectedPage && (
-          <PageTopBar
-            page={selectedPage}
-            pages={pages}
-            onOpen={openPage}
-            onChanged={refreshPages}
-            onDelete={handleDelete}
-            onAskAi={openAi}
-          />
-        )}
-        {selectedPage && (
-          <PageHeader
-            key={`header-${selectedPage.id}`}
-            page={selectedPage}
-            onChanged={refreshPages}
-          />
-        )}
-        {selectedPageId && (
-          // Keyed by page so a page that fails to draw does not stop the next one from opening. Siblings need
-          // different keys: with the same one React duplicated the header of every page visited.
-          <ErrorBoundary key={`editor-${selectedPageId}`} what="la página">
-            <PageEditor
-              // A database page's editor is title-only, so it needs its own editor instance.
-              key={selectedPage?.ownDatabaseId ? "database" : "page"}
-              ownDatabaseId={selectedPage?.ownDatabaseId ?? null}
-              rowDatabaseId={selectedPage?.databaseId ?? null}
-              pageId={selectedPageId}
+      <div className="page-column">
+        <main className={selectedPage?.ownDatabaseId ? "container container--wide" : "container"}>
+          {selectedPage && (
+            <PageTopBar
+              page={selectedPage}
               pages={pages}
-              onTitleChange={handleTitleChange}
-              onNavigate={setSelectedPageId}
-              onChildPageCreated={handleChildPageCreated}
-              onPagesChanged={refreshPages}
+              onOpen={openPage}
+              onChanged={refreshPages}
+              onDelete={handleDelete}
+              onAskAi={openAi}
             />
-          </ErrorBoundary>
-        )}
-        {selectedPage?.kind === "page" && !selectedPage.databaseId && (
-          <RelatedTasks pageId={selectedPage.id} pages={pages} onOpen={openPage} />
-        )}
-        {dbError && (
-          <p className="app-footer app-footer--error" role="alert">
-            {dbError}
-          </p>
-        )}
-        {version && (
-          <p
-            className="app-footer"
-            title={dbSchema === null ? undefined : `Base de datos: esquema v${dbSchema}`}
-          >
-            AlbaRo Notes v{version}
-          </p>
-        )}
-      </main>
+          )}
+          {selectedPage && (
+            <PageHeader
+              key={`header-${selectedPage.id}`}
+              page={selectedPage}
+              onChanged={refreshPages}
+            />
+          )}
+          {selectedPageId && (
+            // Keyed by page so a page that fails to draw does not stop the next one from opening. Siblings need
+            // different keys: with the same one React duplicated the header of every page visited.
+            <ErrorBoundary key={`editor-${selectedPageId}`} what="la página">
+              <PageEditor
+                // A database page's editor is title-only, so it needs its own editor instance.
+                key={selectedPage?.ownDatabaseId ? "database" : "page"}
+                ownDatabaseId={selectedPage?.ownDatabaseId ?? null}
+                rowDatabaseId={selectedPage?.databaseId ?? null}
+                pageId={selectedPageId}
+                pages={pages}
+                onTitleChange={handleTitleChange}
+                onNavigate={setSelectedPageId}
+                onChildPageCreated={handleChildPageCreated}
+                onPagesChanged={refreshPages}
+              />
+            </ErrorBoundary>
+          )}
+          {selectedPage?.kind === "page" && !selectedPage.databaseId && (
+            <RelatedTasks pageId={selectedPage.id} pages={pages} onOpen={openPage} />
+          )}
+          {dbError && (
+            <p className="app-footer app-footer--error" role="alert">
+              {dbError}
+            </p>
+          )}
+          {version && (
+            <p
+              className="app-footer"
+              title={dbSchema === null ? undefined : `Base de datos: esquema v${dbSchema}`}
+            >
+              AlbaRo Notes v{version}
+            </p>
+          )}
+        </main>
+      </div>
     </div>
   );
 

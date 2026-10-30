@@ -1,8 +1,10 @@
 import { Fragment, useEffect, useRef, useState, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 import {
   PanelRight,
   ChevronDown,
   ChevronRight,
+  Copy,
   Database as DatabaseIcon,
   GripVertical,
   Plus,
@@ -14,6 +16,7 @@ import {
   createRow,
   createView,
   deletePage,
+  duplicateRow,
   deleteProperty,
   deleteView,
   renameProperty,
@@ -43,6 +46,8 @@ import { hasDragItem, readDragItem, type DragItem } from "../../lib/drag-item";
 import { cellKey, commitOnBlur } from "./cell-commit";
 import { useDragReorder } from "./drag-reorder";
 import { fitColumn } from "./fit-column";
+import { hits, isPageBlank, startMarquee } from "../../lib/marquee";
+import { moveItem } from "../../lib/reorder";
 import { AddPropertyPanel, PropertyPanel } from "./DatabaseProperties";
 import { DatabaseCalendar } from "./DatabaseCalendar";
 import { ChartPanel, DatabaseChart } from "./DatabaseChart";
@@ -143,7 +148,9 @@ export function DatabaseTable({
     document.addEventListener("mousedown", down);
     return () => document.removeEventListener("mousedown", down);
   }, [panel]);
-  const [confirmRow, setConfirmRow] = useState<string | null>(null);
+  // The menu of a row's grip (open, duplicate, delete); the row it belongs to is picked.
+  const [rowMenu, setRowMenu] = useState<{ id: string; x: number; y: number } | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   // A form view has two faces, like Notion's: the form itself and the answers (the database's rows).
   const [formTab, setFormTab] = useState<"form" | "responses">("form");
@@ -169,6 +176,81 @@ export function DatabaseTable({
     },
     (id) => (selected.has(id) ? [...selected] : [id]),
   );
+
+  // Dragging a band from the blank space around the table ticks the rows it touches (Shift or Ctrl adds to the picked ones).
+  const selectedRef = useRef(selected);
+  useEffect(() => {
+    selectedRef.current = selected;
+  });
+  useEffect(() => {
+    const down = (e: MouseEvent) => {
+      const root = tableRef.current?.closest(".db-root");
+      const t = e.target;
+      if (!root || !(t instanceof Element)) return;
+      // A table inside a page owns only its own blank space; a database page's table also owns the page's.
+      const mine = root.contains(t)
+        ? t.matches(".db-root, .db-scroll")
+        : !!root.closest(".db-page") && isPageBlank(t);
+      if (!mine) return;
+      const base = new Set(e.shiftKey || e.ctrlKey || e.metaKey ? selectedRef.current : []);
+      startMarquee(
+        e,
+        (box) => {
+          const next = new Set(base);
+          tableRef.current?.querySelectorAll<HTMLElement>("tr[data-row-id]").forEach((tr) => {
+            if (hits(tr, box)) next.add(tr.dataset.rowId!);
+          });
+          setConfirmBulk(false);
+          setSelected((prev) =>
+            prev.size === next.size && [...prev].every((id) => next.has(id)) ? prev : next,
+          );
+        },
+        (dragged) => dragged && scrollRef.current?.focus({ preventScroll: true }),
+      );
+    };
+    document.addEventListener("mousedown", down, true);
+    return () => document.removeEventListener("mousedown", down, true);
+  }, []);
+
+  // With rows picked and the focus on the table (not in a cell), Delete asks to remove them and Esc lets go.
+  // Captured on the document so a page's editor never sees the key (it would delete its own selection).
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      const t = e.target;
+      if (!selectedRef.current.size || !(t instanceof Element)) return;
+      if (!scrollRef.current?.contains(t) || t.closest("input, textarea, select, [role=combobox]"))
+        return;
+      if (e.key === "Delete" || e.key === "Backspace") {
+        setRowMenu(null);
+        setConfirmBulk(true);
+      } else if (e.key === "Escape" && !document.querySelector(".handle-menu"))
+        setSelected(new Set());
+      else return;
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    document.addEventListener("keydown", key, true);
+    return () => document.removeEventListener("keydown", key, true);
+  }, []);
+
+  // The row menu closes on a press outside it or Esc.
+  useEffect(() => {
+    if (!rowMenu) return;
+    const close = (e: Event) => {
+      if (
+        e instanceof KeyboardEvent
+          ? e.key === "Escape"
+          : !(e.target as Element).closest(".handle-menu")
+      )
+        setRowMenu(null);
+    };
+    document.addEventListener("mousedown", close, true);
+    document.addEventListener("keydown", close, true);
+    return () => {
+      document.removeEventListener("mousedown", close, true);
+      document.removeEventListener("keydown", close, true);
+    };
+  }, [rowMenu]);
 
   if (data === undefined) {
     return (
@@ -267,10 +349,37 @@ export function DatabaseTable({
       onPagesChanged();
     });
 
-  const removeRow = (pageId: string) =>
+  // The grip's click: it picks the row (Shift: the range up to it, Ctrl: adds or removes it) and, on a plain
+  // click, opens the menu. The focus moves to the table so Delete reaches it.
+  const gripClick = (e: React.MouseEvent<HTMLElement>, id: string) => {
+    if (e.shiftKey) pick(id, true, true);
+    else if (e.ctrlKey || e.metaKey) pick(id, !selected.has(id), false);
+    else {
+      setSelected(new Set([id]));
+      setConfirmBulk(false);
+      lastPicked.current = id;
+      const r = e.currentTarget.getBoundingClientRect();
+      setRowMenu({
+        id,
+        x: Math.min(r.left, window.innerWidth - 176),
+        y: Math.min(r.bottom + 4, window.innerHeight - 120),
+      });
+    }
+    scrollRef.current?.focus({ preventScroll: true });
+  };
+  // «+» on a row adds one under it (in the database's own order; with a sort or a group it lands at the end).
+  const addBelow = (id: string, ordered: boolean) =>
     run(async () => {
-      await deletePage(pageId);
-      setConfirmRow(null);
+      const created = await createRow(databaseId);
+      if (ordered) {
+        const ids = [...data.rows.map((r) => r.pageId), created.id];
+        await reorderRows(databaseId, moveItem(ids, created.id, id, true));
+      }
+      onPagesChanged();
+    });
+  const duplicate = (id: string) =>
+    run(async () => {
+      await duplicateRow(id);
       onPagesChanged();
     });
 
@@ -372,6 +481,7 @@ export function DatabaseTable({
       <tr
         key={key}
         data-grid-row
+        data-row-id={row.pageId}
         data-reorder-row={reorderRow ? "" : undefined}
         data-drop={dropRow === row.pageId ? "true" : reorderRow?.["data-drop"]}
         data-selected={selected.has(row.pageId) || undefined}
@@ -394,6 +504,17 @@ export function DatabaseTable({
       >
         <td {...stickyOf(0)} data-wrap={wrappedIds.has(TITLE_ID) || undefined}>
           <div className="db-row-title-cell">
+            {kind === "table" && (
+              <button
+                type="button"
+                className="db-row-add"
+                title="Añadir una fila debajo"
+                aria-label={`Añadir una fila debajo de ${row.title}`}
+                onClick={() => void addBelow(row.pageId, reorderRow !== null)}
+              >
+                <Plus size={14} aria-hidden="true" />
+              </button>
+            )}
             <input
               type="checkbox"
               className="db-row-check"
@@ -402,16 +523,20 @@ export function DatabaseTable({
               aria-label={`Seleccionar ${row.title}`}
               onClick={(e) => pick(row.pageId, e.currentTarget.checked, e.shiftKey)}
             />
-            {reorderRow && (
-              <span
-                className="db-row-grip"
-                title="Arrastrar para reordenar"
-                aria-label={`Mover ${row.title}`}
-                {...rowReorder.handle(row.pageId)}
-              >
-                <GripVertical size={14} aria-hidden="true" />
-              </span>
-            )}
+            <span
+              className="db-row-grip"
+              title={
+                reorderRow
+                  ? "Arrastra para mover; pulsa para ver las opciones"
+                  : "Opciones de la fila"
+              }
+              role="button"
+              aria-label={`Opciones de ${row.title}`}
+              {...(reorderRow ? rowReorder.handle(row.pageId) : {})}
+              onClick={(e) => gripClick(e, row.pageId)}
+            >
+              <GripVertical size={14} aria-hidden="true" />
+            </span>
             {wrappedIds.has(TITLE_ID) ? (
               <textarea key={row.title} className="db-input db-wrap" rows={1} {...titleField} />
             ) : (
@@ -444,28 +569,7 @@ export function DatabaseTable({
             </td>
           );
         })}
-        <td className="db-col-action">
-          {confirmRow === row.pageId ? (
-            <span className="db-confirm">
-              <button type="button" onClick={() => void removeRow(row.pageId)}>
-                Borrar
-              </button>
-              <button type="button" onClick={() => setConfirmRow(null)}>
-                No
-              </button>
-            </span>
-          ) : (
-            <button
-              type="button"
-              className="db-icon-btn"
-              aria-label={`Borrar fila ${row.title}`}
-              title="Borrar fila"
-              onClick={() => setConfirmRow(row.pageId)}
-            >
-              <Trash2 size={14} strokeWidth={1.75} aria-hidden="true" />
-            </button>
-          )}
-        </td>
+        <td className="db-col-action" />
       </tr>
     );
   };
@@ -831,7 +935,7 @@ export function DatabaseTable({
           {confirmBulk ? (
             <span className="db-confirm">
               ¿Borrar {picked.length === 1 ? "la fila" : `las ${picked.length} filas`}?
-              <button type="button" onClick={() => void removePicked()}>
+              <button type="button" autoFocus onClick={() => void removePicked()}>
                 Borrar
               </button>
               <button type="button" onClick={() => setConfirmBulk(false)}>
@@ -850,8 +954,49 @@ export function DatabaseTable({
           )}
         </div>
       )}
+      {rowMenu &&
+        createPortal(
+          <div className="handle-menu" role="menu" style={{ left: rowMenu.x, top: rowMenu.y }}>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setRowMenu(null);
+                onNavigate(rowMenu.id);
+              }}
+            >
+              <PanelRight size={14} aria-hidden="true" /> Abrir
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setRowMenu(null);
+                void duplicate(rowMenu.id);
+              }}
+            >
+              <Copy size={14} aria-hidden="true" /> Duplicar
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setRowMenu(null);
+                setConfirmBulk(true);
+              }}
+            >
+              <Trash2 size={14} aria-hidden="true" /> Borrar
+            </button>
+          </div>,
+          document.body,
+        )}
       {(kind === "table" || responses) && (
-        <div className="db-scroll" data-picking={picked.length > 0 || undefined}>
+        <div
+          className="db-scroll"
+          ref={scrollRef}
+          tabIndex={-1}
+          data-picking={picked.length > 0 || undefined}
+        >
           <table
             ref={tableRef}
             className="db-table"

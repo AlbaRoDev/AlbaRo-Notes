@@ -967,3 +967,32 @@
 .page-editor .ProseMirror a:hover {
   text-decoration-thickness: 2px;
 }
+
+/* ---- rubber-band selection (blocks of a page; rows are tinted by the database styles) ---- */
+.page-editor .ProseMirror .block-selected {
+  background: rgba(var(--accent-rgb), 0.14);
+  border-radius: 4px;
+}
+
+.page-editor .ProseMirror.has-block-selection ::selection {
+  background: transparent;
+}
+
+.marquee-band {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  background: rgba(var(--accent-rgb), 0.12);
+  border: 1px solid rgba(var(--accent-rgb), 0.45);
+}
+
+body[data-marquee],
+body[data-marquee] * {
+  user-select: none !important;
+}
+
+/* While a band is dragged the pointer stays an ordinary arrow, not the text cursor of what it passes over. */
+body[data-marquee],
+body[data-marquee] * {
+  cursor: var(--cursor-default, default) !important;
+}

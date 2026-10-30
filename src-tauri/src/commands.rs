@@ -498,6 +498,12 @@ pub fn duplicate_row(state: State<DbState>, page_id: String) -> Result<PageSumma
 }
 
 #[tauri::command]
+pub fn rename_page(state: State<DbState>, page_id: String, title: String) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    db::rename_page(&conn, &page_id, &title)
+}
+
+#[tauri::command]
 pub fn set_row_title(state: State<DbState>, page_id: String, title: String) -> Result<(), String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     db::set_row_title(&conn, &page_id, &title)

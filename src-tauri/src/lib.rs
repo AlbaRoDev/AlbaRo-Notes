@@ -133,6 +133,7 @@ pub fn run() {
             commands::duplicate_property,
             commands::change_property_type,
             commands::set_row_title,
+            commands::rename_page,
             commands::create_view,
             commands::rename_view,
             commands::delete_view,

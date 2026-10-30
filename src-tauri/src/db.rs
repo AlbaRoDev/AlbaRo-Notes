@@ -924,10 +924,6 @@ const MAX_TITLE: usize = 200;
 /// open editor would overwrite this, so the table is meant for rows whose own
 /// page is not open.
 pub fn set_row_title(conn: &Connection, page_id: &str, title: &str) -> Result<(), String> {
-    let title = title.trim();
-    if title.chars().count() > MAX_TITLE {
-        return Err(format!("El título no puede pasar de {MAX_TITLE} caracteres"));
-    }
     let is_row: Option<bool> = conn
         .query_row("SELECT database_id IS NOT NULL FROM pages WHERE id = ?1", [page_id], |r| r.get(0))
         .optional()
@@ -935,7 +931,16 @@ pub fn set_row_title(conn: &Connection, page_id: &str, title: &str) -> Result<()
     if is_row != Some(true) {
         return Err("La página no es una fila de una base de datos".to_string());
     }
+    rename_page(conn, page_id, title)
+}
 
+/// Renames any page that is not open in an editor (the sidebar's rename goes through the open editor
+/// instead, whose autosave would otherwise overwrite this): rewrites the first heading of its document.
+pub fn rename_page(conn: &Connection, page_id: &str, title: &str) -> Result<(), String> {
+    let title = title.trim();
+    if title.chars().count() > MAX_TITLE {
+        return Err(format!("El título no puede pasar de {MAX_TITLE} caracteres"));
+    }
     let (block_id, content): (String, String) = conn
         .query_row(
             "SELECT id, content FROM blocks WHERE page_id = ?1 AND parent_id IS NULL AND type = 'doc' LIMIT 1",
@@ -1308,6 +1313,27 @@ mod tests {
             set_row_title(&conn, &task.id, "Nuevo título").unwrap_or_else(|e| panic!("{stored:?}: {e}"));
             assert_eq!(derive_page_title(&conn, &task.id).unwrap(), "Nuevo título", "{stored:?}");
         }
+    }
+
+    #[test]
+    fn any_page_can_be_renamed_and_keeps_its_body() {
+        let conn = conn();
+        let parent = create_page(&conn, None).unwrap();
+        let child = create_page(&conn, Some(&parent.id)).unwrap();
+        save_page_content(
+            &conn,
+            &child.id,
+            &serde_json::json!({"type":"doc","content":[
+                {"type":"heading","attrs":{"level":1},"content":[{"type":"text","text":"Viejo"}]},
+                {"type":"paragraph","content":[{"type":"text","text":"cuerpo"}]}]}),
+        )
+        .unwrap();
+        rename_page(&conn, &child.id, "  Nuevo  ").unwrap();
+        assert_eq!(derive_page_title(&conn, &child.id).unwrap(), "Nuevo");
+        let doc = get_page_content(&conn, &child.id).unwrap().unwrap();
+        assert_eq!(doc["content"].as_array().unwrap().len(), 2, "the body stays");
+        assert!(rename_page(&conn, &child.id, &"x".repeat(MAX_TITLE + 1)).is_err());
+        assert!(rename_page(&conn, "no-existe", "x").is_err());
     }
 
     #[test]

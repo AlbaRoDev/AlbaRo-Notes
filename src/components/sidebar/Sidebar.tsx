@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   ChevronRight,
   ChevronsLeft,
@@ -68,6 +69,10 @@ const THEMES: { pref: ThemePref; label: string; Icon: typeof Sun }[] = [
   { pref: "dark", label: "Oscuro", Icon: Moon },
 ];
 
+// Size of the «+» menu, to keep it inside the window.
+const MENU_W = 208;
+const MENU_H = 84;
+
 const clampWidth = (w: number) => Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, Math.round(w)));
 
 interface SidebarProps {
@@ -76,6 +81,7 @@ interface SidebarProps {
   onSelect: (pageId: string) => void;
   onCreate: (kind: PageSummary["kind"]) => void;
   onDelete: (pageId: string) => void;
+  onRename: (pageId: string, title: string) => Promise<void>;
   /** Opens the search dialog. */
   onSearch: () => void;
   /** Opens the AI assistant. */
@@ -112,12 +118,16 @@ export function Sidebar({
   onSelect,
   onCreate,
   onDelete,
+  onRename,
   onSearch,
   onAskAi,
 }: SidebarProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   // The «+» offers the two kinds of page; a database page is its own kind, not a sub-page.
-  const [menuOpen, setMenuOpen] = useState(false);
+  // Drawn in a portal at fixed coordinates: the sidebar clips whatever overflows it.
+  const [menuAt, setMenuAt] = useState<{ top: number; left: number } | null>(null);
+  const menuOpen = menuAt !== null;
+  const setMenuOpen = (open: boolean) => !open && setMenuAt(null);
   const [width, setWidth] = useState(() =>
     clampWidth(Number(readPref("sidebar.width")) || DEFAULT_WIDTH),
   );
@@ -158,7 +168,7 @@ export function Sidebar({
   useEffect(() => {
     if (!menuOpen) return;
     const onDown = (e: MouseEvent) => {
-      if (!(e.target as Element).closest(".sidebar-header")) setMenuOpen(false);
+      if (!(e.target as Element).closest(".sidebar-header, .sidebar-menu")) setMenuAt(null);
     };
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
@@ -206,6 +216,14 @@ export function Sidebar({
       else next.add(pageId);
       return next;
     });
+  };
+
+  // The page being renamed in place (double-click its name): Enter or leaving saves, Esc cancels.
+  const [renaming, setRenaming] = useState<string | null>(null);
+  const finishRename = (page: PageSummary, input: HTMLInputElement, save: boolean) => {
+    setRenaming(null);
+    const title = input.value.trim();
+    if (save && title && title !== page.title) void onRename(page.id, title);
   };
 
   const handleDelete = (page: PageSummary, e: React.MouseEvent) => {
@@ -256,9 +274,30 @@ export function Sidebar({
           ) : (
             <FileText size={16} strokeWidth={1.75} className="sidebar-item-icon" aria-hidden />
           )}
-          <span className="sidebar-item-title" title={page.title}>
-            {page.title}
-          </span>
+          {renaming === page.id ? (
+            <input
+              className="sidebar-item-rename"
+              defaultValue={page.title}
+              maxLength={200}
+              aria-label="Nombre de la página"
+              autoFocus
+              onFocus={(e) => e.currentTarget.select()}
+              onClick={(e) => e.stopPropagation()}
+              onBlur={(e) => finishRename(page, e.currentTarget, true)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") finishRename(page, e.currentTarget, true);
+                else if (e.key === "Escape") finishRename(page, e.currentTarget, false);
+              }}
+            />
+          ) : (
+            <span
+              className="sidebar-item-title"
+              title={page.title}
+              onDoubleClick={() => setRenaming(page.id)}
+            >
+              {page.title}
+            </span>
+          )}
           {/* The Gestor's task database can't be deleted (Rust refuses too). */}
           {page.role !== "tasks" && (
             <button
@@ -373,35 +412,52 @@ export function Sidebar({
               <button
                 type="button"
                 className="sidebar-add"
-                onClick={() => setMenuOpen((open) => !open)}
+                onClick={(e) => {
+                  const r = e.currentTarget.getBoundingClientRect();
+                  // Keep the menu inside the window: right-aligned to the button, above it if there is no room below.
+                  setMenuAt((at) =>
+                    at
+                      ? null
+                      : {
+                          top: Math.min(r.bottom + 4, window.innerHeight - MENU_H - 8),
+                          left: Math.max(
+                            8,
+                            Math.min(r.right - MENU_W, window.innerWidth - MENU_W - 8),
+                          ),
+                        },
+                  );
+                }}
                 title="Nueva página"
                 aria-label="Nueva página"
                 aria-expanded={menuOpen}
               >
                 <Plus size={16} />
               </button>
-              {menuOpen && (
-                <div
-                  className="sidebar-menu"
-                  role="menu"
-                  onKeyDown={(e) => e.key === "Escape" && setMenuOpen(false)}
-                >
-                  {(["page", "database"] as const).map((kind) => (
-                    <button
-                      key={kind}
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        setMenuOpen(false);
-                        onCreate(kind);
-                      }}
-                    >
-                      {kind === "page" ? <FileText size={16} /> : <Database size={16} />}
-                      {kind === "page" ? "Página" : "Base de datos"}
-                    </button>
-                  ))}
-                </div>
-              )}
+              {menuAt &&
+                createPortal(
+                  <div
+                    className="sidebar-menu"
+                    style={menuAt}
+                    role="menu"
+                    onKeyDown={(e) => e.key === "Escape" && setMenuOpen(false)}
+                  >
+                    {(["page", "database"] as const).map((kind) => (
+                      <button
+                        key={kind}
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          onCreate(kind);
+                        }}
+                      >
+                        {kind === "page" ? <FileText size={16} /> : <Database size={16} />}
+                        {kind === "page" ? "Página" : "Base de datos"}
+                      </button>
+                    ))}
+                  </div>,
+                  document.body,
+                )}
             </div>
             <Fold open={pagesOpen}>
               <ul className="sidebar-list">{rootPages.map(renderNode)}</ul>

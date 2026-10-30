@@ -213,7 +213,8 @@ export function SelectionToolbar({ editor }: { editor: Editor }) {
     selection instanceof TextSelection &&
     !selection.empty &&
     editor.state.doc.textBetween(selection.from, selection.to).trim() !== "" &&
-    !getAiAssist(editor.state).open;
+    !getAiAssist(editor.state).open &&
+    !editor.view.dom.classList.contains("has-block-selection"); // blocks picked by the rubber band, not text
   if (!show) return null;
 
   let coords: { left: number; top: number; bottom: number };

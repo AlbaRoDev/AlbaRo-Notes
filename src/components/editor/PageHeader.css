@@ -12,6 +12,23 @@
   overflow: hidden;
 }
 
+/* On a page the cover is Notion's: edge to edge of the page zone (whatever the width of the window and
+   of the zone), flush under the bar, with a height that follows the window. */
+.page-column .page-cover {
+  width: 100cqw;
+  margin-left: calc(50% - 50cqw);
+  height: clamp(120px, 30vh, 320px);
+  border-radius: 0;
+}
+
+.page-column .page-cover-actions {
+  right: max(12px, calc(50cqw - 312px));
+}
+
+.container:has(.page-cover) {
+  padding-top: 0;
+}
+
 .page-cover-art {
   position: absolute;
   inset: 0;

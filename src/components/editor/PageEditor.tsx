@@ -10,6 +10,7 @@ import { DatabaseTable } from "../database/DatabaseTable";
 import { RowProperties } from "../database/RowProperties";
 import { RowPanelAnchor, setRowPanelContainer } from "../database/RowPanelAnchor";
 import { databasePageExtensions } from "../database/database-page-extensions";
+import { BlockSelect } from "./BlockSelect";
 import { ItemDrop } from "./ItemDrop";
 import { MediaDrop } from "./MediaDrop";
 import { TableControls } from "./TableControls";
@@ -28,6 +29,7 @@ import {
   savePageContent,
 } from "../../lib/db-client";
 import { deriveTitleFromDoc } from "../../lib/title";
+import { RENAME_EVENT, type RenameDetail } from "../../lib/rename";
 import type { PageSummary } from "../../types";
 import "katex/dist/katex.min.css";
 import "./PageEditor.css";
@@ -143,12 +145,16 @@ export function PageEditor({
           RowPanelAnchor,
           MediaDrop,
           ItemDrop,
+          BlockSelect,
           EditorBridge,
           ProtectedTitle,
           SlashCommand,
           AiAssist,
+          // The title always shows its hint while empty; the body's only on the line the cursor is in.
           Placeholder.configure({
-            placeholder: ({ pos }) => (pos === 0 ? "" : BODY_PLACEHOLDER),
+            showOnlyCurrent: false,
+            placeholder: ({ pos, hasAnchor }) =>
+              pos === 0 ? "Sin título" : hasAnchor ? BODY_PLACEHOLDER : "",
           }),
         ],
     content: ownDatabaseId ? EMPTY_DATABASE_PAGE : EMPTY_CONTENT,
@@ -247,6 +253,21 @@ export function PageEditor({
     };
   }, [editor, pageId, onChildPageCreated, ownDatabaseId]);
   /* eslint-enable react-hooks/immutability */
+
+  // A rename from the sidebar edits the title here, so it autosaves with the rest and nothing overwrites it.
+  useEffect(() => {
+    if (!editor) return;
+    const rename = (e: Event) => {
+      const detail = (e as CustomEvent<RenameDetail>).detail;
+      const first = editor.state.doc.firstChild;
+      if (detail.handled || detail.pageId !== loadedPageIdRef.current || !first) return;
+      detail.handled = true;
+      const text = detail.title ? [editor.schema.text(detail.title)] : [];
+      editor.view.dispatch(editor.state.tr.replaceWith(1, 1 + first.content.size, text));
+    };
+    window.addEventListener(RENAME_EVENT, rename);
+    return () => window.removeEventListener(RENAME_EVENT, rename);
+  }, [editor]);
 
   // Ctrl+J with the cursor in this page opens the in-page AI (App routes the shortcut here).
   useEffect(() => {
