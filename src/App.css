@@ -346,3 +346,46 @@ select optgroup {
   color: var(--text);
   background: var(--bg-popover);
 }
+
+/* Notion-style checkbox: a rounded square that fills with the accent and shows a check. */
+.page-editor .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"],
+.task-checklist li input[type="checkbox"] {
+  appearance: none;
+  position: relative;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  border: 1.5px solid var(--text-faint);
+  border-radius: 4px;
+  background: transparent;
+  transition:
+    background-color 0.12s,
+    border-color 0.12s;
+}
+
+.page-editor .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"]:hover,
+.task-checklist li input[type="checkbox"]:hover {
+  border-color: var(--text-muted);
+  background: rgba(var(--ink), 0.06);
+}
+
+.page-editor .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"]:checked,
+.task-checklist li input[type="checkbox"]:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.page-editor .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"]:checked::after,
+.task-checklist li input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 0.5px;
+  width: 4px;
+  height: 8px;
+  border: solid var(--on-accent);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
