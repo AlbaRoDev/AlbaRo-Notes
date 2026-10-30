@@ -2,7 +2,7 @@
   "name": "albaro-notes",
   "private": true,
   "license": "MIT",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "packageManager": "npm@11.17.0",
   "type": "module",
   "scripts": {
