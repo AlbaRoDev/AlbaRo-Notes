@@ -43,7 +43,8 @@ export function EmojiPickerView({ node, getPos, editor }: NodeViewProps) {
   // (see `pick` below), so there's no later render where an updated list
   // would ever be shown from this same instance.
   const [recent] = useState<string[]>(() => getRecentEmoji());
-  const [query, setQuery] = useState("");
+  // `:smi` typed in the text opens the picker already searching for «smi»
+  const [query, setQuery] = useState(() => String(node.attrs.query ?? ""));
   const [activeGroup, setActiveGroup] = useState(() =>
     getRecentEmoji().length > 0 ? RECENT_GROUP : 0,
   );

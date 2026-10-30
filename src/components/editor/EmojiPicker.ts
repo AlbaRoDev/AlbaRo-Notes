@@ -13,6 +13,9 @@ export const EmojiPicker = Node.create({
   group: "inline",
   inline: true,
   atom: true,
+  addAttributes() {
+    return { query: { default: "" } };
+  },
   parseHTML() {
     return [{ tag: 'span[data-type="emoji-picker"]' }];
   },

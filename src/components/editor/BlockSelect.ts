@@ -1,7 +1,8 @@
 import { Extension } from "@tiptap/react";
-import { Plugin, PluginKey, Selection, TextSelection } from "@tiptap/pm/state";
+import { Plugin, PluginKey, Selection, TextSelection, type EditorState } from "@tiptap/pm/state";
 import { Decoration, DecorationSet, type EditorView } from "@tiptap/pm/view";
 import { hits, isPageBlank, startMarquee, type Box } from "../../lib/marquee";
+import { blockAt, isTitle } from "./block-commands";
 
 interface Range {
   from: number;
@@ -35,6 +36,9 @@ function selectBlocks(view: EditorView, box: Box) {
   view.dispatch(tr);
 }
 
+/** The blocks picked right now (with the rubber band, a handle or Esc), as a document range, or null. */
+export const blockSelection = (state: EditorState) => key.getState(state) ?? null;
+
 /** Picks one block (at any depth) as the selection: it is tinted, and Delete or Backspace removes it. */
 export function selectBlock(view: EditorView, pos: number) {
   const node = view.state.doc.nodeAt(pos);
@@ -42,6 +46,23 @@ export function selectBlock(view: EditorView, pos: number) {
   view.dispatch(view.state.tr.setMeta(key, { from: pos, to: pos + node.nodeSize }));
   view.focus();
 }
+
+/** Esc picks the block the cursor is in (Notion's «select this block»); Delete then removes it. */
+export const EscapeSelectsBlock = Extension.create({
+  name: "escapeSelectsBlock",
+  // After the menus and boxes that close on Esc (the slash menu, the AI box): they get the key first.
+  priority: 1,
+  addKeyboardShortcuts() {
+    return {
+      Escape: ({ editor }) => {
+        const b = blockAt(editor.state);
+        if (!b || blockSelection(editor.state) || isTitle(editor.state, b.pos)) return false;
+        selectBlock(editor.view, b.pos);
+        return true;
+      },
+    };
+  },
+});
 
 /** Notion's rubber band over a page: press on the blank space around the text and drag across blocks. */
 export const BlockSelect = Extension.create({

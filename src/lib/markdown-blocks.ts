@@ -142,7 +142,7 @@ export function markdownToBlocks(markdown: string): JSONContent[] {
       const content = inlineToNodes(heading[2].replace(/\s+#+\s*$/, ""));
       blocks.push({
         type: "heading",
-        attrs: { level: Math.min(heading[1].length, 3) },
+        attrs: { level: Math.min(heading[1].length, 4) },
         ...(content.length ? { content } : {}),
       });
       i++;

@@ -36,6 +36,13 @@
   margin: 1em 0 0.25em;
 }
 
+.page-editor .ProseMirror h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0.9em 0 0.2em;
+}
+
 .page-editor .ProseMirror p {
   margin: 0 0 0.4em;
 }
@@ -520,6 +527,10 @@
   padding-left: 2em;
 }
 
+.page-editor .ProseMirror .toc-block button[data-level="4"] {
+  padding-left: 3em;
+}
+
 .page-editor .ProseMirror pre {
   margin: 0 0 1em;
   padding: 0.75em 1em;
@@ -995,4 +1006,14 @@ body[data-marquee] * {
 body[data-marquee],
 body[data-marquee] * {
   cursor: var(--cursor-default, default) !important;
+}
+
+/* Inline code, as Notion draws it: a small grey chip with red monospace text. */
+.page-editor .ProseMirror :not(pre) > code {
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  background: rgba(var(--ink), 0.1);
+  color: var(--text-red, #eb5757);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.85em;
 }

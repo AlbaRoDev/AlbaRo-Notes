@@ -22,6 +22,7 @@ import { WebBookmark } from "./WebBookmark";
 import { CanvasBlock } from "./CanvasBlock";
 import { BackgroundColor, TextColor } from "./ColorMarks";
 import { LinkOpen } from "./LinkOpen";
+import { NotionShortcuts } from "./NotionShortcuts";
 import { CalendarBlock, ChartBlock, MapBlock, TimelineBlock } from "../views/view-blocks";
 
 /**
@@ -37,7 +38,7 @@ export const contentExtensions = [
   // a slash command turns the trailing paragraph into a heading/list/etc).
   // codeBlock: false — replaced by CodeBlock below (same node name, adds highlighting).
   StarterKit.configure({
-    heading: { levels: [1, 2, 3] },
+    heading: { levels: [1, 2, 3, 4] },
     trailingNode: false,
     codeBlock: false,
     // links: never followed by the webview (LinkOpen opens them on Ctrl+click) and only these schemes; a typed
@@ -52,6 +53,7 @@ export const contentExtensions = [
   TextColor,
   BackgroundColor,
   LinkOpen,
+  NotionShortcuts,
   CodeBlock,
   TaskList,
   TaskItem.configure({ nested: true }),

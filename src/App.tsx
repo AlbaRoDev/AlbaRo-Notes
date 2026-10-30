@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { AiPanel } from "./components/ai/AiPanel";
 import { AI_INLINE_EVENT } from "./components/editor/AiAssist";
+import { OPEN_LINK_EVENT } from "./components/editor/NotionShortcuts";
+import { FIND_EVENT } from "./components/editor/PageSearch";
 import { PageHeader } from "./components/editor/PageHeader";
 import { PageTopBar } from "./components/editor/PageTopBar";
 import {
@@ -104,12 +106,15 @@ function App() {
     [openPage],
   );
 
-  const handleCreate = (kind: PageSummary["kind"]) => {
-    void (kind === "database" ? createDatabasePage() : createPage()).then((page) => {
-      setPages((prev) => [...prev, page]);
-      openPage(page.id);
-    });
-  };
+  const handleCreate = useCallback(
+    (kind: PageSummary["kind"]) => {
+      void (kind === "database" ? createDatabasePage() : createPage()).then((page) => {
+        setPages((prev) => [...prev, page]);
+        openPage(page.id);
+      });
+    },
+    [openPage],
+  );
 
   const handleDelete = (pageId: string) => {
     void deletePage(pageId).then(async () => {
@@ -161,6 +166,32 @@ function App() {
 
   const selectedPage = pages.find((p) => p.id === selectedPageId);
 
+  // The mouse's «back» button goes up to the page's parent (a row's database, a sub-page's parent): the app has
+  // no history to walk, and the webview's own would leave the page.
+  const parentId = layout.main === "notes" ? (selectedPage?.parentId ?? null) : null;
+  useEffect(() => {
+    const onMouse = (e: MouseEvent) => {
+      if (e.button !== 3 && e.button !== 4) return;
+      e.preventDefault();
+      if (e.type === "mouseup" && e.button === 3 && parentId) openPage(parentId);
+    };
+    // Notion's keys for the same: Ctrl+Shift+U (go to the parent page) and Ctrl+[ (back)
+    const onKey = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      const up = e.shiftKey && !e.altKey && key === "u";
+      if (!(e.ctrlKey || e.metaKey) || !(up || (!e.shiftKey && !e.altKey && key === "["))) return;
+      e.preventDefault();
+      if (parentId) openPage(parentId);
+    };
+    const types = ["mousedown", "mouseup", "auxclick"] as const;
+    for (const t of types) window.addEventListener(t, onMouse, true);
+    window.addEventListener("keydown", onKey, true);
+    return () => {
+      types.forEach((t) => window.removeEventListener(t, onMouse, true));
+      window.removeEventListener("keydown", onKey, true);
+    };
+  }, [parentId, openPage]);
+
   const [searchOpen, setSearchOpen] = useState(false);
   const openSearch = useCallback(() => setSearchOpen(true), []);
   const closeSearch = useCallback(() => setSearchOpen(false), []);
@@ -175,10 +206,35 @@ function App() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();
-      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && (key === "k" || key === "p")) {
+      const selected = getSelection();
+      const textSelected =
+        !!selected &&
+        !selected.isCollapsed &&
+        !!selected.anchorNode?.parentElement?.closest(".page-editor .ProseMirror");
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && key === "k" && textSelected) {
+        // Ctrl+K on selected text makes a link, as in Notion (the toolbar opens its box); without a selection it searches.
+        e.preventDefault();
+        e.stopPropagation();
+        window.dispatchEvent(new Event(OPEN_LINK_EVENT));
+      } else if (
+        (e.ctrlKey || e.metaKey) &&
+        !e.shiftKey &&
+        !e.altKey &&
+        (key === "k" || key === "p")
+      ) {
         e.preventDefault(); // Ctrl+P would otherwise open the print dialog
         e.stopPropagation();
         setSearchOpen((open) => !open);
+      } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && key === "f") {
+        // Ctrl+F: find in the page. Always cancelled: the webview's own find box would search the whole window.
+        e.preventDefault();
+        e.stopPropagation();
+        window.dispatchEvent(new Event(FIND_EVENT, { cancelable: true }));
+      } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && key === "n") {
+        // Ctrl+N: a new page, as in Notion (the webview would open another window)
+        e.preventDefault();
+        e.stopPropagation();
+        handleCreate("page");
       } else if (
         (e.ctrlKey || e.metaKey) &&
         !e.shiftKey &&
@@ -208,7 +264,7 @@ function App() {
     };
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
-  }, [enter]);
+  }, [enter, handleCreate]);
 
   const commands: PaletteCommand[] = [
     {

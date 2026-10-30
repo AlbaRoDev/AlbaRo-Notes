@@ -176,11 +176,11 @@ function htmlToBlocks(html: string): { blocks: JSONContent[]; title: string | nu
   dom
     .querySelectorAll("script, style, iframe, object, embed, link, meta, noscript")
     .forEach((el) => el.remove());
-  // the editor has three heading levels: deeper ones read as the third
-  dom.querySelectorAll("h4, h5, h6").forEach((h) => {
-    const three = dom.createElement("h3");
-    three.append(...Array.from(h.childNodes));
-    h.replaceWith(three);
+  // the editor has four heading levels: deeper ones read as the fourth
+  dom.querySelectorAll("h5, h6").forEach((h) => {
+    const four = dom.createElement("h4");
+    four.append(...Array.from(h.childNodes));
+    h.replaceWith(four);
   });
   const title = dom.querySelector("title")?.textContent?.trim() || null;
   const doc = PMParser.fromSchema(schema).parse(dom.body);

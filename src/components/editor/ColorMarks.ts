@@ -14,6 +14,12 @@ export const MARK_COLORS = [
 ] as const;
 type MarkColor = (typeof MARK_COLORS)[number];
 
+/** The colour last picked for each mark: Ctrl+Shift+H puts the highlighter back on with it, as Notion does. */
+export const lastColors: Record<"textColor" | "backgroundColor", MarkColor> = {
+  textColor: "red",
+  backgroundColor: "yellow",
+};
+
 const isColor = (value: string | null): value is MarkColor =>
   MARK_COLORS.includes(value as MarkColor);
 

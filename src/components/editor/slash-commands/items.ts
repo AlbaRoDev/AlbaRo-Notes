@@ -17,6 +17,7 @@ import {
   Heading1,
   Heading2,
   Heading3,
+  Heading4,
   ImageIcon,
   Lightbulb,
   Link2,
@@ -146,6 +147,14 @@ const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
     icon: Heading3,
     run: (editor, range) =>
       editor.chain().focus().deleteRange(range).setNode("heading", { level: 3 }).run(),
+  },
+  {
+    title: "Encabezado 4",
+    category: "Básicos",
+    keywords: ["heading", "head", "h4", "titulo", "título"],
+    icon: Heading4,
+    run: (editor, range) =>
+      editor.chain().focus().deleteRange(range).setNode("heading", { level: 4 }).run(),
   },
   // Listas
   {

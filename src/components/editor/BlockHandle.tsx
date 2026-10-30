@@ -1,14 +1,44 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { DragHandle } from "@tiptap/extension-drag-handle-react";
 import type { Editor } from "@tiptap/core";
 import type { Node as PMNode } from "@tiptap/pm/model";
-import { Copy, GripVertical, Plus, Trash2 } from "lucide-react";
+import { Selection } from "@tiptap/pm/state";
+import { ChevronRight, Copy, GripVertical, Plus, Trash2 } from "lucide-react";
 import { selectBlock } from "./BlockSelect";
+import { turnInto, type TurnKind } from "./block-commands";
 import "./BlockHandle.css";
 
 // A constant, not an inline object: the handle re-registers its plugin (and hides) whenever this changes.
 const POSITION = { placement: "left-start" } as const;
+
+// What «Convertir en» offers, and the blocks it applies to (the text ones: not media, tables or databases).
+const TURN_OPTIONS: { kind: TurnKind; label: string }[] = [
+  { kind: "paragraph", label: "Texto" },
+  { kind: "h1", label: "Encabezado 1" },
+  { kind: "h2", label: "Encabezado 2" },
+  { kind: "h3", label: "Encabezado 3" },
+  { kind: "h4", label: "Encabezado 4" },
+  { kind: "task", label: "Checklist" },
+  { kind: "bullet", label: "Lista con viñetas" },
+  { kind: "ordered", label: "Lista numerada" },
+  { kind: "toggle", label: "Lista desplegable" },
+  { kind: "code", label: "Bloque de código" },
+  { kind: "quote", label: "Cita" },
+  { kind: "callout", label: "Destacado" },
+];
+const TURNABLE = [
+  "paragraph",
+  "heading",
+  "bulletList",
+  "orderedList",
+  "taskList",
+  "listItem",
+  "taskItem",
+  "blockquote",
+  "callout",
+  "codeBlock",
+];
 
 /**
  * Notion's block handles: hovering a block shows a «+» (adds an empty line under it and opens the «/» menu) and a
@@ -56,17 +86,35 @@ export function BlockHandle({ editor }: { editor: Editor }) {
       document.removeEventListener("keydown", close, true);
     };
   }, [menu]);
+  const [turning, setTurning] = useState(false);
+  // Opened or expanded near the bottom of the window, the menu moves up until it fits.
+  const menuRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const el = menuRef.current;
+    if (!el) return;
+    const over = el.getBoundingClientRect().bottom - (window.innerHeight - 8);
+    if (over > 0) el.style.top = `${Math.max(8, el.getBoundingClientRect().top - over)}px`;
+  }, [menu, turning]);
   const openMenu = (e: React.MouseEvent) => {
     const { node, pos } = target;
     if (!node || pos < 0) return;
     const r = e.currentTarget.getBoundingClientRect();
     selectBlock(editor.view, pos);
+    setTurning(false);
     setMenu({
       node,
       pos,
       x: Math.min(r.left, window.innerWidth - 168),
       y: Math.min(r.bottom + 4, window.innerHeight - 84),
     });
+  };
+  const turnBlock = (kind: TurnKind) => {
+    if (!menu) return;
+    // the cursor goes into the block first: «turn into» works on the line the cursor is in
+    const inside = Selection.findFrom(editor.state.doc.resolve(menu.pos + 1), 1, true);
+    if (inside) editor.commands.setTextSelection(inside.from);
+    turnInto(editor, kind);
+    setMenu(null);
   };
   const removeBlock = () => {
     if (!menu) return;
@@ -134,7 +182,34 @@ export function BlockHandle({ editor }: { editor: Editor }) {
       </div>
       {menu &&
         createPortal(
-          <div className="handle-menu" role="menu" style={{ left: menu.x, top: menu.y }}>
+          <div
+            className="handle-menu"
+            role="menu"
+            ref={menuRef}
+            style={{ left: menu.x, top: menu.y }}
+          >
+            {TURNABLE.includes(menu.node.type.name) && (
+              <button
+                type="button"
+                role="menuitem"
+                aria-expanded={turning}
+                onClick={() => setTurning((t) => !t)}
+              >
+                <ChevronRight size={14} aria-hidden="true" /> Convertir en
+              </button>
+            )}
+            {turning &&
+              TURN_OPTIONS.map(({ kind, label }) => (
+                <button
+                  key={kind}
+                  type="button"
+                  role="menuitem"
+                  className="handle-menu-sub"
+                  onClick={() => turnBlock(kind)}
+                >
+                  {label}
+                </button>
+              ))}
             <button type="button" role="menuitem" onClick={duplicateBlock}>
               <Copy size={14} aria-hidden="true" /> Duplicar
             </button>

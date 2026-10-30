@@ -65,7 +65,7 @@ test("headings, quotes, code, rules and tables", () => {
     blocks.map((b) => b.type),
     ["heading", "heading", "blockquote", "codeBlock", "horizontalRule", "table"],
   );
-  assert.equal(blocks[1].attrs.level, 3); // the editor has H1–H3
+  assert.equal(blocks[1].attrs.level, 4); // the editor has H1–H4
   assert.equal(blocks[2].content.length, 2);
   assert.deepEqual(blocks[3], {
     type: "codeBlock",

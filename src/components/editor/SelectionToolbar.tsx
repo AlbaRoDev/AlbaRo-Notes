@@ -12,7 +12,8 @@ import {
   Strikethrough,
   Underline,
 } from "lucide-react";
-import { MARK_COLORS } from "./ColorMarks";
+import { MARK_COLORS, lastColors } from "./ColorMarks";
+import { OPEN_LINK_EVENT } from "./NotionShortcuts";
 import { getAiAssist, openAiAssist } from "./AiAssist";
 import "./SelectionToolbar.css";
 
@@ -146,7 +147,10 @@ function ColorPanel({ editor }: { editor: Editor }) {
             title={COLOR_LABELS[color]}
             aria-pressed={editor.isActive(mark, { color })}
             onMouseDown={(e) => e.preventDefault()}
-            onClick={() => editor.chain().focus().setMark(mark, { color }).run()}
+            onClick={() => {
+              lastColors[mark] = color;
+              editor.chain().focus().setMark(mark, { color }).run();
+            }}
           >
             {mark === "textColor" ? "A" : ""}
           </button>
@@ -180,6 +184,13 @@ export function SelectionToolbar({ editor }: { editor: Editor }) {
   const [, rerender] = useReducer((n: number) => n + 1, 0);
   const [dragging, setDragging] = useState(false);
   const [panel, setPanel] = useState<"link" | "color" | null>(null);
+
+  // Ctrl+K with text selected (App sends this) opens the link box, as in Notion.
+  useEffect(() => {
+    const open = () => setPanel("link");
+    window.addEventListener(OPEN_LINK_EVENT, open);
+    return () => window.removeEventListener(OPEN_LINK_EVENT, open);
+  }, []);
 
   useEffect(() => {
     const dom = editor.view.dom;

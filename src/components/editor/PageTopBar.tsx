@@ -140,17 +140,15 @@ export function PageTopBar({
   return (
     <div className="page-topbar">
       <nav className="page-crumbs" aria-label="Ruta de la página">
-        {trail.map((p) => (
+        {/* Only the pages above this one: its own title is the big one right under the bar. */}
+        {trail.map((p, i) => (
           <span key={p.id} className="page-crumb">
+            {i > 0 && <ChevronRight size={12} aria-hidden="true" />}
             <button type="button" onClick={() => onOpen(p.id)} title={p.title}>
               <Crumb page={p} />
             </button>
-            <ChevronRight size={12} aria-hidden="true" />
           </span>
         ))}
-        <span className="page-crumb" aria-current="page">
-          <Crumb page={page} />
-        </span>
       </nav>
       <div className="page-topbar-actions" ref={menuRef}>
         <button

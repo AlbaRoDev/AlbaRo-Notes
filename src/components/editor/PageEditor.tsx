@@ -10,7 +10,9 @@ import { DatabaseTable } from "../database/DatabaseTable";
 import { RowProperties } from "../database/RowProperties";
 import { RowPanelAnchor, setRowPanelContainer } from "../database/RowPanelAnchor";
 import { databasePageExtensions } from "../database/database-page-extensions";
-import { BlockSelect } from "./BlockSelect";
+import { BlockSelect, EscapeSelectsBlock } from "./BlockSelect";
+import { FindBar } from "./FindBar";
+import { FIND_EVENT, PageSearch } from "./PageSearch";
 import { ItemDrop } from "./ItemDrop";
 import { MediaDrop } from "./MediaDrop";
 import { TableControls } from "./TableControls";
@@ -146,6 +148,8 @@ export function PageEditor({
           MediaDrop,
           ItemDrop,
           BlockSelect,
+          EscapeSelectsBlock,
+          PageSearch,
           EditorBridge,
           ProtectedTitle,
           SlashCommand,
@@ -269,6 +273,30 @@ export function PageEditor({
     return () => window.removeEventListener(RENAME_EVENT, rename);
   }, [editor]);
 
+  // Ctrl+F: the find bar of this page. Where two editors are on screen (a page and a task beside it), the one
+  // with the cursor takes it, else the first to hear it. The bar hangs from the page's top bar when there is one.
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [find, setFind] = useState<{ open: boolean; token: number; host: HTMLElement | null }>({
+    open: false,
+    token: 0,
+    host: null,
+  });
+  useEffect(() => {
+    if (!editor || ownDatabaseId) return;
+    const onFind = (e: Event) => {
+      const wrapper = wrapperRef.current;
+      const focused = document.querySelector(".page-editor-wrapper:focus-within");
+      if (!wrapper || e.defaultPrevented || (focused && focused !== wrapper)) return;
+      e.preventDefault();
+      const host =
+        wrapper.closest(".container")?.querySelector<HTMLElement>(".page-topbar") ?? null;
+      setFind((f) => ({ open: true, token: f.token + 1, host }));
+    };
+    window.addEventListener(FIND_EVENT, onFind);
+    return () => window.removeEventListener(FIND_EVENT, onFind);
+  }, [editor, ownDatabaseId]);
+  const closeFind = useCallback(() => setFind((f) => ({ ...f, open: false })), []);
+
   // Ctrl+J with the cursor in this page opens the in-page AI (App routes the shortcut here).
   useEffect(() => {
     if (!editor || ownDatabaseId) return;
@@ -279,7 +307,19 @@ export function PageEditor({
 
   return (
     <EditorAppProvider value={{ pages, currentPageId: pageId, onNavigate, onPagesChanged }}>
-      <div className="page-editor-wrapper">
+      <div className="page-editor-wrapper" ref={wrapperRef}>
+        {find.open &&
+          editor &&
+          (find.host ? (
+            createPortal(
+              <FindBar editor={editor} focusToken={find.token} onClose={closeFind} />,
+              find.host,
+            )
+          ) : (
+            <div className="find-anchor">
+              <FindBar editor={editor} focusToken={find.token} onClose={closeFind} />
+            </div>
+          ))}
         {rowDatabaseId &&
           createPortal(
             <RowProperties key={pageId} pageId={pageId} databaseId={rowDatabaseId} />,
