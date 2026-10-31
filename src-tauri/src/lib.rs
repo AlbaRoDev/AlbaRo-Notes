@@ -280,6 +280,14 @@ mod tests {
                 // `appDataDir()` + `join()` to build asset URLs.
                 "core:path:allow-join",
                 "core:path:allow-resolve-directory",
+                // The app's own title bar (the window has no frame): minimize, maximize and restore, close, drag it
+                // by the bar and tell whether it is maximized. Nothing that moves or resizes it by script.
+                "core:window:allow-close",
+                "core:window:allow-internal-toggle-maximize",
+                "core:window:allow-is-maximized",
+                "core:window:allow-minimize",
+                "core:window:allow-start-dragging",
+                "core:window:allow-toggle-maximize",
                 // Ctrl+click on a link, bookmarks and url/email/phone cells; `safe` in JS limits the scheme, this limits it again.
                 "opener:allow-default-urls",
                 "opener:allow-open-url",

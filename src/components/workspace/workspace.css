@@ -13,16 +13,13 @@
   padding: 2rem 1.5rem;
 }
 
-.home-menu {
+/* On the start screen the bar floats over the page, with no line under it. */
+.home .home-bar {
+  --topbar-h: 46px;
   position: absolute;
-  top: 0.75rem;
-  left: 0.75rem;
-}
-
-.home-theme {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
+  inset: 0 0 auto 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .home-icon {
@@ -92,7 +89,7 @@
 
 /* ---- Workspace ---- */
 .workspace {
-  --topbar-h: 38px; /* the sidebar and the companion stick below it */
+  --topbar-h: 46px; /* the sidebar and the companion stick below it */
 }
 
 .workspace-bar {
@@ -109,15 +106,51 @@
   box-shadow: inset 0 -1px 0 var(--border);
 }
 
-.workspace-bar > .ws-icon-button:last-child {
-  margin-left: auto;
+.workspace-bar {
+  user-select: none;
+}
+
+.workspace-bar-fill {
+  flex: 1 1 auto;
+  align-self: stretch;
+}
+
+/* The window's own buttons, flush with the right edge of the bar like Windows' and Notion's. */
+.window-controls {
+  display: flex;
+  align-self: stretch;
+  margin: 0 -0.5rem 0 0.25rem;
+}
+
+.window-controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.window-controls button:hover {
+  background: rgba(var(--ink), 0.1);
+  color: var(--text);
+}
+
+.window-controls button[data-close]:hover {
+  background: var(--danger);
+  color: var(
+    --bg
+  ); /* the page's own colour on the red: white in the light theme, dark on the lighter red of the dark one */
 }
 
 .ws-icon-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 5px;
+  padding: 8px;
   border: none;
   border-radius: 6px;
   background: transparent;
@@ -139,7 +172,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 2px 0.7rem;
+  padding: 4px 0.8rem;
   border: none;
   border-radius: 6px;
   background: transparent;
@@ -480,8 +513,8 @@
 /* A task opens as Notion's side peek: over the right of the window, the table still usable behind it. */
 .task-peek-backdrop {
   position: fixed;
-  inset: 38px 0 0 0; /* below the workspace bar (--topbar-h lives on .workspace, not on body) */
-  z-index: 15;
+  inset: var(--topbar-h, 46px) 0 0 0; /* below the workspace bar (--topbar-h lives on .workspace, not on body) */
+  z-index: 35; /* over the page's sticky top bar (30) */
   pointer-events: none;
 }
 

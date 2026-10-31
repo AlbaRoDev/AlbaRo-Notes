@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ChevronsLeft, ChevronsRight, House } from "lucide-react";
 import { HALVES } from "./halves";
 import { ThemeToggle } from "./ThemeToggle";
+import { WindowControls } from "./WindowControls";
 import {
   DEFAULT_SPLIT,
   SNAPS,
@@ -131,7 +132,7 @@ export function Workspace({
 
   return (
     <div className="workspace">
-      <header className="workspace-bar">
+      <header className="workspace-bar" data-tauri-drag-region>
         {menu}
         <button
           type="button"
@@ -159,7 +160,9 @@ export function Workspace({
             );
           })}
         </div>
+        <span className="workspace-bar-fill" data-tauri-drag-region />
         <ThemeToggle />
+        <WindowControls />
       </header>
       <div className="workspace-body" ref={bodyRef} data-dragging={dragSplit !== null || undefined}>
         {mainFolded && (

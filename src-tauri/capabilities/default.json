@@ -1,10 +1,16 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "What the page may ask of Tauri itself, and nothing more: the app version, the data folder path (to build asset URLs), hear events, and open http(s)/mailto/tel links in the system. Not core:default, which also lets the page build tray icons and menus, read image files, emit events and inspect windows; not opener:default, which also reveals arbitrary paths. dialog is only used from Rust.",
+  "description": "What the page may ask of Tauri itself, and nothing more: the app version, the data folder path (to build asset URLs), hear events, and open http(s)/mailto/tel links in the system, and the window controls of the app's own title bar (minimize, maximize, close, drag). Not core:default, which also lets the page build tray icons and menus, read image files, emit events and inspect windows; not opener:default, which also reveals arbitrary paths. dialog is only used from Rust.",
   "windows": ["main"],
   "permissions": [
     "core:app:allow-version",
+    "core:window:allow-close",
+    "core:window:allow-internal-toggle-maximize",
+    "core:window:allow-is-maximized",
+    "core:window:allow-minimize",
+    "core:window:allow-start-dragging",
+    "core:window:allow-toggle-maximize",
     "core:event:allow-listen",
     "core:event:allow-unlisten",
     "core:path:allow-join",
