@@ -14,6 +14,7 @@ mod maps;
 mod search;
 mod secret;
 mod tasks;
+mod trash;
 mod validate;
 mod views;
 mod webview_privacy;
@@ -42,6 +43,20 @@ pub fn run() {
                 Err(e) => eprintln!("orphaned block sweep failed: {e}"),
             }
 
+            // What has been in the trash for 30 days goes for good (its files with it), and so do the links to
+            // pages that no longer exist which older versions left in the documents.
+            let attachments_dir = app_data_dir.join("attachments");
+            match trash::purge_expired(&conn, &attachments_dir) {
+                Ok(0) => {}
+                Ok(n) => eprintln!("erased {n} entr(ies) that had been in the trash too long"),
+                Err(e) => eprintln!("trash purge failed: {e}"),
+            }
+            match trash::strip_dead_links(&conn) {
+                Ok(0) => {}
+                Ok(n) => eprintln!("removed links to deleted pages from {n} document(s)"),
+                Err(e) => eprintln!("dead link sweep failed: {e}"),
+            }
+
             // Sweeps run before any command can be served — see
             // attachments::sweep_orphans. Synced blocks go first: attachments
             // only referenced from a deleted synced block then go with it.
@@ -50,7 +65,6 @@ pub fn run() {
                 Ok(n) => eprintln!("removed {n} orphaned synced block(s)"),
                 Err(e) => eprintln!("synced block sweep failed: {e}"),
             }
-            let attachments_dir = app_data_dir.join("attachments");
             match attachments::sweep_orphans(&conn, &attachments_dir) {
                 Ok(0) => {}
                 Ok(n) => eprintln!("removed {n} orphaned attachment file(s)"),
@@ -158,6 +172,10 @@ pub fn run() {
             commands::ai_cancel,
             commands::create_page,
             commands::delete_page,
+            commands::list_trash,
+            commands::restore_trash,
+            commands::purge_trash,
+            commands::empty_trash,
             commands::ensure_task_base,
             commands::add_task,
             commands::store_attachment,

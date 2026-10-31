@@ -1,0 +1,66 @@
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.confirm-dialog {
+  display: grid;
+  gap: 0.6rem;
+  width: min(380px, 90vw);
+  padding: 1.1rem;
+  border-radius: 10px;
+  background: var(--bg-popover);
+  box-shadow: var(--shadow-popover);
+  color: var(--text);
+}
+
+.confirm-dialog h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.confirm-dialog p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+}
+
+.confirm-actions button {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.confirm-actions button:hover,
+.confirm-actions button:focus-visible {
+  background: rgba(var(--ink), 0.08);
+}
+
+.confirm-actions .confirm-danger {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: var(--on-accent);
+}
+
+.confirm-actions .confirm-danger:hover,
+.confirm-actions .confirm-danger:focus-visible {
+  background: var(--danger);
+  filter: brightness(0.92);
+}

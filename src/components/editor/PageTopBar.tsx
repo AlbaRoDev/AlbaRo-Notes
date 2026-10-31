@@ -58,7 +58,7 @@ export function PageTopBar({
   pages: PageSummary[];
   onOpen: (pageId: string) => void;
   onChanged: () => void;
-  onDelete: (pageId: string) => void;
+  onDelete: (pageId: string) => Promise<boolean>;
   onAskAi: () => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -115,14 +115,8 @@ export function PageTopBar({
             Icon: Trash2,
             danger: true,
             run: () => {
-              if (
-                !window.confirm(
-                  `¿Borrar «${page.title || "Sin título"}»? Esta acción no se puede deshacer.`,
-                )
-              )
-                return;
               setMenuOpen(false);
-              onDelete(page.id);
+              void onDelete(page.id);
             },
           },
         ]

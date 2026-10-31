@@ -9,6 +9,13 @@ export function linkablePages(pages: PageSummary[]): PageSummary[] {
   );
 }
 
+/** How many pages hang from this one at any depth: its sub-pages, or the rows of a database and what hangs from them. */
+export function countBelow(pages: PageSummary[], id: string): number {
+  return pages
+    .filter((p) => p.parentId === id)
+    .reduce((n, child) => n + 1 + countBelow(pages, child.id), 0);
+}
+
 // The «@» menu runs inside ProseMirror, outside React, so the page list reaches it through here
 // (EditorAppProvider keeps it current).
 let known: PageSummary[] = [];

@@ -12,6 +12,21 @@
   background: var(--bg);
 }
 
+/* The bar spans the page zone edge to edge (the cover's trick), so the path sits in the corner, not in the text column. */
+.page-column > .container > .page-topbar {
+  box-sizing: border-box;
+  width: 100cqw;
+  margin-left: calc(50% - 50cqw);
+  padding: 2px 12px;
+}
+
+/* Without a cover the bar goes up to the top of the zone and the title stays where it was, well below it, as in
+   Notion (with a cover, the cover goes flush under the bar). */
+.container:not(:has(.page-cover)) > .page-topbar {
+  margin-top: -10vh;
+  margin-bottom: calc(10vh + 2.5rem);
+}
+
 .page-crumbs {
   display: flex;
   flex: 1 1 auto;

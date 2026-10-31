@@ -21,6 +21,7 @@ import {
   MousePointer2,
   Sparkles,
   Sun,
+  Trash2,
 } from "lucide-react";
 import { AiPanel } from "./components/ai/AiPanel";
 import { AI_INLINE_EVENT } from "./components/editor/AiAssist";
@@ -44,6 +45,11 @@ import { Workspace } from "./components/workspace/Workspace";
 import { setCursorPref, setStylePref, setThemePref, toggleTheme } from "./lib/theme";
 import { createDatabasePage, createPage, deletePage, dbPing, listPages } from "./lib/db-client";
 import { AppMenu } from "./components/AppMenu";
+import { ConfirmHost } from "./components/ConfirmHost";
+import { TrashDialog } from "./components/TrashDialog";
+import { askConfirm } from "./lib/confirm";
+import { emitAnyDatabaseChange } from "./lib/database-bus";
+import { countBelow } from "./lib/page-links";
 import { UpdateBanner } from "./components/UpdateBanner";
 import { requestUpdateCheck } from "./lib/app-update";
 import { renamePage } from "./lib/rename";
@@ -139,26 +145,55 @@ function App() {
     [openPage],
   );
 
-  const handleDelete = (pageId: string) => {
-    void deletePage(pageId).then(async () => {
-      // Re-read instead of filtering: deleting a page cascades to its sub-pages,
-      // and a database page also takes its rows with it.
-      const all = await listPages();
-      const visible = all.filter((p) => !p.databaseId);
-
-      if (visible.length === 0) {
-        const created = await createPage();
-        setPages([...all, created]);
-        setSelectedPageId(created.id);
-        return;
-      }
-
-      setPages(all);
-      if (!all.some((p) => p.id === selectedPageId)) {
-        setSelectedPageId(visible[0].id);
-      }
+  // The one place every delete goes through (sidebar, page menu, task menu): asks first, then moves the page to the
+  // trash. Resolves whether it was deleted.
+  const handleDelete = async (pageId: string): Promise<boolean> => {
+    const page = pages.find((p) => p.id === pageId);
+    const below = countBelow(pages, pageId);
+    const inside =
+      below === 0
+        ? ""
+        : below === 1
+          ? " Se moverá también la subpágina o fila que contiene."
+          : ` Se moverán también las ${below} subpáginas y filas que contiene.`;
+    const ok = await askConfirm({
+      title: `¿Mover «${page?.title || "Sin título"}» a la papelera?`,
+      detail: `${inside} Podrás restaurarla desde la papelera durante 30 días.`.trim(),
+      confirmLabel: "Mover a la papelera",
     });
+    if (!ok) return false;
+    try {
+      await deletePage(pageId);
+    } catch (err) {
+      console.error("Failed to delete the page", err);
+      return false;
+    }
+    // Re-read instead of filtering: deleting a page cascades to its sub-pages,
+    // and a database page also takes its rows with it.
+    const all = await listPages();
+    const visible = all.filter((p) => !p.databaseId);
+
+    if (visible.length === 0) {
+      const created = await createPage();
+      setPages([...all, created]);
+      setSelectedPageId(created.id);
+      return true;
+    }
+
+    setPages(all);
+    if (!all.some((p) => p.id === selectedPageId)) {
+      setSelectedPageId(visible[0].id);
+    }
+    return true;
   };
+
+  // A page came back from the trash: the list and every open view of a database read again.
+  const [trashOpen, setTrashOpen] = useState(false);
+  const closeTrash = useCallback(() => setTrashOpen(false), []);
+  const handleRestored = useCallback(() => {
+    void listPages().then(setPages);
+    emitAnyDatabaseChange();
+  }, []);
 
   // useCallback here isn't a performance nicety — PageEditor's content-loading
   // effect depends (transitively, via flushPendingSave) on this reference. An
@@ -308,6 +343,13 @@ function App() {
       run: () => enter("manager"),
     },
     {
+      id: "trash",
+      label: "Abrir la papelera",
+      keywords: "borrado eliminado restaurar recuperar deshacer",
+      icon: Trash2,
+      run: () => setTrashOpen(true),
+    },
+    {
       id: "go-home",
       label: "Pantalla de inicio",
       keywords: "inicio portada elegir",
@@ -417,6 +459,7 @@ function App() {
       onSelect={openPage}
       onCreate={handleCreate}
       onDelete={handleDelete}
+      onOpenTrash={() => setTrashOpen(true)}
       onRename={handleRename}
       onSearch={openSearch}
       onAskAi={openAi}
@@ -552,6 +595,8 @@ function App() {
         onPagesChanged={refreshPages}
       />
       {searchOpen && <SearchModal commands={commands} onOpen={openPage} onClose={closeSearch} />}
+      {trashOpen && <TrashDialog onClose={closeTrash} onRestored={handleRestored} />}
+      <ConfirmHost />
       <ImportHost onDone={handleImported} />
       <UpdateBanner />
     </>

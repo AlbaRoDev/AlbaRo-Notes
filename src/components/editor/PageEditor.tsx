@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { EditorContent, useEditor, type JSONContent } from "@tiptap/react";
+import { EditorContent, useEditor, type Editor, type JSONContent } from "@tiptap/react";
 import { EditorState } from "@tiptap/pm/state";
 import { Placeholder } from "@tiptap/extensions";
 import { contentExtensions } from "./editor-extensions";
@@ -57,6 +57,21 @@ const SAVED_BADGE_DURATION_MS = 1500;
 const NOTICE_DURATION_MS = 5000;
 
 type SaveStatus = "idle" | "saving" | "saved";
+
+/** Takes out of the open document the links and mentions of pages that were just deleted. */
+function removeLinksTo(editor: Editor, gone: Set<string>) {
+  const ranges: { from: number; to: number }[] = [];
+  editor.state.doc.descendants((node, pos) => {
+    if (node.type.name === "pageLink" || node.type.name === "pageMention") {
+      if (gone.has(node.attrs.pageId as string))
+        ranges.push({ from: pos, to: pos + node.nodeSize });
+    }
+  });
+  if (ranges.length === 0) return;
+  const tr = editor.state.tr;
+  for (const { from, to } of ranges.reverse()) tr.delete(from, to); // last first: earlier positions stay valid
+  editor.view.dispatch(tr);
+}
 
 interface PageEditorProps {
   pageId: string;
@@ -202,6 +217,19 @@ export function PageEditor({
       cancelled = true;
     };
   }, [editor, pageId, flushPendingSave, ownDatabaseId]);
+
+  // Rust takes the links to a deleted page out of the stored documents; this does it in the open one, whose
+  // autosave would otherwise write them back. Only pages that were in the list and are not now: a page just
+  // created and not yet in this copy of the list is never taken for a deleted one.
+  const knownPageIds = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    const now = new Set(pages.map((p) => p.id));
+    const before = knownPageIds.current;
+    knownPageIds.current = now;
+    if (!editor || !before) return;
+    const gone = new Set([...before].filter((id) => !now.has(id)));
+    if (gone.size > 0) removeLinksTo(editor, gone);
+  }, [editor, pages]);
 
   // The unmount cleanup below runs once, so it reads the callback through a ref.
   const onTitleChangeRef = useRef(onTitleChange);

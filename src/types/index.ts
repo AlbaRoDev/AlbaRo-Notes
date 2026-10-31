@@ -381,6 +381,19 @@ export interface DatabaseSummary {
   name: string;
 }
 
+/** A deleted page waiting in the trash (with what hung from it). Dates are `YYYY-MM-DD HH:MM:SS`, UTC. */
+export interface TrashItem {
+  id: string;
+  title: string;
+  kind: "page" | "database";
+  icon: string | null;
+  /** The page deleted and what went with it (sub-pages, rows). */
+  pageCount: number;
+  deletedAt: string;
+  /** When it is erased for good. */
+  expiresAt: string;
+}
+
 /** One search hit. Matches in `title`/`snippet` are wrapped in U+E000 … U+E001. */
 export interface SearchResult {
   id: string;

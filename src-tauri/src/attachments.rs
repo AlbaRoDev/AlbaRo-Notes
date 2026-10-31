@@ -6,7 +6,7 @@
 //! only thing standing between the asset protocol / `open` / `save as` and an
 //! arbitrary path.
 
-use rusqlite::{Connection, OptionalExtension};
+use rusqlite::Connection;
 use serde::Serialize;
 use serde_json::Value;
 use std::fs;
@@ -273,74 +273,26 @@ pub fn sweep_orphans(conn: &Connection, dir: &Path) -> rusqlite::Result<usize> {
     Ok(removed)
 }
 
-/// Whether any page document, synced block or page cover still points at this attachment.
+/// Whether any page document, synced block, page cover or trashed page still points at this attachment.
 fn is_referenced(conn: &Connection, name: &str) -> rusqlite::Result<bool> {
     conn.query_row(
         "SELECT EXISTS(SELECT 1 FROM blocks WHERE instr(content, ?1) > 0)
              OR EXISTS(SELECT 1 FROM synced_blocks WHERE instr(content, ?1) > 0)
-             OR EXISTS(SELECT 1 FROM pages WHERE cover = 'image:' || ?1)",
+             OR EXISTS(SELECT 1 FROM pages WHERE cover = 'image:' || ?1)
+             OR EXISTS(SELECT 1 FROM trash WHERE instr(snapshot, ?1) > 0)",
         [name],
         |r| r.get::<_, bool>(0),
     )
 }
 
-/// Deletes a page together with what only it used. Deleting a page is final (there is no undo), so
-/// its attachments, and the synced blocks no other page shows (with whatever those hold), go now
-/// instead of waiting for the next start: until then they stayed on disk, readable. Anything else,
-/// such as an image removed from a page, still waits for the startup sweep, because Ctrl+Z can bring
-/// it back. Only what the deleted pages used is looked at: a file uploaded a moment ago and not saved
-/// into any page yet is not touched.
+/// Deletes the attachments named in `texts` (snapshots of what was deleted) that nothing points at now.
+/// Deleting a page does not call this: its files wait in the trash with the rest of it (`is_referenced`
+/// counts the trash) and go when the trash entry does (trash::purge). Only the files named there are looked
+/// at: one uploaded a moment ago and not saved into any page yet is not touched.
 ///
 /// Known limit: removing a file does not overwrite its bytes, and on an SSD or a journaling file system
 /// it could not be relied on if it did; full-disk encryption is the answer to that, not this.
-pub fn delete_page_and_leftovers(conn: &Connection, dir: &Path, page_id: &str) -> Result<(), String> {
-    // the page and everything that hangs from it (sub-pages; the rows of a database)
-    let tree: Vec<String> = {
-        let mut stmt = conn
-            .prepare("WITH RECURSIVE tree(id) AS (SELECT ?1 UNION ALL SELECT p.id FROM pages p JOIN tree t ON p.parent_id = t.id) SELECT id FROM tree")
-            .map_err(|e| e.to_string())?;
-        let rows = stmt.query_map([page_id], |r| r.get::<_, String>(0)).map_err(|e| e.to_string())?;
-        rows.collect::<rusqlite::Result<_>>().map_err(|e| e.to_string())?
-    };
-    // what those pages point at, as text: their documents and their covers
-    let mut texts: Vec<String> = Vec::new();
-    for id in &tree {
-        let mut stmt = conn.prepare("SELECT content FROM blocks WHERE page_id = ?1").map_err(|e| e.to_string())?;
-        let docs = stmt.query_map([id], |r| r.get::<_, String>(0)).map_err(|e| e.to_string())?;
-        for doc in docs {
-            texts.push(doc.map_err(|e| e.to_string())?);
-        }
-        let cover: Option<String> = conn.query_row("SELECT cover FROM pages WHERE id = ?1", [id], |r| r.get(0)).map_err(|e| e.to_string())?;
-        texts.extend(cover);
-    }
-    let mut synced = std::collections::HashSet::new();
-    for text in &texts {
-        if let Ok(doc) = serde_json::from_str::<Value>(text) {
-            crate::validate::collect_ids(&doc, "syncedBlock", "syncId", &mut synced);
-        }
-    }
-
-    crate::db::delete_page(conn, page_id).map_err(|e| e.to_string())?;
-
-    // synced blocks no remaining page shows go too, and what they held is looked at as well
-    for id in synced {
-        let shown: bool = conn
-            .query_row("SELECT EXISTS(SELECT 1 FROM blocks WHERE type = 'doc' AND instr(content, ?1) > 0)", [&id], |r| r.get(0))
-            .map_err(|e| e.to_string())?;
-        if shown {
-            continue;
-        }
-        let held: Option<String> = conn
-            .query_row("SELECT content FROM synced_blocks WHERE id = ?1", [&id], |r| r.get(0))
-            .optional()
-            .map_err(|e| e.to_string())?;
-        if let Some(held) = held {
-            texts.push(held);
-            conn.execute("DELETE FROM synced_blocks WHERE id = ?1", [&id]).map_err(|e| e.to_string())?;
-        }
-    }
-
-    // attachments named in any of that and pointed at by nothing now
+pub fn remove_unreferenced(conn: &Connection, dir: &Path, texts: &[String]) -> Result<(), String> {
     let Ok(entries) = fs::read_dir(dir) else { return Ok(()) };
     for entry in entries.flatten() {
         let name = entry.file_name().to_string_lossy().into_owned();
@@ -787,7 +739,6 @@ fn parse_meta(html: &str) -> Meta {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::json;
 
     const UUID: &str = "3f2a1b4c-5d6e-4f70-8a9b-0c1d2e3f4a5b";
 
@@ -901,7 +852,7 @@ mod tests {
         assert!(resolve(&dir, &info.file).is_ok());
 
         let conn = Connection::open_in_memory().unwrap();
-        conn.execute_batch("CREATE TABLE blocks (id TEXT, content TEXT); CREATE TABLE synced_blocks (id TEXT, content TEXT); CREATE TABLE pages (id TEXT, cover TEXT);")
+        conn.execute_batch("CREATE TABLE blocks (id TEXT, content TEXT); CREATE TABLE synced_blocks (id TEXT, content TEXT); CREATE TABLE pages (id TEXT, cover TEXT); CREATE TABLE trash (snapshot TEXT);")
             .unwrap();
         fs::write(dir.join(format!("{TMP_PREFIX}abc")), b"x").unwrap();
         let orphan = store_bytes(&dir, b"o", "png").unwrap();
@@ -1061,59 +1012,5 @@ mod tests {
         for ext in ["png", "jpg", "pdf", "txt", "docx", "xlsx", "zip", "mp4", "mp3", "bin"] {
             assert!(ensure_openable(&format!("11111111-2222-4333-8444-555555555555.{ext}")).is_ok(), "{ext}");
         }
-    }
-
-    fn image(file: &str) -> Value {
-        json!({ "type": "image", "attrs": { "file": file, "name": "x", "size": 1 } })
-    }
-
-    fn doc(blocks: Vec<Value>) -> Value {
-        json!({ "type": "doc", "content": blocks })
-    }
-
-    #[test]
-    fn deleting_a_page_takes_its_files_and_synced_blocks_but_nothing_else() {
-        let conn = Connection::open_in_memory().unwrap();
-        conn.pragma_update(None, "foreign_keys", true).unwrap();
-        crate::db::run_migrations(&conn).unwrap();
-        let dir = std::env::temp_dir().join(format!("albaro-test-{}", Uuid::new_v4()));
-        let make = |tag: &str| -> String {
-            let name = format!("{}.png", Uuid::new_v4());
-            fs::create_dir_all(&dir).unwrap();
-            fs::write(dir.join(&name), tag).unwrap();
-            name
-        };
-        let (only_a, shared, in_child, in_cover, in_synced, shared_synced_file, loose) = (make("a"), make("s"), make("c"), make("v"), make("y"), make("z"), make("l"));
-        let (synced_gone, synced_kept) = (Uuid::new_v4().to_string(), Uuid::new_v4().to_string());
-        crate::db::save_synced_block(&conn, &synced_gone, &doc(vec![image(&in_synced)])).unwrap();
-        crate::db::save_synced_block(&conn, &synced_kept, &doc(vec![image(&shared_synced_file)])).unwrap();
-
-        let doomed = crate::db::create_page(&conn, None).unwrap();
-        let child = crate::db::create_page(&conn, Some(&doomed.id)).unwrap();
-        let other = crate::db::create_page(&conn, None).unwrap();
-        let synced = |id: &str| json!({ "type": "syncedBlock", "attrs": { "syncId": id } });
-        crate::db::save_page_content(&conn, &doomed.id, &doc(vec![image(&only_a), image(&shared), synced(&synced_gone), synced(&synced_kept)])).unwrap();
-        crate::db::save_page_content(&conn, &child.id, &doc(vec![image(&in_child)])).unwrap();
-        crate::db::set_page_cover(&conn, &doomed.id, Some(&format!("image:{in_cover}"))).unwrap();
-        crate::db::save_page_content(&conn, &other.id, &doc(vec![image(&shared), synced(&synced_kept)])).unwrap();
-        // `loose` was uploaded and is not in any page yet (its save is still in the debounce)
-
-        delete_page_and_leftovers(&conn, &dir, &doomed.id).unwrap();
-
-        let exists = |name: &str| dir.join(name).exists();
-        assert!(!exists(&only_a), "its own attachment stayed on disk");
-        assert!(!exists(&in_child), "a sub-page's attachment stayed on disk");
-        assert!(!exists(&in_cover), "its cover stayed on disk");
-        assert!(!exists(&in_synced), "what a synced block only it showed held stayed on disk");
-        assert!(exists(&shared), "an attachment another page still shows was deleted");
-        assert!(exists(&shared_synced_file), "what a synced block another page shows holds was deleted");
-        assert!(exists(&loose), "a file that no page used was touched");
-        let synced_rows: i64 = conn.query_row("SELECT COUNT(*) FROM synced_blocks", [], |r| r.get(0)).unwrap();
-        assert_eq!(synced_rows, 1, "the synced block nobody shows any more stayed, or the shared one went");
-        let kept: bool = conn
-            .query_row("SELECT EXISTS(SELECT 1 FROM synced_blocks WHERE id = ?1)", [&synced_kept], |r| r.get(0))
-            .unwrap();
-        assert!(kept);
-        fs::remove_dir_all(&dir).unwrap();
     }
 }

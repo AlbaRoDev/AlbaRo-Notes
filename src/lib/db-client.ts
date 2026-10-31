@@ -22,6 +22,7 @@ import type {
   SearchResult,
   StatusGroup,
   TagColor,
+  TrashItem,
   ViewConfig,
   ViewInfo,
   ViewKind,
@@ -310,8 +311,27 @@ export async function duplicateRow(pageId: string): Promise<PageSummary> {
   return invoke<PageSummary>("duplicate_row", { pageId });
 }
 
-export async function deletePage(pageId: string): Promise<void> {
-  return invoke("delete_page", { pageId });
+/** Moves a page, and what hangs from it, to the trash; returns the trash entry. */
+export async function deletePage(pageId: string): Promise<string> {
+  return invoke<string>("delete_page", { pageId });
+}
+
+export async function listTrash(): Promise<TrashItem[]> {
+  return invoke<TrashItem[]>("list_trash");
+}
+
+/** Puts a trashed page back; returns its id. */
+export async function restoreTrash(trashId: string): Promise<string> {
+  return invoke<string>("restore_trash", { trashId });
+}
+
+/** Erases one entry for good. */
+export async function purgeTrash(trashId: string): Promise<void> {
+  return invoke("purge_trash", { trashId });
+}
+
+export async function emptyTrash(): Promise<void> {
+  return invoke("empty_trash");
 }
 
 /** Pages matching `query` (title and text, FTS5), best first; an empty query lists recent pages. */

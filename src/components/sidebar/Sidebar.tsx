@@ -81,7 +81,8 @@ interface SidebarProps {
   selectedPageId: string | null;
   onSelect: (pageId: string) => void;
   onCreate: (kind: PageSummary["kind"]) => void;
-  onDelete: (pageId: string) => void;
+  onDelete: (pageId: string) => Promise<boolean>;
+  onOpenTrash: () => void;
   onRename: (pageId: string, title: string) => Promise<void>;
   /** Opens the search dialog. */
   onSearch: () => void;
@@ -119,6 +120,7 @@ export function Sidebar({
   onSelect,
   onCreate,
   onDelete,
+  onOpenTrash,
   onRename,
   onSearch,
   onAskAi,
@@ -229,10 +231,7 @@ export function Sidebar({
 
   const handleDelete = (page: PageSummary, e: React.MouseEvent) => {
     e.stopPropagation();
-    const extra = page.kind === "database" ? " Se borrarán también todas sus filas." : "";
-    if (window.confirm(`¿Borrar "${page.title}"?${extra} Esta acción no se puede deshacer.`)) {
-      onDelete(page.id);
-    }
+    void onDelete(page.id);
   };
 
   const renderNode = (page: PageSummary): React.ReactNode => {
@@ -481,6 +480,15 @@ export function Sidebar({
                 </Fold>
               </>
             )}
+            <button type="button" className="sidebar-item sidebar-search" onClick={onOpenTrash}>
+              <Trash2
+                size={16}
+                strokeWidth={1.75}
+                className="sidebar-item-icon"
+                aria-hidden="true"
+              />
+              <span className="sidebar-item-title">Papelera</span>
+            </button>
           </div>
           <div className="sidebar-footer" role="radiogroup" aria-label="Estilo">
             {STYLES.map(({ pref, label, title, Icon }) => (

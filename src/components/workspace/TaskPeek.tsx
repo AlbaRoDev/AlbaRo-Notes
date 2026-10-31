@@ -107,15 +107,8 @@ function TaskMenu({
       keywords: "papelera eliminar quitar",
       Icon: Trash2,
       danger: true,
-      run: () => {
-        if (
-          !window.confirm(
-            `¿Borrar "${page.title}"? Se borrarán también sus entradas del calendario. Esta acción no se puede deshacer.`,
-          )
-        )
-          return;
-        host.onDelete(page.id);
-        onDeleted();
+      run: async () => {
+        if (await host.onDelete(page.id)) onDeleted();
       },
     },
   ];

@@ -72,6 +72,7 @@ import { typeChoiceOf } from "./property-types";
 import { calcLabel, computeCalc } from "./calculations";
 import { PropertyMenu, type MenuView } from "./PropertyMenu";
 import { useDatabase } from "./useDatabase";
+import { askConfirm } from "../../lib/confirm";
 import { TITLE_ID, VIEW_KIND_LABELS, normalizeConfig } from "./view-config";
 import "./DatabaseView.css";
 
@@ -738,13 +739,19 @@ export function DatabaseTable({
             onToggleSettings={() => togglePanel({ kind: "view" })}
             onAdd={(kind) => void addView(kind)}
             onDelete={(v) => {
-              if (!window.confirm(`¿Borrar la vista «${v.name}»? Los datos no se borran.`)) return;
-              void run(async () => {
-                await deleteView(v.id);
-                if (v.id === view.id) {
-                  setPanel(null);
-                  selectView(data.views.find((o) => o.id !== v.id)!.id);
-                }
+              void askConfirm({
+                title: `¿Borrar la vista «${v.name}»?`,
+                detail: "Los datos no se borran.",
+                confirmLabel: "Borrar la vista",
+              }).then((ok) => {
+                if (!ok) return;
+                void run(async () => {
+                  await deleteView(v.id);
+                  if (v.id === view.id) {
+                    setPanel(null);
+                    selectView(data.views.find((o) => o.id !== v.id)!.id);
+                  }
+                });
               });
             }}
           />

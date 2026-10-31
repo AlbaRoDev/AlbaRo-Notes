@@ -12,7 +12,7 @@ const EDGE = 32; // near the top or bottom of the scroll area, the page scrolls 
 /** The blank space around a page's text: the zone, the page column and the editor's own padding. */
 export const isPageBlank = (t: Element) =>
   t.matches(
-    ".app-layout, .container, .manager, .tasks, .page-editor-wrapper, .page-editor, .ProseMirror",
+    ".app-layout, .page-column, .container, .manager, .tasks, .page-editor-wrapper, .page-editor, .ProseMirror",
   );
 
 export const hits = (el: Element, box: Box) => {

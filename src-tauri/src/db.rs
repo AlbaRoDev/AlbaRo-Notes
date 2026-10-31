@@ -402,6 +402,22 @@ pub(crate) fn run_migrations_up_to(conn: &Connection, target: i64) -> rusqlite::
         conn.pragma_update(None, "user_version", 22)?;
     }
 
+    if current_version < 23 && target >= 23 {
+        // the trash: a deleted page leaves as a snapshot (trash.rs), kept 30 days, instead of vanishing for good.
+        conn.execute_batch(
+            "CREATE TABLE trash (
+                 id TEXT PRIMARY KEY,
+                 title TEXT NOT NULL,
+                 kind TEXT NOT NULL,
+                 icon TEXT,
+                 page_count INTEGER NOT NULL,
+                 deleted_at TEXT NOT NULL DEFAULT (datetime('now')),
+                 snapshot TEXT NOT NULL
+             );",
+        )?;
+        conn.pragma_update(None, "user_version", 23)?;
+    }
+
     Ok(())
 }
 
@@ -1257,12 +1273,34 @@ mod tests {
 
         let conn = init(&dir).unwrap();
         let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0)).unwrap();
-        assert_eq!(version, 22);
+        assert_eq!(version, 23);
         let secure: i64 = conn.query_row("PRAGMA secure_delete", [], |r| r.get(0)).unwrap();
         assert_eq!(secure, 1, "secure_delete is on for the app's own connection");
         drop(conn);
         assert!(!file_contains(&path, SECRET), "the first start with the new version cleans the free space");
         fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn migration_23_adds_the_trash_and_leaves_the_pages_as_they_were() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.pragma_update(None, "foreign_keys", true).unwrap();
+        run_migrations_up_to(&conn, 22).unwrap();
+        let page = create_page(&conn, None).unwrap();
+        save_page_content(&conn, &page.id, &doc_with("lo que había")).unwrap();
+        let state = |conn: &Connection| -> (i64, String) {
+            let pages = conn.query_row("SELECT COUNT(*) FROM pages", [], |r| r.get(0)).unwrap();
+            (pages, conn.query_row("SELECT content FROM blocks WHERE page_id = ?1", [&page.id], |r| r.get(0)).unwrap())
+        };
+        let before = state(&conn);
+
+        run_migrations(&conn).unwrap();
+        assert_eq!(state(&conn), before, "nothing of the pages changed");
+        let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0)).unwrap();
+        assert_eq!(version, 23);
+        let trashed: i64 = conn.query_row("SELECT COUNT(*) FROM trash", [], |r| r.get(0)).unwrap();
+        assert_eq!(trashed, 0);
+        run_migrations(&conn).unwrap(); // a second run does nothing
     }
 
     #[test]

@@ -20,8 +20,8 @@ export interface TaskHost {
   onPagesChanged: () => void;
   /** Opens any page in Notes. */
   onOpenPage: (pageId: string) => void;
-  /** Deletes a page (a task) and refreshes the page list. */
-  onDelete: (pageId: string) => void;
+  /** Moves a page (a task) to the trash after asking, and refreshes the page list; false if the user said no. */
+  onDelete: (pageId: string) => Promise<boolean>;
   /** Opens the AI assistant. */
   onOpenAi: () => void;
 }

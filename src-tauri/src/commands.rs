@@ -10,6 +10,7 @@ use crate::ics;
 use crate::maps::{self, GeocodeResult};
 use crate::search::{self, SearchResult};
 use crate::tasks;
+use crate::trash::{self, TrashItem};
 use crate::views::{self, ViewInfo, ViewResult};
 use serde_json::Value;
 use std::fs;
@@ -63,10 +64,35 @@ pub fn create_page(state: State<DbState>, parent_id: Option<String>) -> Result<P
 }
 
 #[tauri::command]
-pub fn delete_page(state: State<DbState>, dir: State<AttachmentsDir>, page_id: String) -> Result<(), String> {
+pub fn delete_page(state: State<DbState>, page_id: String) -> Result<String, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     tasks::check_deletable(&conn, &page_id)?;
-    attachments::delete_page_and_leftovers(&conn, &dir.0, &page_id)
+    trash::move_to_trash(&conn, &page_id)
+}
+
+#[tauri::command]
+pub fn list_trash(state: State<DbState>) -> Result<Vec<TrashItem>, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    trash::list(&conn)
+}
+
+/// Puts a trashed page back; returns its id.
+#[tauri::command]
+pub fn restore_trash(state: State<DbState>, trash_id: String) -> Result<String, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    trash::restore(&conn, &trash_id)
+}
+
+#[tauri::command]
+pub fn purge_trash(state: State<DbState>, dir: State<AttachmentsDir>, trash_id: String) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    trash::purge(&conn, &dir.0, &[trash_id])
+}
+
+#[tauri::command]
+pub fn empty_trash(state: State<DbState>, dir: State<AttachmentsDir>) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    trash::empty(&conn, &dir.0)
 }
 
 /// The Gestor's task database, created the first time.

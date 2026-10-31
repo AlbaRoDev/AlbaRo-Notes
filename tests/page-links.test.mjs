@@ -1,7 +1,7 @@
 // Run with: node --test tests/
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { linkablePages, searchPages } from "../src/lib/page-links.ts";
+import { countBelow, linkablePages, searchPages } from "../src/lib/page-links.ts";
 
 const page = (id, title, extra = {}) => ({
   id,
@@ -40,4 +40,24 @@ test("search ignores accents and capitals and puts titles that start with the wo
   );
   assert.deepEqual(searchPages(pages, "tarea"), []);
   assert.equal(searchPages(pages, "", 2).length, 2);
+});
+
+test("the pages below one are counted at any depth, the rows of a database included", () => {
+  const tree = [
+    page("a", "A"),
+    page("a1", "A1", { parentId: "a" }),
+    page("a2", "A2", { parentId: "a" }),
+    page("a1x", "A1x", { parentId: "a1" }),
+    page("b", "B"),
+  ];
+  assert.equal(countBelow(tree, "a"), 3);
+  assert.equal(countBelow(tree, "a1"), 1);
+  assert.equal(countBelow(tree, "b"), 0);
+  assert.equal(
+    countBelow(
+      [...pages.map((p) => ({ ...p, parentId: p.databaseId === "db-o" ? "other" : null }))],
+      "other",
+    ),
+    1,
+  );
 });
