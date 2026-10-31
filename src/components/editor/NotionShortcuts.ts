@@ -197,19 +197,7 @@ export const NotionShortcuts = Extension.create({
             },
           }),
       ),
-      // `@` or `[[` (at the start or after a space) asks which page to mention; `:` and two letters, which emoji.
-      new InputRule({
-        find: /(?:^|\s)(@|\[\[)$/,
-        handler: ({ chain, range, match }) => {
-          const from = range.from + match[0].length - match[0].trimStart().length;
-          chain()
-            .insertContentAt(
-              { from, to: range.to },
-              { type: "pageMention", attrs: { pageId: null } },
-            )
-            .run();
-        },
-      }),
+      // `:` and two letters ask which emoji (`@` and `[[` have their own list: PageMentionSuggest).
       new InputRule({
         find: /(?:^|\s):([\p{L}]{2,})$/u,
         handler: ({ chain, range, match }) => {

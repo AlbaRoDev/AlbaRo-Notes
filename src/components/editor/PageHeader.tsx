@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { ImagePlus, Smile, X } from "lucide-react";
 import { setPageCover, setPageIcon } from "../../lib/db-client";
 import { errorMessage, storeAttachment } from "../../lib/attachments";
@@ -38,7 +38,7 @@ function coverParts(cover: string): { kind: string; value: string } {
   return { kind: cover.slice(0, at), value: cover.slice(at + 1) };
 }
 
-function PageCover({ cover }: { cover: string }) {
+export function PageCover({ cover }: { cover: string }) {
   const { kind, value } = coverParts(cover);
   const url = useAttachmentUrl(kind === "image" ? value : null);
   const style =
@@ -82,7 +82,7 @@ function Popover({
   );
 }
 
-const MAX_FOUND = 400;
+const MAX_FOUND = 120;
 
 export function IconPicker({
   current,
@@ -108,7 +108,8 @@ export function IconPicker({
     };
   }, []);
 
-  const needle = query.trim().toLowerCase();
+  // deferred: the box answers each key at once and the grid catches up
+  const needle = useDeferredValue(query).trim().toLowerCase();
   const found = useMemo(
     () => (emoji && needle ? emoji.filter((e) => matchesEmoji(e, needle)).slice(0, MAX_FOUND) : []),
     [emoji, needle],

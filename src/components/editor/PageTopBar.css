@@ -139,3 +139,70 @@
   padding-top: 6px;
   border-top: 1px solid var(--border);
 }
+
+/* the pages beside a step of the path */
+.crumb-menu {
+  position: fixed;
+  z-index: 1250;
+  display: grid;
+  max-height: min(60vh, 420px);
+  overflow-y: auto;
+  padding: 6px;
+  border-radius: 10px;
+  background: var(--bg-popover);
+  box-shadow: var(--shadow-popover);
+  color: var(--text);
+  font-size: 0.88rem;
+  animation: pop-in 120ms ease-out;
+}
+
+.crumb-menu > button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  padding: 5px 8px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.crumb-menu > button:hover,
+.crumb-menu > button:focus-visible {
+  background: rgba(var(--ink), 0.08);
+  outline: none;
+}
+
+.crumb-menu > button[aria-current] {
+  background: rgba(var(--accent-rgb), 0.14);
+}
+
+.crumb-menu .page-ref-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  min-width: 1.3em;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.crumb-menu .page-ref-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crumb-menu .page-ref-title {
+  flex: 1 1 auto;
+}
+
+/* the arrow of a page that holds pages: they open to the side */
+.crumb-menu-arrow {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: var(--text-faint);
+}

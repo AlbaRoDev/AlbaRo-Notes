@@ -26,6 +26,7 @@ import { AiPanel } from "./components/ai/AiPanel";
 import { AI_INLINE_EVENT } from "./components/editor/AiAssist";
 import { OPEN_LINK_EVENT } from "./components/editor/NotionShortcuts";
 import { FIND_EVENT } from "./components/editor/PageSearch";
+import { loadEmojiData } from "./components/editor/emoji-data";
 import { PageHeader } from "./components/editor/PageHeader";
 import { PageTopBar } from "./components/editor/PageTopBar";
 import {
@@ -36,6 +37,8 @@ import {
 import { RelatedTasks } from "./components/editor/RelatedTasks";
 import { Home } from "./components/workspace/Home";
 import { ManagerCompanion, ManagerMain } from "./components/workspace/Manager";
+import { TaskPeek } from "./components/workspace/TaskPeek";
+import type { TaskHost } from "./components/workspace/Tasks";
 import { useLayout } from "./components/workspace/use-layout";
 import { Workspace } from "./components/workspace/Workspace";
 import { setCursorPref, setStylePref, setThemePref, toggleTheme } from "./lib/theme";
@@ -63,6 +66,9 @@ function App() {
     getVersion()
       .then(setVersion)
       .catch(() => setVersion(null));
+    // the emoji list is a 570 KB chunk: fetched right after the first paint, so the picker does not wait for it
+    const warm = window.setTimeout(() => void loadEmojiData(), 200);
+    return () => window.clearTimeout(warm);
   }, []);
 
   const bootstrapped = useRef(false);
@@ -86,10 +92,27 @@ function App() {
 
   const { layout, enter, promote, setSplit, goHome } = useLayout();
 
+  // A row of a database (a task…) opens in the side peek, over the page that shows it, as in Notion; any other
+  // page replaces the open one. Read through a ref so the callback stays the same one when titles change.
+  const [peekId, setPeekId] = useState<string | null>(null);
+  const pagesRef = useRef(pages);
+  useEffect(() => {
+    pagesRef.current = pages;
+  }, [pages]);
+  const navigate = useCallback((pageId: string) => {
+    if (pagesRef.current.find((p) => p.id === pageId)?.databaseId) setPeekId(pageId);
+    else {
+      setPeekId(null);
+      setSelectedPageId(pageId);
+    }
+  }, []);
+  const closePeek = useCallback(() => setPeekId(null), []);
+
   // Opening a page from anywhere (search, the AI, the Notes companion) brings Notes to the main zone.
   const openPage = useCallback(
     (pageId: string) => {
       setSelectedPageId(pageId);
+      setPeekId(null);
       promote("notes");
     },
     [promote],
@@ -165,6 +188,7 @@ function App() {
   }, []);
 
   const selectedPage = pages.find((p) => p.id === selectedPageId);
+  const peekPage = pages.find((p) => p.id === peekId);
 
   // The mouse's «back» button goes up to the page's parent (a row's database, a sub-page's parent): the app has
   // no history to walk, and the webview's own would leave the page.
@@ -407,6 +431,15 @@ function App() {
       onSearch={openSearch}
     />
   );
+  const taskHost: TaskHost = {
+    pages,
+    onTitleChange: handleTitleChange,
+    onChildPageCreated: handleChildPageCreated,
+    onPagesChanged: refreshPages,
+    onOpenPage: openPage,
+    onDelete: handleDelete,
+    onOpenAi: openAi,
+  };
   const notesMain = (
     <div className="app-layout">
       {sidebar}
@@ -442,11 +475,25 @@ function App() {
                 pageId={selectedPageId}
                 pages={pages}
                 onTitleChange={handleTitleChange}
-                onNavigate={setSelectedPageId}
+                onNavigate={navigate}
                 onChildPageCreated={handleChildPageCreated}
                 onPagesChanged={refreshPages}
               />
             </ErrorBoundary>
+          )}
+          {peekPage && (
+            <TaskPeek page={peekPage} host={taskHost} onClose={closePeek}>
+              <PageEditor
+                key={peekPage.id}
+                pageId={peekPage.id}
+                rowDatabaseId={peekPage.databaseId}
+                pages={pages}
+                onTitleChange={handleTitleChange}
+                onNavigate={navigate}
+                onChildPageCreated={handleChildPageCreated}
+                onPagesChanged={refreshPages}
+              />
+            </TaskPeek>
           )}
           {selectedPage?.kind === "page" && !selectedPage.databaseId && (
             <RelatedTasks pageId={selectedPage.id} pages={pages} onOpen={openPage} />
@@ -482,17 +529,7 @@ function App() {
             ) : (
               <div className="app-layout">
                 {sidebar}
-                <ManagerMain
-                  host={{
-                    pages,
-                    onTitleChange: handleTitleChange,
-                    onChildPageCreated: handleChildPageCreated,
-                    onPagesChanged: refreshPages,
-                    onOpenPage: openPage,
-                    onDelete: handleDelete,
-                    onOpenAi: openAi,
-                  }}
-                />
+                <ManagerMain host={taskHost} />
               </div>
             )
           }

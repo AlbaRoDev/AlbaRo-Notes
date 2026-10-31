@@ -1,0 +1,109 @@
+/* ---- the card that shows over a link to a page when the pointer rests on it ---- */
+.page-preview {
+  position: fixed;
+  z-index: 1250;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--bg-popover);
+  box-shadow: var(--shadow-popover);
+  color: var(--text);
+  font-size: 0.85rem;
+  cursor: var(--cursor-pointer, pointer);
+  animation: pop-in 120ms ease-out;
+}
+
+.page-preview-cover {
+  position: relative;
+  flex: 0 0 64px;
+  height: 64px;
+}
+
+.page-preview-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 0.9rem 0.3rem;
+  font-size: 1rem;
+}
+
+.page-preview-head strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.page-preview-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.page-preview-body {
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 0.9rem 0.8rem;
+  color: var(--text-muted);
+  /* the last line fades out instead of being cut */
+  mask-image: linear-gradient(to bottom, black 80%, transparent);
+}
+
+.page-preview-body p {
+  display: -webkit-box;
+  margin: 0 0 0.25rem;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.page-preview-body p[data-heading] {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.page-preview-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--text-faint);
+}
+
+/* a page this one links to: a row that opens it */
+.page-preview-body .page-preview-page {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  min-width: 0;
+  margin: 0 0 0.1rem;
+  padding: 3px 6px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+}
+
+.page-preview-body .page-preview-page:hover {
+  background: rgba(var(--ink), 0.08);
+}
+
+.page-preview-page .page-ref-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  min-width: 1.3em;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.page-preview-page .page-ref-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

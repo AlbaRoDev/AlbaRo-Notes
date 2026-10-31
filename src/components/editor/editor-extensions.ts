@@ -14,6 +14,7 @@ import { TableOfContents } from "./TableOfContents";
 import { EmojiPicker } from "./EmojiPicker";
 import { DateMention } from "./DateMention";
 import { PageMention } from "./PageMention";
+import { PageMentionSuggest } from "./PageMentionSuggest";
 import { Equation } from "./Equation";
 import { EquationBlock } from "./EquationBlock";
 import { CodeBlock } from "./CodeBlock";
@@ -54,6 +55,7 @@ export const contentExtensions = [
   BackgroundColor,
   LinkOpen,
   NotionShortcuts,
+  PageMentionSuggest,
   CodeBlock,
   TaskList,
   TaskItem.configure({ nested: true }),

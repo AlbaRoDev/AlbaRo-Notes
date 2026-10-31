@@ -1,11 +1,13 @@
 import { useState, type KeyboardEvent } from "react";
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
-import { FileText } from "lucide-react";
 import { useEditorAppContext } from "./editor-app-context";
+import { PageRef } from "./PageRef";
+import { useHoverPreview } from "./use-hover-preview";
+import { linkablePages } from "../../lib/page-links";
 import type { PageSummary } from "../../types";
 
 export function PageLinkView({ node, updateAttributes }: NodeViewProps) {
-  const { pages, currentPageId, onNavigate } = useEditorAppContext();
+  const { pages, currentPageId } = useEditorAppContext();
   const pageId = node.attrs.pageId as string | null;
 
   if (!pageId) {
@@ -20,7 +22,14 @@ export function PageLinkView({ node, updateAttributes }: NodeViewProps) {
     );
   }
 
+  return <ResolvedPageLink pageId={pageId} />;
+}
+
+/** A link to a page that is chosen: its icon and title, with the preview card on hover. */
+function ResolvedPageLink({ pageId }: { pageId: string }) {
+  const { pages, onNavigate } = useEditorAppContext();
   const target = pages.find((p) => p.id === pageId);
+  const { bind, card } = useHoverPreview(target, pages, onNavigate);
 
   return (
     <NodeViewWrapper
@@ -29,6 +38,7 @@ export function PageLinkView({ node, updateAttributes }: NodeViewProps) {
       contentEditable={false}
       role="button"
       tabIndex={0}
+      {...bind}
       onClick={() => onNavigate(pageId)}
       onKeyDown={(e: KeyboardEvent) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -37,8 +47,8 @@ export function PageLinkView({ node, updateAttributes }: NodeViewProps) {
         }
       }}
     >
-      <FileText size={16} strokeWidth={1.75} aria-hidden="true" />
-      <span>{target?.title ?? "Página eliminada"}</span>
+      <PageRef page={target} />
+      {card}
     </NodeViewWrapper>
   );
 }
@@ -54,7 +64,7 @@ function PageLinkPicker({
 }) {
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
-  const results = pages.filter(
+  const results = linkablePages(pages).filter(
     (p) => p.id !== currentPageId && (!q || p.title.toLowerCase().includes(q)),
   );
 

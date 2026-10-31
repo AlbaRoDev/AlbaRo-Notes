@@ -4,6 +4,8 @@ export interface EmojiEntry {
   label: string;
   tags: string[];
   group: number;
+  /** Name and tags folded once at load (lower case, no accents), so each keystroke only compares strings. */
+  search: string[];
 }
 
 export interface EmojiCategory {
@@ -34,8 +36,7 @@ const fold = (text: string) =>
 export function matchesEmoji(emoji: EmojiEntry, query: string): boolean {
   const words = fold(query).split(/\s+/).filter(Boolean);
   if (words.length === 0) return true;
-  const haystack = [emoji.label, ...emoji.tags].map(fold);
-  return words.every((w) => haystack.some((h) => h.includes(w)));
+  return words.every((w) => emoji.search.some((h) => h.includes(w)));
 }
 
 const RECENT_KEY = "albaro-notes:recent-emoji";
@@ -91,6 +92,7 @@ export function loadEmojiData(): Promise<EmojiEntry[]> {
           label: e.label,
           tags: e.tags ?? [],
           group: e.group,
+          search: [e.label, ...(e.tags ?? [])].map(fold),
         }));
     });
   }

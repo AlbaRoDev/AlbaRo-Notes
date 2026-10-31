@@ -312,12 +312,8 @@ const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
     category: "En línea",
     keywords: ["mention", "mencion", "mención", "pagina", "página", "@"],
     icon: AtSign,
-    run: (editor, range) =>
-      editor
-        .chain()
-        .deleteRange(range)
-        .insertContent({ type: "pageMention", attrs: { pageId: null } })
-        .run(),
+    // writes the «@», which opens the same list as typing it
+    run: (editor, range) => editor.chain().focus().deleteRange(range).insertContent("@").run(),
   },
   {
     title: "Ecuación integrada",

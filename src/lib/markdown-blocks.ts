@@ -435,3 +435,37 @@ const TEXT_BLOCKS = new Set([
 export function isOnlyText(nodes: JSONContent[]): boolean {
   return nodes.every((n) => TEXT_BLOCKS.has(n.type ?? "") && isOnlyText(n.content ?? []));
 }
+
+/** One line of that Markdown as the card shows it: a heading is marked, the other syntax marks go. */
+export function previewLine(line: string): { text: string; heading: boolean } {
+  const heading = /^#{1,6}\s+/.test(line);
+  const text = line
+    .replace(/^#{1,6}\s+/, "")
+    .replace(/^[-*]\s+\[[ xX]\]\s+/, "☐ ")
+    .replace(/^[-*]\s+/, "• ")
+    .replace(/^>\s?/, "")
+    .replace(/(\*\*|__|~~|`)/g, "");
+  return { text, heading };
+}
+
+/** What the hover card of a page shows: lines of its text and, where it holds a link to a page, that page. */
+export type PreviewItem = { text: string; heading: boolean } | { pageId: string };
+
+/** The first `max` items of a page's blocks, in order. A block with no Markdown form (`[table]`…) is left out. */
+export function previewItems(nodes: JSONContent[], max: number): PreviewItem[] {
+  const items: PreviewItem[] = [];
+  for (const node of nodes) {
+    if (items.length >= max) break;
+    if (node.type === "pageLink") {
+      const pageId = node.attrs?.pageId as string | null | undefined;
+      if (pageId) items.push({ pageId });
+      continue;
+    }
+    for (const raw of blocksToMarkdown([node]).split(/\r?\n/)) {
+      const line = raw.trim();
+      if (line && !/^\[[A-Za-z]+\]$/.test(line) && items.length < max)
+        items.push(previewLine(line));
+    }
+  }
+  return items;
+}

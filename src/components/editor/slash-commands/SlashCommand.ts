@@ -1,6 +1,7 @@
-import { Extension, ReactRenderer } from "@tiptap/react";
+import { Extension } from "@tiptap/react";
 import Suggestion from "@tiptap/suggestion";
-import { SlashMenu, type SlashMenuHandle } from "./SlashMenu";
+import { SlashMenu } from "./SlashMenu";
+import { suggestionRender } from "./suggestion-render";
 import { filterSlashCommandItems, type SlashCommandItem } from "./items";
 
 /**
@@ -25,35 +26,7 @@ export const SlashCommand = Extension.create({
         command: ({ editor, range, props }) => {
           props.run(editor, range);
         },
-        render: () => {
-          let component: ReactRenderer<SlashMenuHandle> | null = null;
-          let unmount: (() => void) | null = null;
-
-          return {
-            onStart: (props) => {
-              component = new ReactRenderer(SlashMenu, { props, editor: props.editor });
-              // The popup mounts in <body>, outside any stacking context: without a z-index it
-              // sits under the task peek (a fixed layer) and the menu looked empty there.
-              (component.element as HTMLElement).style.zIndex = "1300";
-              unmount = props.mount(component.element as HTMLElement);
-            },
-            onUpdate: (props) => {
-              component?.updateProps(props);
-            },
-            onKeyDown: (props) => {
-              if (props.event.key === "Escape") {
-                unmount?.();
-                unmount = null;
-                return true;
-              }
-              return component?.ref?.onKeyDown(props) ?? false;
-            },
-            onExit: () => {
-              unmount?.();
-              component?.destroy();
-            },
-          };
-        },
+        render: suggestionRender(SlashMenu),
       }),
     ];
   },

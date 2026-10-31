@@ -227,19 +227,43 @@
   cursor: not-allowed;
 }
 
+/* A link to a page, as Notion draws it: icon and underlined title, no box until the pointer is over it. */
 .page-editor .ProseMirror .page-link {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 0.5em;
-  margin: 0 0 1em;
-  padding: 0.4em 0.6em;
+  gap: 0.4em;
+  margin: 0 0 0.3em;
+  padding: 0.25em 0.4em;
   border-radius: 6px;
   cursor: var(--cursor-pointer, pointer);
-  background: rgba(var(--ink), 0.08);
 }
 
 .page-editor .ProseMirror .page-link:hover {
-  background: rgba(var(--ink), 0.16);
+  background: rgba(var(--ink), 0.08);
+}
+
+.page-editor .ProseMirror .page-ref-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.2em;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.page-editor .ProseMirror .page-ref-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  border-bottom: 0.05em solid rgba(var(--ink), 0.25);
+}
+
+.page-editor .ProseMirror .page-link:hover .page-ref-title,
+.page-editor .ProseMirror .page-mention:hover .page-ref-title {
+  border-bottom-color: rgba(var(--ink), 0.5);
 }
 
 .page-editor .ProseMirror .page-link-picker {
@@ -287,8 +311,7 @@
   font-size: 0.85em;
 }
 
-.page-editor .ProseMirror .date-mention,
-.page-editor .ProseMirror .page-mention {
+.page-editor .ProseMirror .date-mention {
   display: inline-flex;
   align-items: center;
   gap: 0.3em;
@@ -298,9 +321,27 @@
   background: rgba(var(--ink), 0.1);
 }
 
-.page-editor .ProseMirror .date-mention:hover,
-.page-editor .ProseMirror .page-mention:hover {
+.page-editor .ProseMirror .date-mention:hover {
   background: rgba(var(--ink), 0.18);
+}
+
+/* A mention sits in the sentence like text: icon, underlined title, a light box only on hover. */
+.page-editor .ProseMirror .page-mention {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25em;
+  max-width: 100%;
+  padding: 0 0.2em;
+  border-radius: 4px;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.page-editor .ProseMirror .page-mention:hover {
+  background: rgba(var(--ink), 0.08);
+}
+
+.page-editor .ProseMirror .page-mention .page-ref-icon {
+  align-self: center;
 }
 
 .page-editor .ProseMirror .page-mention[data-missing="true"] {
@@ -311,8 +352,7 @@
 
 .page-editor .ProseMirror .date-mention-picker input,
 .page-editor .ProseMirror .equation-inline-editing input,
-.page-editor .ProseMirror .emoji-picker input,
-.page-editor .ProseMirror .page-mention-picker-box input {
+.page-editor .ProseMirror .emoji-picker input {
   font: inherit;
   font-size: 0.9em;
   border: 1px solid var(--border);
@@ -393,13 +433,7 @@
 }
 
 .page-editor .ProseMirror .emoji-picker,
-.page-editor .ProseMirror .page-mention-picker-box {
-  position: relative;
-  display: inline-block;
-}
-
-.page-editor .ProseMirror .emoji-picker-popup,
-.page-editor .ProseMirror .page-mention-picker-list {
+.page-editor .ProseMirror .emoji-picker-popup {
   position: absolute;
   top: 1.7em;
   left: 0;
@@ -412,14 +446,6 @@
 
 .page-editor .ProseMirror .emoji-picker-popup {
   width: 16.5em;
-}
-
-.page-editor .ProseMirror .page-mention-picker-list {
-  max-height: 10em;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  min-width: 12em;
 }
 
 .page-editor .ProseMirror .emoji-picker-tabs {
@@ -467,27 +493,11 @@
   border-radius: 4px;
 }
 
-.page-editor .ProseMirror .emoji-picker-list button:hover,
-.page-editor .ProseMirror .page-mention-picker-list button:hover {
+.page-editor .ProseMirror .emoji-picker-list button:hover {
   background: rgba(var(--ink), 0.15);
 }
 
-.page-editor .ProseMirror .page-mention-picker-list button {
-  display: block;
-  width: 100%;
-  text-align: left;
-  padding: 0.3em 0.5em;
-  border: none;
-  background: none;
-  color: inherit;
-  cursor: var(--cursor-pointer, pointer);
-  border-radius: 4px;
-  font: inherit;
-  font-size: 0.9em;
-}
-
-.page-editor .ProseMirror .emoji-picker-empty,
-.page-editor .ProseMirror .page-mention-picker-empty {
+.page-editor .ProseMirror .emoji-picker-empty {
   padding: 0.3em 0.5em;
   font-size: 0.8em;
   color: var(--text-muted);

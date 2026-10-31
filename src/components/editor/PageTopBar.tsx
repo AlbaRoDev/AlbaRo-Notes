@@ -12,7 +12,7 @@ import {
 import { getPageContent, pageInfo, setPageFavorite } from "../../lib/db-client";
 import { blocksToMarkdown } from "../../lib/markdown-blocks";
 import type { PageInfo, PageSummary } from "../../types";
-import { PageIcon } from "../PageIcon";
+import { CrumbStep } from "./PageCrumbs";
 import "./PageTopBar.css";
 
 interface Action {
@@ -40,19 +40,6 @@ function ancestorsOf(page: PageSummary, pages: PageSummary[]): PageSummary[] {
     at = at.parentId ? pages.find((p) => p.id === at!.parentId) : undefined;
   }
   return chain;
-}
-
-function Crumb({ page }: { page: PageSummary }) {
-  return (
-    <>
-      {page.icon && (
-        <span aria-hidden="true">
-          <PageIcon icon={page.icon} size={14} />
-        </span>
-      )}
-      <span className="page-crumb-title">{page.title || "Sin título"}</span>
-    </>
-  );
 }
 
 /**
@@ -145,15 +132,17 @@ export function PageTopBar({
   return (
     <div className="page-topbar">
       <nav className="page-crumbs" aria-label="Ruta de la página">
-        {/* Only the pages above this one: its own title is the big one right under the bar. */}
+        {/* The pages above this one (each opens on click) and, last, this one. */}
         {trail.map((p, i) => (
           <span key={p.id} className="page-crumb">
             {i > 0 && <ChevronRight size={12} aria-hidden="true" />}
-            <button type="button" onClick={() => onOpen(p.id)} title={p.title}>
-              <Crumb page={p} />
-            </button>
+            <CrumbStep page={p} pages={pages} current={false} onOpen={onOpen} />
           </span>
         ))}
+        <span className="page-crumb" aria-current="page">
+          {trail.length > 0 && <ChevronRight size={12} aria-hidden="true" />}
+          <CrumbStep page={page} pages={pages} current onOpen={onOpen} />
+        </span>
       </nav>
       <div className="page-topbar-actions" ref={menuRef}>
         <button

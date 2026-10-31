@@ -151,6 +151,12 @@
   color: var(--text-faint);
 }
 
+/* ~1900 emoji: the sections out of view are not laid out or painted until they scroll in */
+.page-popover-section:has(> .page-emoji-grid) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 280px;
+}
+
 .page-emoji-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));

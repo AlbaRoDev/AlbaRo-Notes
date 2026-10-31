@@ -57,3 +57,23 @@
   padding: 0.4rem 0.6rem;
   color: var(--text-muted);
 }
+
+/* the «@» list: a page per row, icon and title */
+.page-mention-item .page-ref-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  min-width: 1.4em;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.page-mention-item .page-ref-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.page-mention-item {
+  display: flex;
+}
