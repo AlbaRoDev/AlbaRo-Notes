@@ -1,6 +1,7 @@
 import { Extension, InputRule, markInputRule, textInputRule } from "@tiptap/core";
 import { Plugin, TextSelection } from "@tiptap/pm/state";
 import { markdownToBlocks } from "../../lib/markdown-blocks";
+import { NOTION_BLOCKS_MIME, notionBlocksToContent } from "../../lib/notion-clipboard";
 import { lastColors } from "./ColorMarks";
 import { blockSelection, selectAllBlocks } from "./BlockSelect";
 import {
@@ -144,6 +145,16 @@ export const NotionShortcuts = Extension.create({
             return true;
           },
           handlePaste: (view, event) => {
+            // Notion's own format tells a toggle from a bullet, which its HTML and plain text do not
+            if (!view.state.selection.$from.parent.type.spec.code) {
+              const own = event.clipboardData?.getData(NOTION_BLOCKS_MIME);
+              const content = own ? notionBlocksToContent(own) : null;
+              if (content) {
+                event.preventDefault();
+                editor.chain().focus().insertContent(content).run();
+                return true;
+              }
+            }
             // Windows puts CRLF in the clipboard, and Notion may indent with no-break spaces
             const text = (event.clipboardData?.getData("text/plain") ?? "")
               .replace(/\r\n?/g, "\n")
