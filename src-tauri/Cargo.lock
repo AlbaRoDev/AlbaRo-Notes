@@ -19,7 +19,7 @@ dependencies = [
 
 [[package]]
 name = "albaro-notes"
-version = "1.0.13"
+version = "1.0.14"
 dependencies = [
  "base64 0.22.1",
  "keyring",
