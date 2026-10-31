@@ -1,8 +1,8 @@
 import { Extension, InputRule, markInputRule, textInputRule } from "@tiptap/core";
-import { Plugin } from "@tiptap/pm/state";
+import { Plugin, TextSelection } from "@tiptap/pm/state";
 import { markdownToBlocks } from "../../lib/markdown-blocks";
 import { lastColors } from "./ColorMarks";
-import { blockSelection } from "./BlockSelect";
+import { blockSelection, selectAllBlocks } from "./BlockSelect";
 import {
   duplicateBlock,
   moveBlock,
@@ -30,6 +30,13 @@ const TURN_KEYS: Record<string, TurnKind> = {
 /** A line that is Markdown: a heading, a list item, a quote, a fence, a table row or a to-do. */
 const MARKDOWN_LINE = /^(#{1,6}\s|\s*[-*+]\s|\s*\d+\.\s|\s*>\s|```|\|.+\|)/m;
 
+/**
+ * What only Notion's own copy writes: a callout (`<aside>`), a toggle as HTML (`<details>`), or a toggle as a bullet
+ * with its blocks indented under it after a blank line. With these the text wins over the HTML Notion also puts on
+ * the clipboard, which the editor would read as a plain bulleted list.
+ */
+const NOTION_TEXT = /^\s*<(aside|details)>|^[ \t]*[-*+] \S.*\n(?:[ \t]*\n)+[ \t]{2,}\S/m;
+
 /** `$latex$` and `$$latex$$` (no space just inside the dollars, so prices like «$5 and $6» are left alone). */
 const LATEX_BODY = String.raw`([^$\s](?:[^$]*[^$\s])?)`;
 
@@ -46,6 +53,13 @@ export const NotionShortcuts = Extension.create({
   addKeyboardShortcuts() {
     const turn = (kind: TurnKind) => () => turnInto(this.editor, kind);
     const shortcuts: Record<string, () => boolean> = {
+      // Ctrl+A picks every block (the table of a database page does the same with its rows); in the title, or in
+      // code, it still selects the text there.
+      "Mod-a": () => {
+        const { $from } = this.editor.state.selection;
+        if ($from.depth < 1 || $from.index(0) === 0 || $from.parent.type.spec.code) return false;
+        return selectAllBlocks(this.editor.view);
+      },
       "Mod-d": () => duplicateBlock(this.editor, blockSelection(this.editor.state)),
       "Mod-Shift-ArrowUp": () => moveBlock(this.editor, -1),
       "Mod-Shift-ArrowDown": () => moveBlock(this.editor, 1),
@@ -113,13 +127,32 @@ export const NotionShortcuts = Extension.create({
     return [
       new Plugin({
         props: {
+          // A click on the blank space under the last block: the cursor goes to its empty line, which is made
+          // first if the last block is anything else (a callout, a table, a line with text…).
+          handleClick: (view, _pos, event) => {
+            if (event.target !== view.dom) return false;
+            const last = view.dom.lastElementChild;
+            if (last && event.clientY <= last.getBoundingClientRect().bottom) return false;
+            const { doc, schema } = view.state;
+            const tail = doc.lastChild;
+            const empty = tail?.type.name === "paragraph" && tail.content.size === 0;
+            const tr = view.state.tr;
+            if (!empty) tr.insert(doc.content.size, schema.nodes.paragraph.create());
+            tr.setSelection(TextSelection.near(tr.doc.resolve(tr.doc.content.size), -1));
+            view.dispatch(tr.scrollIntoView());
+            view.focus();
+            return true;
+          },
           handlePaste: (view, event) => {
-            const text = event.clipboardData?.getData("text/plain") ?? "";
+            // Windows puts CRLF in the clipboard, and Notion may indent with no-break spaces
+            const text = (event.clipboardData?.getData("text/plain") ?? "")
+              .replace(/\r\n?/g, "\n")
+              .replace(/\u00a0/g, " ");
             if (!text.includes("\n") || view.state.selection.$from.parent.type.spec.code)
               return false;
-            const aside = /^\s*<aside>\s*$/im.test(text);
+            const notion = NOTION_TEXT.test(text);
             const rich = !!event.clipboardData?.getData("text/html");
-            if (!aside && (rich || !MARKDOWN_LINE.test(text))) return false;
+            if (!notion && (rich || !MARKDOWN_LINE.test(text))) return false;
             const blocks = markdownToBlocks(text);
             if (blocks.length === 0) return false;
             event.preventDefault();

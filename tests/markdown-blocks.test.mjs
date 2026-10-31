@@ -110,3 +110,45 @@ test("Notion's <aside> is a callout whose first line is its icon", () => {
   assert.match(blocksToMarkdown(blocks.slice(0, 1)), /^<aside>\n📝\n\nNotas de formato\n\n/);
   assert.match(blocksToMarkdown(blocks.slice(0, 1)), /\n<\/aside>$/);
 });
+
+test("Notion's toggle, a bullet with its blocks indented under it after a blank line, is a toggle", () => {
+  const sample =
+    "- Convenciones de nombres de ramas\n    \n    ```\n    feature/add-user-auth\n    bugfix/fix-login-redirect\n    ```\n";
+  const [toggle] = markdownToBlocks(sample);
+  assert.equal(toggle.type, "toggle");
+  assert.deepEqual(
+    toggle.content.map((c) => c.type),
+    ["toggleSummary", "toggleContent"],
+  );
+  assert.equal(toggle.content[0].content[0].text, "Convenciones de nombres de ramas");
+  const code = toggle.content[1].content[0];
+  assert.equal(code.type, "codeBlock");
+  assert.equal(code.content[0].text, "feature/add-user-auth\nbugfix/fix-login-redirect");
+  // an ordinary bullet, one with a wrapped line, and one with a nested list stay lists
+  for (const plain of ["- uno\n- dos", "- uno\n  sigue aquí", "- uno\n\n  - dentro"]) {
+    assert.equal(markdownToBlocks(plain)[0].type, "bulletList", plain);
+  }
+  // the HTML form, and back to Notion's own
+  const [details] = markdownToBlocks(
+    "<details>\n<summary>Título</summary>\n\nTexto dentro\n\n</details>",
+  );
+  assert.equal(details.type, "toggle");
+  assert.equal(details.content[1].content[0].content[0].text, "Texto dentro");
+  assert.match(
+    blocksToMarkdown([toggle]),
+    /^- Convenciones de nombres de ramas\n\n    ```\n    feature/,
+  );
+});
+
+test("a Notion toggle survives Windows line ends, no-break spaces and a fence right under the bullet", () => {
+  const body = "- Título\n    \n    ```\n    uno\n    dos\n    ```\n";
+  for (const [name, text] of [
+    ["crlf", body.replace(/\n/g, "\r\n")],
+    ["nbsp", body.replace(/    /g, "\u00a0\u00a0\u00a0\u00a0")],
+    ["fence right under", "- Título\n    ```\n    uno\n    dos\n    ```\n"],
+  ]) {
+    const [toggle] = markdownToBlocks(text);
+    assert.equal(toggle?.type, "toggle", name);
+    assert.equal(toggle.content[1].content[0].content[0].text, "uno\ndos", name);
+  }
+});

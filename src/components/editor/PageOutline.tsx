@@ -13,6 +13,12 @@ interface Heading {
 function collectHeadings(editor: Editor): Heading[] {
   const found: Heading[] = [];
   editor.state.doc.descendants((node, pos) => {
+    if (node.type.name === "toggle" && node.attrs.headingLevel) {
+      // a toggle heading: its summary is the title, and what is inside it can have headings too
+      const text = node.firstChild?.textContent.trim();
+      if (text) found.push({ pos, level: Number(node.attrs.headingLevel) || 1, text });
+      return true;
+    }
     if (node.type.name !== "heading") return true;
     const text = node.textContent.trim();
     if (pos > 0 && text) found.push({ pos, level: Number(node.attrs.level) || 1, text });
@@ -21,8 +27,8 @@ function collectHeadings(editor: Editor): Heading[] {
   return found;
 }
 
-/** Below this much width the page's own text is too near the edge for the outline to fit beside it. */
-const MIN_ZONE = 760;
+/** Below this much width there is no room for the outline (the page's text keeps 3.5 rem of margin at each side). */
+const MIN_ZONE = 480;
 /** How far below the top of the window a heading counts as the one being read. */
 const READING_LINE = 150;
 
@@ -108,9 +114,8 @@ export function PageOutline({
   if (!place?.roomy || headings.length < 2) return null;
 
   const go = (heading: Heading) => {
-    const at = editor.view.domAtPos(heading.pos + 1).node;
-    const el = at instanceof Element ? at : at.parentElement;
-    el?.closest("h1, h2, h3, h4")?.scrollIntoView({ block: "start", behavior: "smooth" });
+    const dom = editor.view.nodeDOM(heading.pos);
+    if (dom instanceof HTMLElement) dom.scrollIntoView({ block: "start", behavior: "smooth" });
   };
 
   return createPortal(

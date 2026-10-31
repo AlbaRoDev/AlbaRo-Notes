@@ -87,6 +87,6 @@
 }
 
 /* A heading reached from the outline stops under the page's top bar. */
-.page-editor .ProseMirror :is(h1, h2, h3, h4) {
+.page-editor .ProseMirror :is(h1, h2, h3, h4, div[data-type="toggle"]) {
   scroll-margin-top: 90px;
 }

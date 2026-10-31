@@ -9,8 +9,19 @@ import { selectBlock } from "./BlockSelect";
 import { turnInto, type TurnKind } from "./block-commands";
 import "./BlockHandle.css";
 
-// A constant, not an inline object: the handle re-registers its plugin (and hides) whenever this changes.
+// Constants, not inline objects: the handle re-registers its plugin (and hides) whenever these change.
 const POSITION = { placement: "left-start" } as const;
+// A toggle's summary is one line of the toggle: the handle (and the drag) is the toggle's, outside its arrow.
+const NESTED = {
+  edgeDetection: "none" as const,
+  rules: [
+    {
+      id: "toggleSummary",
+      evaluate: ({ node }: { node: { type: { name: string } } }) =>
+        node.type.name === "toggleSummary" ? 1000 : 0,
+    },
+  ],
+};
 
 // What «Convertir en» offers, and the blocks it applies to (the text ones: not media, tables or databases).
 const TURN_OPTIONS: { kind: TurnKind; label: string }[] = [
@@ -151,7 +162,7 @@ export function BlockHandle({ editor }: { editor: Editor }) {
   return (
     <DragHandle
       editor={editor}
-      nested={{ edgeDetection: "none" }}
+      nested={NESTED}
       onNodeChange={({ node, pos }) => {
         posRef.current = pos;
         setTarget({ node, pos });

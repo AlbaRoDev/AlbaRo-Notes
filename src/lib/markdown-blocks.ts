@@ -111,6 +111,46 @@ const tableCells = (line: string) =>
     .split("|")
     .map((c) => c.trim());
 
+const dedent = (lines: string[]) => {
+  const indents = lines.filter((l) => l.trim()).map(indentOf);
+  const margin = indents.length ? Math.min(...indents) : 0;
+  return lines.map((l) => (l.trim() ? l.slice(margin) : ""));
+};
+
+function toggleBlock(summary: string, body: string[]): JSONContent {
+  const blocks = markdownToBlocks(dedent(body).join("\n"));
+  return {
+    type: "toggle",
+    attrs: { open: true, headingLevel: null },
+    content: [
+      { type: "toggleSummary", content: inlineToNodes(summary) },
+      { type: "toggleContent", content: blocks.length ? blocks : [{ type: "paragraph" }] },
+    ],
+  };
+}
+
+/**
+ * Notion writes a toggle as a bullet followed, after a blank line, by its blocks indented under it (a code block, a
+ * paragraph…). A bullet whose indented lines are a list, or follow without a blank line, is an ordinary list item.
+ */
+function toggleItem(lines: string[], start: number): { node: JSONContent; next: number } | null {
+  const m = lines[start].match(LIST_ITEM)!;
+  if (!/^[-*+]$/.test(m[2]) || m[3] !== undefined) return null;
+  const base = indentOf(lines[start]);
+  let first = start + 1;
+  while (first < lines.length && !lines[first].trim()) first++;
+  if (first >= lines.length) return null;
+  if (indentOf(lines[first]) <= base || LIST_ITEM.test(lines[first])) return null;
+  // after a blank line, any blocks; right under the bullet, only a code fence (else it is a wrapped line)
+  if (first === start + 1 && !/^\s*```/.test(lines[first])) return null;
+  const body: string[] = [];
+  let next = first;
+  while (next < lines.length && (!lines[next].trim() || indentOf(lines[next]) > base))
+    body.push(lines[next++]);
+  while (body.length && !body[body.length - 1].trim()) body.pop();
+  return { node: toggleBlock(m[4], body), next };
+}
+
 /** A line that is only emoji: how Notion writes a callout's icon, alone on the first line inside `<aside>`. */
 function isEmojiLine(line: string) {
   // the joiners and skin tones that make up a sequence are not counted, only the pictures
@@ -123,7 +163,10 @@ function isEmojiLine(line: string) {
 
 /** Markdown (as models write it) to editor blocks. Each plain line is its own paragraph, as in Notion. */
 export function markdownToBlocks(markdown: string): JSONContent[] {
-  const lines = markdown.replace(/\r\n?/g, "\n").split("\n");
+  const lines = markdown
+    .replace(/\r\n?/g, "\n")
+    .replace(/\u00a0/g, " ")
+    .split("\n");
   const blocks: JSONContent[] = [];
   let i = 0;
   while (i < lines.length) {
@@ -206,6 +249,33 @@ export function markdownToBlocks(markdown: string): JSONContent[] {
         quoted.push(lines[i++].replace(/^\s*>\s?/, ""));
       const inner = markdownToBlocks(quoted.join("\n"));
       blocks.push({ type: "blockquote", content: inner.length ? inner : [{ type: "paragraph" }] });
+      continue;
+    }
+    // `<details><summary>Title</summary>` … `</details>`: the other way Notion exports a toggle
+    if (/^<details[^>]*>/i.test(trimmed)) {
+      let rest = trimmed.replace(/^<details[^>]*>/i, "").trim();
+      i++;
+      if (!rest && i < lines.length && /^\s*<summary>/i.test(lines[i])) rest = lines[i++].trim();
+      let summary = "";
+      const head = rest.match(/^<summary>(.*?)<\/summary>(.*)$/i);
+      if (head) {
+        summary = head[1].replace(/<[^>]+>/g, "").trim();
+        rest = head[2].trim();
+      }
+      const body: string[] = rest ? [rest] : [];
+      while (i < lines.length && !/<\/details>/i.test(lines[i])) body.push(lines[i++]);
+      if (i < lines.length) {
+        const before = lines[i].replace(/<\/details>.*/i, "").trim();
+        if (before) body.push(before);
+        i++;
+      }
+      blocks.push(toggleBlock(summary, body));
+      continue;
+    }
+    const toggle = LIST_ITEM.test(line) ? toggleItem(lines, i) : null;
+    if (toggle) {
+      blocks.push(toggle.node);
+      i = toggle.next;
       continue;
     }
     if (LIST_ITEM.test(line)) {
@@ -303,6 +373,16 @@ export function blocksToMarkdown(nodes: JSONContent[]): string {
       case "horizontalRule":
         out.push("---");
         break;
+      case "toggle": {
+        // back in Notion's shape: a bullet, a blank line, and the content indented under it
+        const [summary, content] = node.content ?? [];
+        const inner = blocksToMarkdown(content?.content ?? [])
+          .split("\n")
+          .map((l) => (l ? `    ${l}` : l))
+          .join("\n");
+        out.push(`- ${inlineToMarkdown(summary?.content)}\n\n${inner}`);
+        break;
+      }
       case "callout": {
         const icon = typeof node.attrs?.icon === "string" ? node.attrs.icon : "";
         out.push(

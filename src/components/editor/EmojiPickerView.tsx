@@ -18,6 +18,7 @@ import {
   addRecentEmoji,
   getRecentEmoji,
   loadEmojiData,
+  matchesEmoji,
   type EmojiEntry,
 } from "./emoji-data";
 
@@ -69,12 +70,7 @@ export function EmojiPickerView({ node, getPos, editor }: NodeViewProps) {
   const results = useMemo(() => {
     if (!entries) return [];
     if (q) {
-      return entries
-        .filter(
-          (e) =>
-            e.label.toLowerCase().includes(q) || e.tags.some((t) => t.toLowerCase().includes(q)),
-        )
-        .slice(0, MAX_RESULTS);
+      return entries.filter((e) => matchesEmoji(e, q)).slice(0, MAX_RESULTS);
     }
     if (activeGroup === RECENT_GROUP) {
       return recent.map((c) => byChar.get(c)).filter((e): e is EmojiEntry => e != null);

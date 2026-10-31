@@ -12,6 +12,27 @@ interface Range {
 // The blocks picked by the rubber band, as a document range; any other selection change or edit drops it.
 const key = new PluginKey<Range | null>("blockSelect");
 
+/** Picks the blocks of this range (or none), with the text selection that copy and the cursor follow. */
+function pickRange(view: EditorView, range: Range | null) {
+  const { state } = view;
+  const tr = state.tr.setMeta(key, range);
+  if (range) {
+    // deleting is handled by whole blocks (below); the text selection is for copying
+    const a = Selection.findFrom(state.doc.resolve(range.from), 1, true);
+    const b = Selection.findFrom(state.doc.resolve(range.to), -1, true);
+    if (a && b && a.from <= b.to) tr.setSelection(TextSelection.create(state.doc, a.from, b.to));
+  }
+  view.dispatch(tr);
+}
+
+/** Ctrl+A: every block under the title. */
+export function selectAllBlocks(view: EditorView) {
+  const { doc } = view.state;
+  if (doc.childCount < 2) return false;
+  pickRange(view, { from: doc.child(0).nodeSize, to: doc.content.size });
+  return true;
+}
+
 /** Selects the top-level blocks (never the title) that `box` touches. */
 function selectBlocks(view: EditorView, box: Box) {
   const { state } = view;
@@ -26,14 +47,7 @@ function selectBlocks(view: EditorView, box: Box) {
   });
   const prev = key.getState(state);
   if ((prev?.from ?? -1) === from && (prev?.to ?? -1) === to) return;
-  const tr = state.tr.setMeta(key, from < 0 ? null : { from, to });
-  if (from >= 0) {
-    // The text selection copy and the cursor follow; deleting is handled below, by whole blocks.
-    const a = Selection.findFrom(state.doc.resolve(from), 1, true);
-    const b = Selection.findFrom(state.doc.resolve(to), -1, true);
-    if (a && b && a.from <= b.to) tr.setSelection(TextSelection.create(state.doc, a.from, b.to));
-  }
-  view.dispatch(tr);
+  pickRange(view, from < 0 ? null : { from, to });
 }
 
 /** The blocks picked right now (with the rubber band, a handle or Esc), as a document range, or null. */

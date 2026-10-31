@@ -24,6 +24,20 @@ export const EMOJI_CATEGORIES: EmojiCategory[] = [
   { group: 9, label: "Banderas" },
 ];
 
+const fold = (text: string) =>
+  text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+/** Whether the emoji's name or tags have every word typed, without minding accents or capitals. */
+export function matchesEmoji(emoji: EmojiEntry, query: string): boolean {
+  const words = fold(query).split(/\s+/).filter(Boolean);
+  if (words.length === 0) return true;
+  const haystack = [emoji.label, ...emoji.tags].map(fold);
+  return words.every((w) => haystack.some((h) => h.includes(w)));
+}
+
 const RECENT_KEY = "albaro-notes:recent-emoji";
 const MAX_RECENT = 24;
 

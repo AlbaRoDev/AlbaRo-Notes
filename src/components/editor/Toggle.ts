@@ -29,6 +29,8 @@ export const Toggle = Node.create({
   },
   parseHTML() {
     return [
+      // the editor wraps what follows the <summary> in a toggleContent itself (the schema requires one)
+      { tag: "details", getAttrs: () => ({ open: true, headingLevel: null }) },
       {
         tag: 'div[data-type="toggle"]',
         getAttrs: (el) => {
@@ -97,7 +99,7 @@ export const ToggleSummary = Node.create({
   name: "toggleSummary",
   content: "inline*",
   parseHTML() {
-    return [{ tag: 'div[data-type="toggle-summary"]' }];
+    return [{ tag: 'div[data-type="toggle-summary"]' }, { tag: "summary" }];
   },
   renderHTML({ HTMLAttributes }) {
     return ["div", mergeAttributes(HTMLAttributes, { "data-type": "toggle-summary" }), 0];

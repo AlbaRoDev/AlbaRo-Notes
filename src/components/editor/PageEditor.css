@@ -1,5 +1,7 @@
 .page-editor .ProseMirror {
   min-height: 60vh;
+  /* room under the last block, as Notion leaves it: a click there gives a new line (NotionShortcuts) */
+  padding-bottom: 30vh;
   outline: none;
   font-size: 1rem;
   line-height: 1.6;
@@ -114,19 +116,32 @@
 }
 
 .page-editor .ProseMirror .toggle-marker {
+  display: inline-flex;
   flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 1.4em;
+  height: 1.4em;
+  margin-top: 0.1em;
+  padding: 0;
   border: none;
+  border-radius: 4px;
   background: none;
+  color: var(--text-muted);
   cursor: var(--cursor-pointer, pointer);
-  color: inherit;
-  padding: 0.25em 0.1em 0 0;
-  line-height: 1;
+}
+
+.page-editor .ProseMirror .toggle-marker:hover {
+  background: rgba(var(--ink), 0.08);
 }
 
 .page-editor .ProseMirror .toggle-marker::before {
-  content: "▶";
-  display: inline-block;
-  font-size: 0.7em;
+  content: "";
+  width: 0;
+  height: 0;
+  border-top: 0.3em solid transparent;
+  border-bottom: 0.3em solid transparent;
+  border-left: 0.45em solid currentColor;
   transition: transform 0.15s ease;
 }
 
@@ -633,18 +648,6 @@
   opacity: 0.6;
 }
 
-.markdown-hint {
-  margin: 0;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.markdown-hint code {
-  background: rgba(var(--ink), 0.15);
-  border-radius: 3px;
-  padding: 0.05em 0.3em;
-}
-
 .save-indicator {
   display: block;
   margin-top: 0.5rem;
@@ -701,14 +704,6 @@
   pointer-events: none;
 }
 
-.page-editor .table-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3em;
-  margin: 0 0 1em;
-}
-
-.page-editor .table-controls button,
 .page-editor .ProseMirror .button-block button,
 .page-editor .ProseMirror .equation-block-actions button,
 .page-editor .ProseMirror .tabs-bar button,
@@ -723,7 +718,6 @@
   background: rgba(var(--ink), 0.08);
 }
 
-.page-editor .table-controls button:hover,
 .page-editor .ProseMirror .button-block button:hover,
 .page-editor .ProseMirror .equation-block-actions button:hover,
 .page-editor .ProseMirror .tabs-bar button:hover,
@@ -1011,7 +1005,8 @@
 
 /* ---- rubber-band selection (blocks of a page; rows are tinted by the database styles) ---- */
 .page-editor .ProseMirror .block-selected {
-  background: rgba(var(--accent-rgb), 0.14);
+  /* an inner shadow, not a background: blocks with a fill of their own (a callout) would hide a background */
+  box-shadow: inset 0 0 0 100vmax rgba(var(--accent-rgb), 0.14);
   border-radius: 4px;
 }
 
@@ -1046,4 +1041,56 @@ body[data-marquee] * {
   color: var(--text-red, #eb5757);
   font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   font-size: 0.85em;
+}
+
+/* The editors that are not a page get no room under them: a synced block's, a database page's title, its table. */
+.page-editor.page-editor--database .ProseMirror,
+.page-editor .ProseMirror.db-page,
+.page-editor .ProseMirror .ProseMirror {
+  padding-bottom: 0;
+}
+
+/* ---- a table's handles (TableControls): grips for a row and a column, «+» strips to add one ---- */
+.table-ui-grip,
+.table-ui-add {
+  position: fixed;
+  z-index: 45;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: var(--bg-popover);
+  color: var(--text-faint);
+  box-shadow: 0 0 0 1px var(--border);
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.table-ui-grip {
+  width: 12px;
+  height: 20px;
+}
+
+.table-ui-grip-col {
+  width: 20px;
+  height: 12px;
+}
+
+.table-ui-add {
+  background: rgba(var(--ink), 0.04);
+  box-shadow: none;
+  opacity: 0.6;
+}
+
+.table-ui-grip:hover,
+.table-ui-add:hover {
+  background: rgba(var(--ink), 0.12);
+  color: var(--text);
+  opacity: 1;
+}
+
+.handle-menu button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }

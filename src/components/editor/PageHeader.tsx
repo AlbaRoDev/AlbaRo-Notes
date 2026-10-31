@@ -15,6 +15,7 @@ import {
   addRecentEmoji,
   getRecentEmoji,
   loadEmojiData,
+  matchesEmoji,
   type EmojiEntry,
 } from "./emoji-data";
 import "./PageHeader.css";
@@ -109,16 +110,7 @@ export function IconPicker({
 
   const needle = query.trim().toLowerCase();
   const found = useMemo(
-    () =>
-      emoji && needle
-        ? emoji
-            .filter(
-              (e) =>
-                e.label.toLowerCase().includes(needle) ||
-                e.tags.some((t) => t.toLowerCase().includes(needle)),
-            )
-            .slice(0, MAX_FOUND)
-        : [],
+    () => (emoji && needle ? emoji.filter((e) => matchesEmoji(e, needle)).slice(0, MAX_FOUND) : []),
     [emoji, needle],
   );
   const sections = useMemo(

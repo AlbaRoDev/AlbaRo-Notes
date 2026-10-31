@@ -349,10 +349,6 @@ export function PageEditor({
                 <BlockHandle editor={editor} />
               </>
             )}
-            <p className="markdown-hint">
-              Atajos: <code># </code> título, <code>- </code> lista, <code>[] </code> checklist, o
-              escribe <code>/</code> para ver todos los bloques
-            </p>
           </>
         )}
         {notice && (

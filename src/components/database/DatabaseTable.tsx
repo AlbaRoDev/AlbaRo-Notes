@@ -212,12 +212,36 @@ export function DatabaseTable({
     return () => document.removeEventListener("mousedown", down, true);
   }, []);
 
-  // With rows picked and the focus on the table (not in a cell), Delete asks to remove them and Esc lets go.
+  // With rows picked and the focus on the table (not in a cell), Delete asks to remove them and Esc lets go;
+  // Ctrl+A picks them all.
   // Captured on the document so a page's editor never sees the key (it would delete its own selection).
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       const t = e.target;
-      if (!selectedRef.current.size || !(t instanceof Element)) return;
+      if (!(t instanceof Element)) return;
+      // Ctrl+A with the focus on the table (or on nothing, on a page that is a table) picks all its rows
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "a") {
+        const field = !!t.closest(
+          "input, textarea, select, [role=combobox], [contenteditable=true]",
+        );
+        const onTable = !!scrollRef.current?.contains(t) && !field;
+        // a button just pressed (a tab of the Gestor, the toolbar) leaves the focus there, not on the table
+        const onPage =
+          !field &&
+          !!tableRef.current?.closest(".db-page") &&
+          (t === document.body || !!t.closest(".manager, .container"));
+        const ids = [
+          ...(tableRef.current?.querySelectorAll<HTMLElement>("tr[data-row-id]") ?? []),
+        ].map((tr) => tr.dataset.rowId!);
+        if ((!onTable && !onPage) || ids.length === 0) return;
+        setSelected(new Set(ids));
+        setConfirmBulk(false);
+        scrollRef.current?.focus({ preventScroll: true });
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      if (!selectedRef.current.size) return;
       if (!scrollRef.current?.contains(t) || t.closest("input, textarea, select, [role=combobox]"))
         return;
       if (e.key === "Delete" || e.key === "Backspace") {
