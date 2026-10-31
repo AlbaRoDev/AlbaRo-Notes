@@ -69,3 +69,13 @@
   background: rgba(var(--accent-rgb), 0.5);
   box-shadow: 0 0 0 1px var(--accent);
 }
+
+/* the cells of a database table that have the words */
+.page-editor .ProseMirror .db-table tbody td[data-find="match"] {
+  background: var(--highlight, rgba(255, 212, 0, 0.35));
+}
+
+.page-editor .ProseMirror .db-table tbody td[data-find="current"] {
+  background: rgba(var(--accent-rgb), 0.5);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}

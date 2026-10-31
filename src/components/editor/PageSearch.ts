@@ -131,11 +131,8 @@ export function setFindQuery(editor: Editor, query: string) {
   if (query) reveal(editor);
 }
 
-/** The next (1) or previous (-1) match, round and round. */
-export function stepFind(editor: Editor, dir: 1 | -1) {
-  const { matches, current } = findState(editor.state);
-  if (matches.length === 0) return;
-  const next = (current + dir + matches.length) % matches.length;
-  editor.view.dispatch(editor.state.tr.setMeta(key, { current: next }));
+/** Shows the match at `index` (the page's own matches come before the cells of a table, see FindBar). */
+export function goToMatch(editor: Editor, index: number) {
+  editor.view.dispatch(editor.state.tr.setMeta(key, { current: index }));
   reveal(editor);
 }

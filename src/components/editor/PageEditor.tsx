@@ -283,7 +283,7 @@ export function PageEditor({
     host: null,
   });
   useEffect(() => {
-    if (!editor || ownDatabaseId) return;
+    if (!editor) return;
     const onFind = (e: Event) => {
       const wrapper = wrapperRef.current;
       const focused = document.querySelector(".page-editor-wrapper:focus-within");
@@ -295,7 +295,7 @@ export function PageEditor({
     };
     window.addEventListener(FIND_EVENT, onFind);
     return () => window.removeEventListener(FIND_EVENT, onFind);
-  }, [editor, ownDatabaseId]);
+  }, [editor]);
   const closeFind = useCallback(() => setFind((f) => ({ ...f, open: false })), []);
 
   // Ctrl+J with the cursor in this page opens the in-page AI (App routes the shortcut here).
@@ -313,12 +313,22 @@ export function PageEditor({
           editor &&
           (find.host ? (
             createPortal(
-              <FindBar editor={editor} focusToken={find.token} onClose={closeFind} />,
+              <FindBar
+                editor={editor}
+                scope={wrapperRef}
+                focusToken={find.token}
+                onClose={closeFind}
+              />,
               find.host,
             )
           ) : (
             <div className="find-anchor">
-              <FindBar editor={editor} focusToken={find.token} onClose={closeFind} />
+              <FindBar
+                editor={editor}
+                scope={wrapperRef}
+                focusToken={find.token}
+                onClose={closeFind}
+              />
             </div>
           ))}
         {!ownDatabaseId && editor && <PageOutline editor={editor} wrapperRef={wrapperRef} />}

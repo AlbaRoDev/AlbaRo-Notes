@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 import { PageEditor } from "../editor/PageEditor";
 import { TaskPeek } from "./TaskPeek";
+import { FindBar } from "../editor/FindBar";
+import { FIND_EVENT } from "../editor/PageSearch";
 import { EditorAppProvider } from "../editor/EditorAppProvider";
 import { DatabaseTable } from "../database/DatabaseTable";
 import { addTask, ensureTaskBase, linkPage, type TaskBase } from "../../lib/db-client";
@@ -40,6 +42,21 @@ export function TasksSection({ host }: { host: TaskHost }) {
   const [openTask, setOpenTask] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [adding, setAdding] = useState(false);
+  // Ctrl+F finds in the table (the page editors beside it, when a task is open, take the key instead)
+  const root = useRef<HTMLDivElement>(null);
+  const [find, setFind] = useState({ open: false, token: 0 });
+  const closeFind = useCallback(() => setFind((f) => ({ ...f, open: false })), []);
+  const taskOpen = openTask !== null;
+  useEffect(() => {
+    if (taskOpen) return;
+    const onFind = (e: Event) => {
+      if (e.defaultPrevented) return;
+      e.preventDefault();
+      setFind((f) => ({ open: true, token: f.token + 1 }));
+    };
+    window.addEventListener(FIND_EVENT, onFind);
+    return () => window.removeEventListener(FIND_EVENT, onFind);
+  }, [taskOpen]);
 
   // First time in the Gestor: Rust creates the task database (idempotent, so StrictMode's second run is harmless).
   useEffect(() => {
@@ -111,7 +128,12 @@ export function TasksSection({ host }: { host: TaskHost }) {
   const open = openTask && pages.some((p) => p.id === openTask) ? openTask : null;
 
   return (
-    <div className="tasks">
+    <div className="tasks" ref={root}>
+      {find.open && (
+        <div className="find-anchor">
+          <FindBar editor={null} scope={root} focusToken={find.token} onClose={closeFind} />
+        </div>
+      )}
       <form
         className="tasks-add"
         onSubmit={(e) => {
