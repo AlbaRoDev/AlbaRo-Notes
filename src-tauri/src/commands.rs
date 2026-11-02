@@ -565,6 +565,12 @@ pub fn query_view(state: State<DbState>, view_id: String) -> Result<ViewResult, 
     views::query_view(&conn, &view_id)
 }
 
+#[tauri::command]
+pub fn query_config(state: State<DbState>, database_id: String, config: Value) -> Result<ViewResult, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    views::query_config(&conn, &database_id, &config)
+}
+
 /// Path of a map tile relative to the attachments folder, downloading it on first use.
 #[tauri::command]
 pub async fn fetch_map_tile(dir: State<'_, AttachmentsDir>, z: u32, x: u32, y: u32) -> Result<String, String> {

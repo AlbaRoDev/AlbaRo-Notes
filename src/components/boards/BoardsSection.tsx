@@ -22,6 +22,7 @@ import "./boards.css";
 
 const CURRENT_KEY = "boards.current";
 const FIELDS_KEY = "boards.fields.";
+const TRAY_KEY = "boards.tray";
 
 const TRAY_LABELS = {
   pending: "Fuera del tablero",
@@ -289,7 +290,13 @@ export function BoardsSection({ host }: { host: TaskHost }) {
       </div>
       {board && (
         <aside className="boards-side">
-          <TaskTray pages={pages} scheduled={onBoard} onOpen={setOpenTask} labels={TRAY_LABELS} />
+          <TaskTray
+            pages={pages}
+            scheduled={onBoard}
+            onOpen={setOpenTask}
+            labels={TRAY_LABELS}
+            prefKey={TRAY_KEY}
+          />
         </aside>
       )}
       {open && (

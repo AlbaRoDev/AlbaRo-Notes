@@ -153,6 +153,7 @@ pub fn run() {
             commands::delete_view,
             commands::update_view_config,
             commands::query_view,
+            commands::query_config,
             commands::fetch_map_tile,
             commands::geocode_place,
             commands::submit_form,

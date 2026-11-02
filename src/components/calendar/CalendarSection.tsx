@@ -362,7 +362,12 @@ export function CalendarSection({ host }: { host: TaskHost }) {
             onUnlink={() => void write(() => calendarEntryUnlinkTask(selected.id))}
           />
         ) : (
-          <TaskTray pages={pages} scheduled={scheduled} onOpen={onOpenPage} />
+          <TaskTray
+            pages={pages}
+            scheduled={scheduled}
+            onOpen={onOpenPage}
+            prefKey="calendar.tray"
+          />
         )}
       </aside>
       {pending && (

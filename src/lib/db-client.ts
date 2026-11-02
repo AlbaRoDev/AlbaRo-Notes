@@ -178,6 +178,11 @@ export async function updateViewConfig(id: string, config: ViewConfig): Promise<
 }
 
 /** The rows a view shows: filtered, sorted and grouped by Rust. */
+/** Filters, sorts and groups a database by a config that no view stores (the board's tray). */
+export async function queryConfig(databaseId: string, config: ViewConfig): Promise<ViewResult> {
+  return invoke<ViewResult>("query_config", { databaseId, config });
+}
+
 export async function queryView(viewId: string): Promise<ViewResult> {
   return invoke<ViewResult>("query_view", { viewId });
 }

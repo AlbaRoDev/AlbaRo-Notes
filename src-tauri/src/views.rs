@@ -1340,6 +1340,15 @@ pub fn query_view(conn: &Connection, view_id: &str) -> Result<ViewResult, String
     Ok(result)
 }
 
+/// Filters, sorts and groups a database's rows by a config that is not stored in any view (a tray beside a board
+/// picks its own). Validated like a saved one, as a plain list so grouping is free of the board's select-only rule.
+pub fn query_config(conn: &Connection, database_id: &str, raw: &Value) -> Result<ViewResult, String> {
+    let data = databases::get_database(conn, database_id)?.ok_or("La base de datos no existe")?;
+    let config = parse_config(raw)?;
+    validate_config(&config, &load_schema(conn, database_id)?, "list")?;
+    Ok(evaluate(&data, &config, &target_titles(conn, &data)?))
+}
+
 fn collect_snippet(node: &Value, image: &mut Option<String>, text: &mut String) {
     if image.is_none() && node.get("type").and_then(Value::as_str) == Some("image") {
         *image = node
@@ -1725,6 +1734,34 @@ mod tests {
         for bad in [rule(&c, "is", json!("true")), rule(&c, "is_empty", Value::Null), rule(&c, "contains", json!(true))] {
             assert!(update_view_config(&conn, &view, &json!({ "filter": { "rules": [bad] } })).is_err());
         }
+    }
+
+    #[test]
+    fn a_loose_config_is_validated_and_evaluated_without_being_stored() {
+        let (conn, _, db) = fixture();
+        let n = databases::add_property(&conn, &db, "N", "number", &json!({})).unwrap().id;
+        let s = databases::add_property(&conn, &db, "S", "select", &json!({ "options": ["A", "B"] })).unwrap().id;
+        let rows: Vec<String> = (0..3).map(|_| databases::create_row(&conn, &db).unwrap().id).collect();
+        for (r, v) in rows.iter().zip([3.0, 1.0, 2.0]) {
+            databases::set_value(&conn, r, &n, &json!(v)).unwrap();
+        }
+        databases::set_value(&conn, &rows[0], &s, &json!("A")).unwrap();
+
+        let config = json!({
+            "sorts": [{ "property": n, "direction": "desc" }],
+            "filter": { "rules": [rule(&n, "gt", json!(1))] },
+            "group": { "property": s }
+        });
+        let result = query_config(&conn, &db, &config).unwrap();
+        assert_eq!(result.row_ids, [rows[0].clone(), rows[2].clone()]);
+        assert_eq!(result.groups.unwrap().len(), 3); // A, B, Sin valor
+        assert_eq!(list_views(&conn, &db).unwrap().remove(0).config, json!({})); // the saved view is untouched
+
+        // the same checks as a saved config, and a database that exists
+        assert!(query_config(&conn, &db, &json!({ "filter": { "rules": [rule(&n, "contains", json!("x"))] } })).is_err());
+        assert!(query_config(&conn, &db, &json!({ "sorts": [{ "property": "nope", "direction": "asc" }] })).is_err());
+        assert!(query_config(&conn, &db, &json!({ "dashboard": 3 })).is_err());
+        assert!(query_config(&conn, &uuid::Uuid::new_v4().to_string(), &json!({})).is_err());
     }
 
     #[test]
