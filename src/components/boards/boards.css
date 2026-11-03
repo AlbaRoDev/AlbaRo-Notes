@@ -48,7 +48,8 @@
 }
 
 .boards-bar button[aria-pressed="true"] {
-  background: rgba(var(--ink), 0.1);
+  border-color: rgba(var(--accent-rgb), 0.55);
+  background: rgba(var(--accent-rgb), 0.16);
   color: var(--text);
 }
 
@@ -152,8 +153,30 @@
   flex-direction: column;
   padding: 0.4rem;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-top: 4px solid var(--list, var(--tag-blue));
+  border-radius: 10px;
   background: var(--bg-sidebar);
+}
+
+/* each list takes the next tag colour along its top edge */
+.board-list:nth-child(6n + 2) {
+  --list: var(--tag-orange);
+}
+
+.board-list:nth-child(6n + 3) {
+  --list: var(--tag-purple);
+}
+
+.board-list:nth-child(6n + 4) {
+  --list: var(--tag-green);
+}
+
+.board-list:nth-child(6n + 5) {
+  --list: var(--tag-pink);
+}
+
+.board-list:nth-child(6n) {
+  --list: var(--tag-yellow);
 }
 
 .board-list[data-drop-before] {
@@ -194,8 +217,13 @@
 }
 
 .board-count {
-  font-size: 0.75rem;
-  color: var(--text-faint);
+  min-width: 1.4em;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(var(--ink), 0.08);
+  font-size: 0.72rem;
+  text-align: center;
+  color: var(--text-muted);
 }
 
 .board-cards {
@@ -336,14 +364,20 @@
   flex-wrap: wrap;
   align-items: flex-start;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-left: 3px solid rgb(var(--accent-rgb));
+  border-radius: 8px;
   background: var(--bg);
-  box-shadow: 0 1px 2px rgba(var(--ink), 0.08);
+  box-shadow: 0 1px 3px rgba(var(--ink), 0.1);
   cursor: grab;
+  transition:
+    box-shadow 0.12s,
+    border-color 0.12s;
 }
 
 .board-card:hover {
   border-color: var(--border-strong);
+  border-left-color: rgb(var(--accent-rgb));
+  box-shadow: 0 3px 8px rgba(var(--ink), 0.16);
 }
 
 .board-card-title {

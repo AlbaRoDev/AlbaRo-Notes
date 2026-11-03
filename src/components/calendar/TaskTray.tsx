@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ListChecks } from "lucide-react";
+import { ArrowUpDown, Layers, ListChecks, ListFilter, type LucideIcon } from "lucide-react";
 import { subscribeDatabaseChanges } from "../../lib/database-bus";
 import { getDatabase, queryConfig } from "../../lib/db-client";
 import { startItemDrag } from "../../lib/drag-item";
@@ -31,10 +31,10 @@ const CALENDAR_LABELS: TrayLabels = {
 };
 
 type PanelKind = "filter" | "sort" | "group";
-const PANELS: [PanelKind, string][] = [
-  ["filter", "Filtrar"],
-  ["sort", "Ordenar"],
-  ["group", "Agrupar"],
+const PANELS: [PanelKind, string, LucideIcon][] = [
+  ["filter", "Filtrar", ListFilter],
+  ["sort", "Ordenar", ArrowUpDown],
+  ["group", "Agrupar", Layers],
 ];
 
 /** A stored config can name a property that was deleted since: Rust would refuse it, so those rules are dropped. */
@@ -155,7 +155,7 @@ export function TaskTray({
           aria-label="Buscar tareas"
           onChange={(e) => setQuery(e.target.value)}
         />
-        <div role="group" aria-label="Qué tareas mostrar">
+        <div className="cal-tray-seg" role="group" aria-label="Qué tareas mostrar">
           <button type="button" aria-pressed={!all} onClick={() => setAll(false)}>
             {labels.pending}
           </button>
@@ -164,16 +164,19 @@ export function TaskTray({
           </button>
         </div>
         {database && (
-          <div role="group" aria-label="Filtrar, ordenar y agrupar">
-            {PANELS.map(([kind, label]) => (
+          <div className="cal-tray-config" role="group" aria-label="Filtrar, ordenar y agrupar">
+            {PANELS.map(([kind, label, Icon]) => (
               <button
                 key={kind}
                 type="button"
+                data-kind={kind}
+                data-used={count[kind] > 0}
                 aria-pressed={panel === kind}
                 onClick={() => setPanel(panel === kind ? null : kind)}
               >
+                <Icon size={13} aria-hidden="true" />
                 {label}
-                {count[kind] > 0 && ` (${count[kind]})`}
+                {count[kind] > 0 && <b>{count[kind]}</b>}
               </button>
             ))}
           </div>
@@ -212,7 +215,7 @@ export function TaskTray({
         sections.map(
           (s) =>
             s.tasks.length > 0 && (
-              <div key={s.key}>
+              <div key={s.key} className="cal-tray-section">
                 {s.label !== null && <h4 className="cal-tray-group">{s.label}</h4>}
                 <ul>
                   {s.tasks.map((task) => (
