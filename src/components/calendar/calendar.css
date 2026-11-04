@@ -207,7 +207,8 @@
 }
 
 .cal-scroll {
-  max-height: min(62vh, 620px);
+  /* fills the window under the toolbar, the day headers and the all-day strip */
+  max-height: max(24rem, calc(100vh - var(--topbar-h, 38px) - 12.5rem));
   overflow-y: auto;
   overscroll-behavior: contain;
   /* no scrollbar: the wheel scrolls, and the day columns stay lined up with their headers */
@@ -373,9 +374,17 @@
 
 /* ---- Month ---- */
 .cal-month {
+  display: flex;
+  flex-direction: column;
+  /* the weeks share the window's height, and grow past it when their entries need it */
+  min-height: calc(100vh - var(--topbar-h, 38px) - 4.5rem);
   border: 1px solid var(--border);
   border-radius: 8px;
   overflow: hidden;
+}
+
+.cal-week {
+  flex: 1 1 0;
 }
 
 .cal-month-head,
@@ -841,28 +850,6 @@
   background: var(--accent);
   border-color: var(--accent);
   color: var(--on-accent);
-}
-
-.cal-scope {
-  display: grid;
-  gap: 0.25rem;
-  margin: 0;
-  padding: 0.4rem 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-}
-
-.cal-scope legend {
-  padding: 0 0.3rem;
-  font-size: 0.75rem;
-  color: var(--text-faint);
-}
-
-.cal-editor .cal-scope label {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  color: var(--text-muted);
 }
 
 .cal-dialog-backdrop {

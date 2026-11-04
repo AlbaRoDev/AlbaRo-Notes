@@ -1,11 +1,11 @@
 import type { CalendarEntry, EntryInput } from "../../types";
 import type { KeyboardEvent } from "react";
 
-/** The whole entry as Rust takes it back (a scheduled task sends no title: it is the task's). */
+/** The whole entry as Rust takes it back (a scheduled task's title is its own name in the calendar: the task keeps its title). */
 export function toInput(entry: CalendarEntry): EntryInput {
   return {
     taskId: entry.taskId,
-    title: entry.taskId ? null : entry.title,
+    title: entry.title,
     start: entry.start,
     end: entry.end,
     allDay: entry.allDay,
@@ -14,6 +14,12 @@ export function toInput(entry: CalendarEntry): EntryInput {
     note: entry.note,
     repeat: entry.repeat,
   };
+}
+
+/** The entry as it will look once `input` is saved (what the panel shows while the change waits to be confirmed). */
+export function withInput(entry: CalendarEntry, input: EntryInput): CalendarEntry {
+  const { title, start, end, allDay, color, location, note } = input;
+  return { ...entry, title: title ?? entry.title, start, end, allDay, color, location, note };
 }
 
 /** Occurrences of one series share an id, so each is told apart by the day it starts on. */

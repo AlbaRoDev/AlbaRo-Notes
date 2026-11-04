@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { ChevronLeft, ChevronRight, Download, Plus } from "lucide-react";
 import {
   calendarDeadlines,
@@ -19,11 +19,11 @@ import {
   todayIso,
   weekDays,
 } from "../../lib/date-utils";
-import { DAY_MINUTES, stamp } from "../../lib/calendar";
+import { DAY_MINUTES, placeCopy, stamp } from "../../lib/calendar";
 import { readPref, writePref } from "../../lib/prefs";
 import type { CalendarEntry, Deadline, EntryInput, Scope } from "../../types";
 import type { TaskHost } from "../workspace/Tasks";
-import { keyOf } from "./entry-input";
+import { keyOf, toInput, withInput } from "./entry-input";
 import { EntryEditor } from "./EntryEditor";
 import { MonthGrid } from "./MonthGrid";
 import { ScopeDialog } from "./ScopeDialog";
@@ -133,51 +133,141 @@ export function CalendarSection({ host }: { host: TaskHost }) {
 
   const create = async (input: EntryInput) => {
     const made = await write(() => createCalendarEntry(input));
-    if (made) setSelectedId(keyOf(made));
+    if (made) select(keyOf(made));
   };
 
-  // A change to a repeating entry asks how far it reaches: the dialog for a drag, the panel's own choice for its fields.
+  // A change to a repeating entry asks how far it reaches. A drag asks at once; the fields of the panel do not: they
+  // pile up in `draft` (shown in the panel) and the question comes when the entry is left (another one is picked, the panel closed).
   const [pending, setPending] = useState<
-    | { kind: "update"; entry: CalendarEntry; input: EntryInput }
+    | { kind: "update"; entry: CalendarEntry; input: EntryInput; reselect: boolean }
     | { kind: "delete"; entry: CalendarEntry }
     | null
   >(null);
-  const [panelScope, setPanelScope] = useState<{ key: string | null; scope: Scope }>({
-    key: null,
-    scope: "this",
-  });
-  const scopeOfPanel: Scope = panelScope.key === selectedId ? panelScope.scope : "this";
+  const [draft, setDraft] = useState<{
+    key: string;
+    entry: CalendarEntry;
+    input: EntryInput;
+  } | null>(null);
+  // bumped when a draft is thrown away, so the panel's fields show what is saved again
+  const [draftRev, setDraftRev] = useState(0);
+  const raw = entries.find((e) => keyOf(e) === selectedId) ?? null;
+  const selected = raw && draft?.key === selectedId ? withInput(raw, draft.input) : raw;
   // a rule was just created: the panel scrolls to it (the panel is long and the rule is at its end)
   const [revealRepeat, setRevealRepeat] = useState(false);
 
-  const apply = async (entry: CalendarEntry, input: EntryInput, scope: Scope) => {
+  const apply = async (entry: CalendarEntry, input: EntryInput, scope: Scope, reselect = true) => {
     const done = await write(() =>
       updateCalendarEntry(entry.id, input, scope, entry.occurrence ?? undefined),
     );
-    if (done) setSelectedId(keyOf(done));
+    if (done && reselect) setSelectedId(keyOf(done));
     return done !== null;
   };
-  /** From the grid (a drag): a repeating entry asks first. */
+  /** From the grid (a drag): a repeating entry asks first (with what was already changed in the panel). */
   const change = (entry: CalendarEntry, input: EntryInput) => {
-    if (entry.repeat) setPending({ kind: "update", entry, input });
-    else void apply(entry, input, "all");
+    if (!entry.repeat) return void apply(entry, input, "all");
+    const merged =
+      draft?.key === keyOf(entry)
+        ? { ...draft.input, start: input.start, end: input.end, allDay: input.allDay }
+        : input;
+    setDraft(null);
+    setPending({ kind: "update", entry, input: merged, reselect: true });
   };
-  /** From the panel's fields. */
+  /** From the panel's fields: a repeating entry keeps the change as a draft until it is left. */
   const changeFromPanel = (entry: CalendarEntry, input: EntryInput) => {
     const ruleChanged = JSON.stringify(input.repeat) !== JSON.stringify(entry.repeat);
     if (!entry.repeat && input.repeat) setRevealRepeat(true);
-    return apply(entry, input, ruleChanged ? "all" : entry.repeat ? scopeOfPanel : "all");
+    if (ruleChanged || !entry.repeat) {
+      setDraft(null);
+      return apply(entry, input, "all");
+    }
+    setDraft({ key: keyOf(entry), entry, input });
+    return Promise.resolve(true);
+  };
+  /** Picks another entry (or none): leaving one that has a draft asks how far the draft reaches. */
+  const select = (id: string | null) => {
+    if (draft && draft.key !== id) {
+      setPending({ kind: "update", entry: draft.entry, input: draft.input, reselect: false });
+      setDraft(null);
+    }
+    setSelectedId(id);
   };
   const remove = async (entry: CalendarEntry, scope: Scope) => {
     const done = await write(() =>
       deleteCalendarEntry(entry.id, scope, entry.occurrence ?? undefined),
     );
-    if (done !== null) setSelectedId(null);
+    if (done !== null) {
+      setDraft(null);
+      setSelectedId(null);
+    }
   };
   const askToRemove = (entry: CalendarEntry) => {
     if (entry.repeat) setPending({ kind: "delete", entry });
     else void remove(entry, "all");
   };
+
+  /**
+   * Ctrl+Z while the panel holds a change that was not confirmed yet throws that change away. (Any other Ctrl+Z is
+   * the app's own history, handled in App: the calendar's changes are in it like everything else.)
+   */
+  const onUndoKey = useEffectEvent((e: globalThis.KeyboardEvent) => {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== "z") return;
+    if (!draft || pending || e.defaultPrevented) return;
+    const target = e.target instanceof HTMLElement ? e.target : document.body;
+    if (target !== document.body && !target.closest(".cal")) return;
+    const field = target.closest("input, textarea");
+    const typed =
+      (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) &&
+      field.value !== field.defaultValue;
+    if (typed) return;
+    e.preventDefault();
+    setDraft(null);
+    setDraftRev((r) => r + 1);
+  });
+  // Copy, paste and duplicate: an in-memory copy of the entry, pasted where the grid was last pressed (or in place).
+  const clip = useRef<EntryInput | null>(null);
+  const point = useRef<{ date: string; minutes: number | null } | null>(null);
+  const copy = () => {
+    if (selected) clip.current = toInput(selected);
+  };
+  const duplicate = () => {
+    if (selected) void create({ ...toInput(selected), repeat: null });
+  };
+  const paste = () => {
+    const [src, at] = [clip.current, point.current];
+    if (!src) return;
+    if (at && at.date >= from && at.date <= to) void create(placeCopy(src, at.date, at.minutes));
+    else void create({ ...src, repeat: null });
+  };
+  const onClipKey = useEffectEvent((e: globalThis.KeyboardEvent) => {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || e.defaultPrevented || pending)
+      return;
+    const key = e.key.toLowerCase();
+    if (key !== "c" && key !== "v" && key !== "d") return;
+    const target = e.target instanceof HTMLElement ? e.target : document.body;
+    if (target !== document.body && !target.closest(".cal")) return;
+    // inside a field (or with text selected) the keys keep their normal meaning, except in the title while it is
+    // still as saved: a new or just-clicked entry has the focus there, and the keys are meant for the entry
+    const field = target.closest("input, textarea, select, [contenteditable='true']");
+    const untouchedTitle =
+      field instanceof HTMLInputElement &&
+      field.hasAttribute("data-cal-title") &&
+      field.value === field.defaultValue;
+    if (field && !untouchedTitle) return;
+    if (!field && key !== "v" && window.getSelection()?.toString()) return;
+    if (key === "c" && selected) copy();
+    else if (key === "d" && selected) duplicate();
+    else if (key === "v" && clip.current) paste();
+    else return;
+    e.preventDefault();
+  });
+  useEffect(() => {
+    const listener = (e: globalThis.KeyboardEvent) => {
+      onUndoKey(e);
+      onClipKey(e);
+    };
+    document.addEventListener("keydown", listener);
+    return () => document.removeEventListener("keydown", listener);
+  }, []);
 
   const dropTask = (taskId: string, date: string, start: number | null) => {
     const end = start === null ? 0 : Math.min(start + 60, DAY_MINUTES);
@@ -215,8 +305,6 @@ export function CalendarSection({ host }: { host: TaskHost }) {
     setAnchor(date);
     setView("day");
   };
-
-  const selected = entries.find((e) => keyOf(e) === selectedId) ?? null;
 
   /**
    * Supr (or Retroceso) deletes the selected entry, like the «Borrar» button (a repeating one asks how far first).
@@ -323,7 +411,8 @@ export function CalendarSection({ host }: { host: TaskHost }) {
             entries={entries}
             deadlines={deadlines}
             selectedId={selectedId}
-            onSelect={setSelectedId}
+            onSelect={select}
+            onPoint={(date) => (point.current = { date, minutes: null })}
             onOpenDay={openDay}
             onCreateOnDay={(date) => newAppointment(date, true)}
             onDropTask={(taskId, date) => dropTask(taskId, date, null)}
@@ -334,7 +423,8 @@ export function CalendarSection({ host }: { host: TaskHost }) {
             entries={entries}
             deadlines={deadlines}
             selectedId={selectedId}
-            onSelect={setSelectedId}
+            onSelect={select}
+            onPoint={(date, minutes) => (point.current = { date, minutes })}
             onOpenDay={openDay}
             onCreate={(input) => void create(input)}
             onCreateAllDay={(date) => newAppointment(date, true)}
@@ -346,15 +436,14 @@ export function CalendarSection({ host }: { host: TaskHost }) {
       <aside className="cal-side">
         {selected ? (
           <EntryEditor
-            key={keyOf(selected)}
+            key={`${keyOf(selected)}-${draftRev}`}
             entry={selected}
-            scope={scopeOfPanel}
-            onScope={(scope) => setPanelScope({ key: selectedId, scope })}
             revealRepeat={revealRepeat}
             onRepeatRevealed={() => setRevealRepeat(false)}
             onChange={(input) => changeFromPanel(selected, input)}
             onDelete={() => askToRemove(selected)}
-            onClose={() => setSelectedId(null)}
+            onDuplicate={duplicate}
+            onClose={() => select(null)}
             onOpenTask={onOpenPage}
             onToTask={() =>
               void write(() => calendarEntryToTask(selected.id)).then((r) => r && onPagesChanged())
@@ -377,7 +466,8 @@ export function CalendarSection({ host }: { host: TaskHost }) {
           onPick={(scope) => {
             const asked = pending;
             setPending(null);
-            if (asked.kind === "update") void apply(asked.entry, asked.input, scope);
+            if (asked.kind === "update")
+              void apply(asked.entry, asked.input, scope, asked.reselect);
             else void remove(asked.entry, scope);
           }}
         />

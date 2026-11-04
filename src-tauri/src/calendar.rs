@@ -40,7 +40,7 @@ pub struct CalendarEntry {
     pub id: String,
     /// Set for a scheduled task.
     pub task_id: Option<String>,
-    /// The task's title, or the appointment's own.
+    /// The appointment's own title; for a scheduled task, the task's unless this entry was renamed (the task is not).
     pub title: String,
     pub start: String,
     pub end: String,
@@ -344,7 +344,10 @@ fn clean(conn: &Connection, input: &EntryInput) -> Result<Clean, String> {
             if !tasks::is_task(conn, task)? {
                 return Err("La tarea no existe".to_string());
             }
-            (Some(task.clone()), None) // a scheduled task takes its title from the task
+            // a scheduled task shows the task's title unless this entry was given a name of its own (the task keeps its title)
+            let own = opt_text(&input.title, "El título", MAX_TITLE)?;
+            let own = own.filter(|t| db::derive_page_title(conn, task).map_or(true, |task_title| *t != task_title));
+            (Some(task.clone()), own)
         }
         None => {
             let title = opt_text(&input.title, "El título", MAX_TITLE)?.ok_or("Una cita necesita un título")?;
@@ -421,9 +424,9 @@ fn entry_of(conn: &Connection, r: Row) -> Result<CalendarEntry, String> {
     let (id, task_id, own_title, start, end, all_day, color, location, note, recurrence) = r;
     let repeat = recurrence.and_then(|json| serde_json::from_str::<Repeat>(&json).ok());
     let occurrence = repeat.as_ref().map(|_| start[..10].to_string());
-    let title = match (&task_id, own_title) {
-        (Some(task), _) => db::derive_page_title(conn, task).map_err(sql)?,
-        (None, title) => title.unwrap_or_default(),
+    let title = match (&task_id, own_title.filter(|t| !t.is_empty())) {
+        (Some(task), None) => db::derive_page_title(conn, task).map_err(sql)?,
+        (_, title) => title.unwrap_or_default(),
     };
     Ok(CalendarEntry {
         id,
@@ -843,6 +846,43 @@ mod tests {
     }
 
     #[test]
+    fn a_scheduled_task_can_be_renamed_in_the_calendar_without_renaming_the_task() {
+        let conn = conn();
+        let task = tasks::add_task(&conn, "Lavar los dientes").unwrap();
+        let mut plain = input(Some(&task.id), None, "2026-10-19T09:00", "2026-10-19T09:15", false);
+        plain.repeat = Some(rule(Freq::Daily, 1));
+        let series = create_entry(&conn, &plain).unwrap();
+        let on = |day: &str| list_entries(&conn, day, day).unwrap().remove(0);
+        assert_eq!(on("2026-10-21").title, "Lavar los dientes");
+        // one day gets a name of its own
+        let coco = EntryInput {
+            title: Some("Lavar los dientes con coco".to_string()),
+            start: "2026-10-21T09:00".to_string(),
+            end: "2026-10-21T09:15".to_string(),
+            repeat: None,
+            ..plain.clone()
+        };
+        let alone = update_series(&conn, &series.id, &coco, Scope::This, Some("2026-10-21")).unwrap();
+        assert_eq!((alone.title.as_str(), alone.task_id.as_deref()), ("Lavar los dientes con coco", Some(task.id.as_str())));
+        assert_eq!(on("2026-10-21").title, "Lavar los dientes con coco");
+        assert_eq!(on("2026-10-22").title, "Lavar los dientes", "the rest of the series is untouched");
+        assert_eq!(db::derive_page_title(&conn, &task.id).unwrap(), "Lavar los dientes", "so is the task");
+        // the whole series can be renamed too, and a blank title (or the task's own) gives the task's title back
+        let all = EntryInput {
+            title: Some("Cepillado".to_string()),
+            ..plain.clone()
+        };
+        update_series(&conn, &series.id, &all, Scope::All, Some("2026-10-19")).unwrap();
+        assert_eq!(on("2026-10-23").title, "Cepillado");
+        let back = EntryInput {
+            title: Some("Lavar los dientes".to_string()),
+            ..plain.clone()
+        };
+        update_series(&conn, &series.id, &back, Scope::All, Some("2026-10-19")).unwrap();
+        assert_eq!(on("2026-10-23").title, "Lavar los dientes");
+    }
+
+    #[test]
     fn rules_expand_into_occurrences_and_are_checked() {
         let conn = conn();
         // every 2 days
@@ -1070,9 +1110,15 @@ mod tests {
 
         let a = create_entry(&conn, &input(Some(&task.id), None, "2026-10-21T10:00", "2026-10-21T11:30", false)).unwrap();
         assert_eq!(a.title, "Escribir ideas", "a scheduled task takes its title from the task");
-        // the same task can be scheduled again, and a title passed with a task is ignored
+        // the same task can be scheduled again, and a title passed with a task is that entry's own name for it
         let b = create_entry(&conn, &input(Some(&task.id), Some("otro"), "2026-10-22T09:00", "2026-10-22T09:15", false)).unwrap();
-        assert_eq!(b.title, "Escribir ideas");
+        assert_eq!(b.title, "otro");
+        assert_eq!(
+            update_entry(&conn, &b.id, &input(Some(&task.id), Some("Escribir ideas"), &b.start, &b.end, false))
+                .unwrap()
+                .title,
+            "Escribir ideas"
+        );
         // a block can run to midnight and across it
         create_entry(&conn, &input(None, Some("Guardia"), "2026-10-21T22:00", "2026-10-22T06:30", false)).unwrap();
         create_entry(&conn, &input(None, Some("Tarde"), "2026-10-21T23:00", "2026-10-21T24:00", false)).unwrap();

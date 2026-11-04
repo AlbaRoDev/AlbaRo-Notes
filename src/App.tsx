@@ -43,7 +43,15 @@ import type { TaskHost } from "./components/workspace/Tasks";
 import { useLayout } from "./components/workspace/use-layout";
 import { Workspace } from "./components/workspace/Workspace";
 import { setCursorPref, setStylePref, setThemePref, toggleTheme } from "./lib/theme";
-import { createDatabasePage, createPage, deletePage, dbPing, listPages } from "./lib/db-client";
+import {
+  createDatabasePage,
+  createPage,
+  deletePage,
+  dbPing,
+  historyRedo,
+  historyUndo,
+  listPages,
+} from "./lib/db-client";
 import { AppMenu } from "./components/AppMenu";
 import { ConfirmHost } from "./components/ConfirmHost";
 import { TrashDialog } from "./components/TrashDialog";
@@ -194,6 +202,48 @@ function App() {
     void listPages().then(setPages);
     emitAnyDatabaseChange();
   }, []);
+
+  // Ctrl+Z / Ctrl+Shift+Z (and Ctrl+Y): the history of everything the app writes except the text of pages (that
+  // has the editor's own). After a step the page list is read again, every database view reloads and the views
+  // under `epoch` are drawn anew, so nothing keeps showing what was undone.
+  const [epoch, setEpoch] = useState(0);
+  const travel = useCallback(async (redo: boolean) => {
+    try {
+      if (!(await (redo ? historyRedo() : historyUndo()))) return;
+    } catch (err) {
+      console.error("Failed to undo", err);
+      return;
+    }
+    const all = await listPages();
+    setPages(all);
+    setSelectedPageId((current) =>
+      all.some((p) => p.id === current) ? current : (all.find((p) => !p.databaseId)?.id ?? null),
+    );
+    setPeekId((current) => (all.some((p) => p.id === current) ? current : null));
+    emitAnyDatabaseChange();
+    setEpoch((n) => n + 1);
+  }, []);
+  useEffect(() => {
+    // Bubble phase, after the fields and the editor: whoever has an undo of their own (a field being typed in, the
+    // text of a page, the canvas) has handled the key and cancelled it. A dialog open on top keeps the key to itself.
+    const onKey = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      if (!(e.ctrlKey || e.metaKey) || e.altKey || (key !== "z" && key !== "y")) return;
+      if (e.defaultPrevented || (key === "y" && e.shiftKey)) return;
+      const target = e.target instanceof Element ? e.target : document.body;
+      if (target.closest("[role='dialog'], .ProseMirror, [contenteditable='true']")) return;
+      const field = target.closest("input, textarea");
+      if (
+        (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) &&
+        field.value !== field.defaultValue
+      )
+        return;
+      e.preventDefault();
+      void travel(key === "y" || e.shiftKey);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [travel]);
 
   // useCallback here isn't a performance nicety — PageEditor's content-loading
   // effect depends (transitively, via flushPendingSave) on this reference. An
@@ -484,7 +534,7 @@ function App() {
     onOpenAi: openAi,
   };
   const notesMain = (
-    <div className="app-layout">
+    <div className="app-layout" key={epoch}>
       {sidebar}
       {/* Like Notion, a database page uses the full width; text pages keep a readable column. */}
       <div className="page-column">
@@ -570,7 +620,7 @@ function App() {
             layout.main === "notes" ? (
               notesMain
             ) : (
-              <div className="app-layout">
+              <div className="app-layout" key={epoch}>
                 {sidebar}
                 <ManagerMain host={taskHost} />
               </div>
@@ -578,7 +628,7 @@ function App() {
           }
           companion={
             layout.main === "notes" ? (
-              <ManagerCompanion pages={pages} onOpenPage={openPage} />
+              <ManagerCompanion key={epoch} pages={pages} onOpenPage={openPage} />
             ) : null
           }
           onEnter={enter}

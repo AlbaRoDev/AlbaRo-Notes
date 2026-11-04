@@ -9,6 +9,7 @@ mod databases;
 mod db;
 mod families;
 mod fsprivate;
+mod history;
 mod ics;
 mod maps;
 mod search;
@@ -21,7 +22,6 @@ mod webview_privacy;
 
 use attachments::AttachmentsDir;
 use db::DbState;
-use std::sync::Mutex;
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -71,7 +71,7 @@ pub fn run() {
                 Err(e) => eprintln!("attachment sweep failed: {e}"),
             }
             app.manage(AttachmentsDir(attachments_dir));
-            app.manage(DbState(Mutex::new(conn)));
+            app.manage(DbState(history::Db::new(conn)?));
             // a key an older version left in ai-config.json moves to the credential store
             ai::migrate_key(app.handle());
             app.manage(ai::AiState::default());
@@ -112,6 +112,8 @@ pub fn run() {
             commands::delete_calendar_entry,
             commands::calendar_entry_to_task,
             commands::calendar_entry_unlink_task,
+            commands::history_undo,
+            commands::history_redo,
             commands::calendar_deadlines,
             commands::export_calendar,
             commands::list_boards,

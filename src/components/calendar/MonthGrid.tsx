@@ -20,6 +20,7 @@ export function MonthGrid({
   deadlines,
   selectedId,
   onSelect,
+  onPoint,
   onOpenDay,
   onCreateOnDay,
   onDropTask,
@@ -30,6 +31,8 @@ export function MonthGrid({
   deadlines: Deadline[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  /** A day cell was pressed: where a paste lands. */
+  onPoint: (date: string) => void;
   onOpenDay: (date: string) => void;
   onCreateOnDay: (date: string) => void;
   onDropTask: (taskId: string, date: string) => void;
@@ -62,6 +65,7 @@ export function MonthGrid({
                 data-today={date === today || undefined}
                 data-other={!inMonth || undefined}
                 data-over={over === date || undefined}
+                onPointerDown={() => onPoint(date)}
                 onDoubleClick={(e) =>
                   !(e.target as HTMLElement).closest("button, .cal-deadline") && onCreateOnDay(date)
                 }

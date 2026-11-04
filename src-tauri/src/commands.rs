@@ -35,7 +35,8 @@ pub fn get_page_content(state: State<DbState>, page_id: String) -> Result<Option
 
 #[tauri::command]
 pub fn save_page_content(state: State<DbState>, page_id: String, content: Value) -> Result<(), String> {
-    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    // the text has the editor's own undo; autosaves would bury the history
+    let conn = state.0.lock().map_err(|e| e.to_string())?.untracked();
     db::save_page_content(&conn, &page_id, &content)
 }
 
@@ -47,7 +48,7 @@ pub fn get_synced_block(state: State<DbState>, id: String) -> Result<Option<Valu
 
 #[tauri::command]
 pub fn save_synced_block(state: State<DbState>, id: String, content: Value) -> Result<(), String> {
-    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    let conn = state.0.lock().map_err(|e| e.to_string())?.untracked();
     db::save_synced_block(&conn, &id, &content)
 }
 
@@ -85,21 +86,35 @@ pub fn restore_trash(state: State<DbState>, trash_id: String) -> Result<String, 
 
 #[tauri::command]
 pub fn purge_trash(state: State<DbState>, dir: State<AttachmentsDir>, trash_id: String) -> Result<(), String> {
-    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    // erased for good: not undoable, and the history does not keep that text either
+    let conn = state.0.lock().map_err(|e| e.to_string())?.forget_history();
     trash::purge(&conn, &dir.0, &[trash_id])
 }
 
 #[tauri::command]
 pub fn empty_trash(state: State<DbState>, dir: State<AttachmentsDir>) -> Result<(), String> {
-    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    let conn = state.0.lock().map_err(|e| e.to_string())?.forget_history();
     trash::empty(&conn, &dir.0)
 }
 
 /// The Gestor's task database, created the first time.
 #[tauri::command]
 pub fn ensure_task_base(state: State<DbState>) -> Result<tasks::TaskBase, String> {
-    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    // made on first use, not by the user: an undo must not take the whole task database away
+    let conn = state.0.lock().map_err(|e| e.to_string())?.untracked();
     tasks::ensure_task_base(&conn)
+}
+
+/// Ctrl+Z: puts back what the last change did. False when there was nothing to undo.
+#[tauri::command]
+pub fn history_undo(state: State<DbState>) -> Result<bool, String> {
+    state.0.undo()
+}
+
+/// Ctrl+Shift+Z: false when there was nothing to redo.
+#[tauri::command]
+pub fn history_redo(state: State<DbState>) -> Result<bool, String> {
+    state.0.redo()
 }
 
 /// Quick add: a new task with this title.

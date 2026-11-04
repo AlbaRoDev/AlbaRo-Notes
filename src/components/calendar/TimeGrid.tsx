@@ -50,6 +50,7 @@ export function TimeGrid({
   deadlines,
   selectedId,
   onSelect,
+  onPoint,
   onOpenDay,
   onCreate,
   onCreateAllDay,
@@ -61,6 +62,8 @@ export function TimeGrid({
   deadlines: Deadline[];
   selectedId: string | null;
   onSelect: (id: string | null) => void;
+  /** The grid was pressed on an empty spot: where a paste lands (minutes are null in the all-day strip). */
+  onPoint: (date: string, minutes: number | null) => void;
   onOpenDay: (date: string) => void;
   onCreate: (input: EntryInput) => void;
   /** A double click on a day of the all-day strip. */
@@ -131,6 +134,7 @@ export function TimeGrid({
     const at = locate(e.clientX, e.clientY);
     if (!at) return;
     const anchor = clamp(Math.floor(at.minutes / SLOT) * SLOT, 0, 24 * 60 - SLOT);
+    onPoint(date, anchor);
     const midnight = dayNumber(date) * DAY_MINUTES;
     let span = { start: anchor, end: Math.min(anchor + 60, 24 * 60) };
     track(
@@ -290,6 +294,7 @@ export function TimeGrid({
             key={date}
             className="cal-allday-cell"
             data-over={allDayOver === date || undefined}
+            onPointerDown={(e) => e.target === e.currentTarget && onPoint(date, null)}
             onDoubleClick={(e) =>
               !(e.target as HTMLElement).closest("button, .cal-deadline") && onCreateAllDay(date)
             }

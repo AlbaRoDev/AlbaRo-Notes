@@ -272,6 +272,16 @@ export async function calendarEntryUnlinkTask(id: string): Promise<CalendarEntry
   return invoke<CalendarEntry>("calendar_entry_unlink_task", { id });
 }
 
+/** Ctrl+Z for everything but the text of pages: resolves false when there was nothing to undo. */
+export async function historyUndo(): Promise<boolean> {
+  return invoke<boolean>("history_undo");
+}
+
+/** Ctrl+Shift+Z: resolves false when there was nothing to redo. */
+export async function historyRedo(): Promise<boolean> {
+  return invoke<boolean>("history_redo");
+}
+
 export async function calendarDeadlines(from: string, to: string): Promise<Deadline[]> {
   return invoke<Deadline[]>("calendar_deadlines", { from, to });
 }

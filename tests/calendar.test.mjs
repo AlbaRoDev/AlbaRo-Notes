@@ -14,6 +14,7 @@ import {
   absOf,
   timeFromAbs,
   endFromAbs,
+  placeCopy,
 } from "../src/lib/calendar.ts";
 
 test("times round-trip and snap to quarters of an hour", () => {
@@ -92,4 +93,29 @@ test("an all-day entry covers the days inside the shown range", () => {
   ]);
   assert.deepEqual(daysOf("2026-10-25", "2026-10-25", "2026-10-20", "2026-10-31"), ["2026-10-25"]);
   assert.deepEqual(daysOf("2026-11-02", "2026-11-03", "2026-10-20", "2026-10-31"), []);
+});
+
+test("a pasted copy keeps its length, drops the repeat and lands where it is put", () => {
+  const timed = {
+    start: "2026-10-20T10:00",
+    end: "2026-10-20T11:30",
+    allDay: false,
+    repeat: { x: 1 },
+  };
+  assert.deepEqual(placeCopy(timed, "2026-10-22", 14 * 60), {
+    start: "2026-10-22T14:00",
+    end: "2026-10-22T15:30",
+    allDay: false,
+    repeat: null,
+  });
+  // no minutes (a day cell): its own time of day; a block that ends at midnight ends at 24:00 of its day
+  assert.equal(placeCopy(timed, "2026-10-22", null).start, "2026-10-22T10:00");
+  assert.equal(placeCopy(timed, "2026-10-22", 22 * 60 + 30).end, "2026-10-22T24:00");
+  const days = { start: "2026-10-20", end: "2026-10-22", allDay: true, repeat: null };
+  assert.deepEqual(placeCopy(days, "2026-10-30", 9 * 60), {
+    start: "2026-10-30",
+    end: "2026-11-01",
+    allDay: true,
+    repeat: null,
+  });
 });

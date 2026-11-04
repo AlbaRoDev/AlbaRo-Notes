@@ -5,7 +5,6 @@ use serde_json::{json, Value};
 use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
 use uuid::Uuid;
 
 #[derive(Serialize, Debug)]
@@ -39,7 +38,7 @@ pub struct PageInfo {
     pub words: usize,
 }
 
-pub struct DbState(pub Mutex<Connection>);
+pub struct DbState(pub crate::history::Db);
 
 const V1_SCHEMA: &str = r#"
     CREATE TABLE IF NOT EXISTS pages (

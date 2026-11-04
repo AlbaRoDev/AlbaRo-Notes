@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowUpRight, Trash2, X } from "lucide-react";
+import { ArrowUpRight, Copy, Trash2, X } from "lucide-react";
 import {
   DAY_MINUTES,
   SLOT,
@@ -12,7 +12,7 @@ import {
   unstamp,
 } from "../../lib/calendar";
 import { dayNumber } from "../../lib/date-utils";
-import type { CalendarEntry, EntryInput, Scope, TagColor } from "../../types";
+import type { CalendarEntry, EntryInput, TagColor } from "../../types";
 import { TaskChecklist } from "../boards/TaskChecklist";
 import { RepeatField } from "./RepeatField";
 import { TAG_COLORS } from "../database/property-types";
@@ -30,25 +30,22 @@ export function EntryEditor({
   entry,
   onChange,
   onDelete,
+  onDuplicate,
   onClose,
   onOpenTask,
   onToTask,
   onUnlink,
-  scope,
-  onScope,
   revealRepeat,
   onRepeatRevealed,
 }: {
   entry: CalendarEntry;
-  /** For a repeating entry: how far the changes made here reach (a change of the rule always reaches the whole series). */
-  scope: Scope;
-  onScope: (scope: Scope) => void;
   /** A rule was just created: the panel scrolls to it once. */
   revealRepeat: boolean;
   onRepeatRevealed: () => void;
   /** Resolves true when the change was saved. */
   onChange: (input: EntryInput) => Promise<boolean>;
   onDelete: () => void;
+  onDuplicate: () => void;
   onClose: () => void;
   onOpenTask: (taskId: string) => void;
   onToTask: () => void;
@@ -107,10 +104,9 @@ export function EntryEditor({
         </button>
       </header>
 
-      {entry.taskId ? (
+      {entry.taskId && (
         <>
           <div className="cal-editor-task">
-            <strong>{entry.title}</strong>
             <button type="button" onClick={() => onOpenTask(entry.taskId!)}>
               <ArrowUpRight size={13} aria-hidden="true" /> Abrir la tarea
             </button>
@@ -125,26 +121,31 @@ export function EntryEditor({
           {/* the task's own checklist: ticked here, it is ticked in its page and on its board cards */}
           <TaskChecklist key={entry.taskId} taskId={entry.taskId} />
         </>
-      ) : (
-        <label>
-          Título
-          <input
-            key={`title-${revision}-${entry.id}`}
-            type="text"
-            data-cal-title
-            maxLength={200}
-            defaultValue={entry.title}
-            autoFocus={entry.title === "Nueva cita"}
-            onFocus={(e) => entry.title === "Nueva cita" && e.currentTarget.select()}
-            onKeyDown={leaveOnEnter}
-            onBlur={(e) => {
-              const title = e.currentTarget.value.trim();
-              if (title && title !== entry.title) void save({ title });
-              else e.currentTarget.value = entry.title;
-            }}
-          />
-        </label>
       )}
+
+      <label>
+        {entry.taskId ? "Nombre en el calendario" : "Título"}
+        <input
+          key={`title-${revision}-${entry.id}`}
+          type="text"
+          data-cal-title
+          maxLength={200}
+          defaultValue={entry.title}
+          title={
+            entry.taskId
+              ? "Solo cambia el nombre de este evento; la tarea sigue llamándose igual. Escribe el nombre de la tarea para volver a él"
+              : undefined
+          }
+          autoFocus={entry.title === "Nueva cita"}
+          onFocus={(e) => entry.title === "Nueva cita" && e.currentTarget.select()}
+          onKeyDown={leaveOnEnter}
+          onBlur={(e) => {
+            const title = e.currentTarget.value.trim();
+            if (title && title !== entry.title) void save({ title });
+            else e.currentTarget.value = entry.title;
+          }}
+        />
+      </label>
 
       <label className="cal-editor-check">
         <input
@@ -264,29 +265,6 @@ export function EntryEditor({
         onRevealed={onRepeatRevealed}
         onChange={(repeat) => void save({ repeat })}
       />
-      {entry.repeat && (
-        <fieldset className="cal-scope">
-          <legend>Los cambios afectan a</legend>
-          {(
-            [
-              ["this", "Solo este evento"],
-              ["following", "Este y los siguientes"],
-              ["all", "Todos los eventos"],
-            ] as const
-          ).map(([id, label]) => (
-            <label key={id}>
-              <input
-                type="radio"
-                name="cal-scope"
-                checked={scope === id}
-                onChange={() => onScope(id)}
-              />
-              {label}
-            </label>
-          ))}
-        </fieldset>
-      )}
-
       <div className="cal-editor-colors" role="radiogroup" aria-label="Color">
         <button
           type="button"
@@ -348,6 +326,13 @@ export function EntryEditor({
             Convertir en tarea
           </button>
         )}
+        <button
+          type="button"
+          onClick={onDuplicate}
+          title="Duplicar (Ctrl+D). Copiar: Ctrl+C; pegar: Ctrl+V"
+        >
+          <Copy size={13} aria-hidden="true" /> Duplicar
+        </button>
         <button type="button" className="cal-danger" onClick={onDelete}>
           <Trash2 size={13} aria-hidden="true" /> Borrar
         </button>

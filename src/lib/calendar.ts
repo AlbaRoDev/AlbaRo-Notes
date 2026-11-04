@@ -123,3 +123,30 @@ export function daysOf(start: string, end: string, from: string, to: string): st
   for (let d = start < from ? from : start; d <= last; d = addDays(d, 1)) out.push(d);
   return out;
 }
+
+/** The fields of an entry that `placeCopy` moves. */
+export interface CopySource {
+  start: string;
+  end: string;
+  allDay: boolean;
+  repeat: unknown;
+}
+
+/**
+ * A one-off copy of `src` moved to `date` (a timed one also to minute `minutes` of it, or keeping its own time of day
+ * when that is null), with the same length. A repeating entry is copied as a single appointment.
+ */
+export function placeCopy<T extends CopySource>(src: T, date: string, minutes: number | null): T {
+  const copy = { ...src, repeat: null };
+  if (src.allDay) {
+    const span = dayNumber(src.end) - dayNumber(src.start);
+    return { ...copy, start: date, end: fromDayNumber(dayNumber(date) + span) };
+  }
+  const length = absOf(src.end) - absOf(src.start);
+  const from = minutes ?? unstamp(src.start).minutes;
+  return {
+    ...copy,
+    start: stamp(date, from),
+    end: endFromAbs(dayNumber(date) * DAY_MINUTES + from + length),
+  };
+}

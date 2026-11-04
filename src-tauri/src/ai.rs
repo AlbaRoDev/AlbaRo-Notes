@@ -21,7 +21,7 @@ use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, MutexGuard};
+use std::sync::Mutex;
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -232,7 +232,7 @@ fn sql<E: ToString>(e: E) -> String {
     e.to_string()
 }
 
-fn lock(app: &AppHandle) -> Result<MutexGuard<'_, Connection>, String> {
+fn lock(app: &AppHandle) -> Result<crate::history::Guard<'_>, String> {
     app.state::<DbState>().inner().0.lock().map_err(sql)
 }
 
