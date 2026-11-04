@@ -33,6 +33,11 @@ serde_json = "1"
 rusqlite = { version = "0.40", features = ["bundled"] }
 uuid = { version = "1", features = ["v4"] }
 tauri-plugin-dialog = "2"
+# Native notifications for the calendar's reminders (src/notifications.rs). Used from Rust only: no
+# capability gives the page `notification:*`.
+tauri-plugin-notification = "2"
+# The local clock (entries are floating local times); nothing else of it is used.
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 ureq = "3"
 url = "2"
 

@@ -8,6 +8,7 @@ use crate::db::{self, DbState, PageSummary};
 use crate::families;
 use crate::ics;
 use crate::maps::{self, GeocodeResult};
+use crate::notifications;
 use crate::search::{self, SearchResult};
 use crate::tasks;
 use crate::trash::{self, TrashItem};
@@ -359,6 +360,22 @@ pub async fn export_calendar(app: AppHandle, state: State<'_, DbState>, include_
     let dest = dest.into_path().map_err(|e| e.to_string())?;
     fs::write(&dest, text).map_err(|e| format!("No se pudo guardar el archivo: {e}"))?;
     Ok(Some(dest.to_string_lossy().into_owned()))
+}
+
+/// notifications of the calendar (src/notifications.rs): the settings and a sample to see what they look like.
+#[tauri::command]
+pub fn get_notification_settings(app: AppHandle) -> Result<notifications::Settings, String> {
+    notifications::get_settings(&app)
+}
+
+#[tauri::command]
+pub fn set_notification_settings(app: AppHandle, settings: notifications::Settings) -> Result<notifications::Settings, String> {
+    notifications::set_settings(&app, &settings)
+}
+
+#[tauri::command]
+pub fn test_notification(app: AppHandle) -> Result<(), String> {
+    notifications::send_test(&app)
 }
 
 /// boards. Every rule lives in `boards.rs`; these only lock the database and pass the call on.

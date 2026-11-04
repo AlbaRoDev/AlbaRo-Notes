@@ -26,6 +26,7 @@ import type { TaskHost } from "../workspace/Tasks";
 import { keyOf, toInput, withInput } from "./entry-input";
 import { EntryEditor } from "./EntryEditor";
 import { MonthGrid } from "./MonthGrid";
+import { NotificationSettings } from "./NotificationSettings";
 import { ScopeDialog } from "./ScopeDialog";
 import { TaskTray } from "./TaskTray";
 import { TimeGrid } from "./TimeGrid";
@@ -371,6 +372,7 @@ export function CalendarSection({ host }: { host: TaskHost }) {
               </button>
             ))}
           </div>
+          <NotificationSettings onError={setError} />
           <button
             type="button"
             title="Guarda todo el calendario como un archivo .ics para abrirlo en otra aplicación"

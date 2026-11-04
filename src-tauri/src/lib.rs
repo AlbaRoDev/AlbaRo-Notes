@@ -12,6 +12,7 @@ mod fsprivate;
 mod history;
 mod ics;
 mod maps;
+mod notifications;
 mod search;
 mod secret;
 mod tasks;
@@ -29,6 +30,8 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        // Only used from Rust (src/notifications.rs); no capability gives it to the page.
+        .plugin(tauri_plugin_notification::init())
         // The window can only show the app itself.
         .plugin(navigation_guard())
         .setup(|app| {
@@ -77,6 +80,8 @@ pub fn run() {
             app.manage(ai::AiState::default());
             // the browser keeps the text typed into the app (search, cells…) unless told not to
             webview_privacy::forget_typed_text(app);
+            // Tells of the entries of the calendar when their time comes.
+            notifications::start(app.handle().clone());
             // Only used from Rust, to look for a new version of the app. No `updater:*` permission
             // goes to the page (see the capability test below).
             #[cfg(desktop)]
@@ -116,6 +121,9 @@ pub fn run() {
             commands::history_redo,
             commands::calendar_deadlines,
             commands::export_calendar,
+            commands::get_notification_settings,
+            commands::set_notification_settings,
+            commands::test_notification,
             commands::list_boards,
             commands::get_board,
             commands::create_board,

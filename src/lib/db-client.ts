@@ -468,3 +468,28 @@ export async function setPageIcon(pageId: string, icon: string | null): Promise<
 export async function setPageCover(pageId: string, cover: string | null): Promise<void> {
   return invoke("set_page_cover", { pageId, cover });
 }
+
+/** The reminders of the calendar: whether a notification is shown when an entry with an hour begins, and how early. */
+export interface NotificationSettings {
+  enabled: boolean;
+  /** 0 = when it starts. */
+  leadMinutes: number;
+}
+
+/** The lead times Rust accepts (`notifications::LEADS`). */
+export const NOTIFICATION_LEADS = [0, 5, 10, 15, 30, 60] as const;
+
+export async function getNotificationSettings(): Promise<NotificationSettings> {
+  return invoke<NotificationSettings>("get_notification_settings");
+}
+
+export async function setNotificationSettings(
+  settings: NotificationSettings,
+): Promise<NotificationSettings> {
+  return invoke<NotificationSettings>("set_notification_settings", { settings });
+}
+
+/** Shows a sample notification (and fails if the system does not let it through). */
+export async function testNotification(): Promise<void> {
+  return invoke<void>("test_notification");
+}

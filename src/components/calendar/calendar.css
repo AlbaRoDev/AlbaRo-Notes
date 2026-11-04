@@ -935,3 +935,49 @@
   font-size: 0.8rem;
   color: var(--text-muted);
 }
+
+/* ---- Notification settings (the bell in the bar) ---- */
+.cal-notify {
+  position: relative;
+}
+
+.cal-notify-pop {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 17rem;
+  padding: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  box-shadow: 0 6px 24px rgba(var(--ink), 0.18);
+  color: var(--text);
+  font-size: 0.85rem;
+  animation: pop-in 120ms ease-out;
+}
+
+.cal-notify-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.cal-notify-row select {
+  margin-left: auto;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.cal-notify-hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
