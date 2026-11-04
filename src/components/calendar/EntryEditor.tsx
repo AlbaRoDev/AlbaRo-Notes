@@ -17,6 +17,7 @@ import { TaskChecklist } from "../boards/TaskChecklist";
 import { RepeatField } from "./RepeatField";
 import { TAG_COLORS } from "../database/property-types";
 import { leaveOnEnter, toInput } from "./entry-input";
+import { t } from "../../lib/i18n.ts";
 
 /** The longest the duration slider reaches (a block can be longer, by dragging or by its end day). */
 const MAX_SLIDER = DAY_MINUTES;
@@ -96,10 +97,10 @@ export function EntryEditor({
   );
 
   return (
-    <section className="cal-editor" aria-label="Entrada del calendario">
+    <section className="cal-editor" aria-label={t("Entrada del calendario")}>
       <header>
-        <h3>{entry.taskId ? "Tarea programada" : "Cita"}</h3>
-        <button type="button" onClick={onClose} aria-label="Cerrar" title="Cerrar">
+        <h3>{entry.taskId ? t("Tarea programada") : t("Cita")}</h3>
+        <button type="button" onClick={onClose} aria-label={t("Cerrar")} title={t("Cerrar")}>
           <X size={16} aria-hidden="true" />
         </button>
       </header>
@@ -108,14 +109,14 @@ export function EntryEditor({
         <>
           <div className="cal-editor-task">
             <button type="button" onClick={() => onOpenTask(entry.taskId!)}>
-              <ArrowUpRight size={13} aria-hidden="true" /> Abrir la tarea
+              <ArrowUpRight size={13} aria-hidden="true" /> {t("Abrir la tarea")}
             </button>
             <button
               type="button"
               onClick={onUnlink}
-              title="Deja una cita suelta con el mismo título; la tarea no se toca"
+              title={t("Deja una cita suelta con el mismo título; la tarea no se toca")}
             >
-              Desligar de la tarea
+              {t("Desligar de la tarea")}
             </button>
           </div>
           {/* the task's own checklist: ticked here, it is ticked in its page and on its board cards */}
@@ -124,7 +125,7 @@ export function EntryEditor({
       )}
 
       <label>
-        {entry.taskId ? "Nombre en el calendario" : "Título"}
+        {entry.taskId ? t("Nombre en el calendario") : t("Título")}
         <input
           key={`title-${revision}-${entry.id}`}
           type="text"
@@ -133,11 +134,13 @@ export function EntryEditor({
           defaultValue={entry.title}
           title={
             entry.taskId
-              ? "Solo cambia el nombre de este evento; la tarea sigue llamándose igual. Escribe el nombre de la tarea para volver a él"
+              ? t(
+                  "Solo cambia el nombre de este evento; la tarea sigue llamándose igual. Escribe el nombre de la tarea para volver a él",
+                )
               : undefined
           }
-          autoFocus={entry.title === "Nueva cita"}
-          onFocus={(e) => entry.title === "Nueva cita" && e.currentTarget.select()}
+          autoFocus={entry.title === t("Nueva cita")}
+          onFocus={(e) => entry.title === t("Nueva cita") && e.currentTarget.select()}
           onKeyDown={leaveOnEnter}
           onBlur={(e) => {
             const title = e.currentTarget.value.trim();
@@ -163,11 +166,11 @@ export function EntryEditor({
             )
           }
         />
-        Todo el día
+        {t("Todo el día")}
       </label>
 
       <label>
-        {entry.allDay ? "Desde" : "Día"}
+        {entry.allDay ? t("Desde") : t("Día")}
         <input
           key={`date-${revision}-${entry.start}`}
           type="date"
@@ -186,7 +189,7 @@ export function EntryEditor({
 
       {entry.allDay ? (
         <label>
-          Hasta
+          {t("Hasta")}
           <input
             key={`until-${revision}-${entry.end}`}
             type="date"
@@ -200,11 +203,11 @@ export function EntryEditor({
       ) : (
         <>
           <div className="cal-editor-times">
-            {timeField("Inicio", from.minutes, (m) => void startAt(m))}
+            {timeField(t("Inicio"), from.minutes, (m) => void startAt(m))}
             {timeField("Fin", to.minutes, (m) => void setAbs(startAbs, midnightOf(to.date) + m))}
           </div>
           <label>
-            Termina el día
+            {t("Termina el día")}
             <input
               key={`end-date-${revision}-${entry.end}`}
               type="date"
@@ -265,12 +268,12 @@ export function EntryEditor({
         onRevealed={onRepeatRevealed}
         onChange={(repeat) => void save({ repeat })}
       />
-      <div className="cal-editor-colors" role="radiogroup" aria-label="Color">
+      <div className="cal-editor-colors" role="radiogroup" aria-label={t("Color")}>
         <button
           type="button"
           role="radio"
           aria-checked={entry.color === null}
-          aria-label="Sin color"
+          aria-label={t("Sin color")}
           data-color="none"
           onClick={() => void save({ color: null })}
         />
@@ -289,7 +292,7 @@ export function EntryEditor({
       </div>
 
       <label>
-        Lugar
+        {t("Lugar")}
         <input
           key={`place-${revision}-${entry.location ?? ""}`}
           type="text"
@@ -303,7 +306,7 @@ export function EntryEditor({
         />
       </label>
       <label>
-        Nota
+        {t("Nota")}
         <textarea
           key={`note-${revision}-${entry.note ?? ""}`}
           rows={3}
@@ -321,20 +324,20 @@ export function EntryEditor({
           <button
             type="button"
             onClick={onToTask}
-            title="Crea la tarea con este título para enlazarla a notas o agruparla"
+            title={t("Crea la tarea con este título para enlazarla a notas o agruparla")}
           >
-            Convertir en tarea
+            {t("Convertir en tarea")}
           </button>
         )}
         <button
           type="button"
           onClick={onDuplicate}
-          title="Duplicar (Ctrl+D). Copiar: Ctrl+C; pegar: Ctrl+V"
+          title={t("Duplicar (Ctrl+D). Copiar: Ctrl+C; pegar: Ctrl+V")}
         >
-          <Copy size={13} aria-hidden="true" /> Duplicar
+          <Copy size={13} aria-hidden="true" /> {t("Duplicar")}
         </button>
         <button type="button" className="cal-danger" onClick={onDelete}>
-          <Trash2 size={13} aria-hidden="true" /> Borrar
+          <Trash2 size={13} aria-hidden="true" /> {t("Borrar")}
         </button>
       </footer>
     </section>

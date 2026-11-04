@@ -196,7 +196,7 @@ pub fn export(conn: &Connection, include_deadlines: bool, now: &str) -> Result<S
                 format!("DTSTAMP:{}", stamp_value(now)),
                 format!("DTSTART;VALUE=DATE:{}", date_value(&due.date)),
                 format!("DTEND;VALUE=DATE:{}", date_value(&calendar::iso(calendar::day_number(&due.date) + 1))),
-                format!("SUMMARY:{}", escape(&format!("Fecha límite: {}", due.title))),
+                format!("SUMMARY:{}", escape(&format!("{}: {}", crate::lang::pick("Fecha límite", "Due date"), due.title))),
                 "TRANSP:TRANSPARENT".to_string(),
                 "END:VEVENT".to_string(),
             ]);

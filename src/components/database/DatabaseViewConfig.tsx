@@ -36,6 +36,7 @@ import {
   VIEW_KIND_LABELS,
   needsValue,
 } from "./view-config";
+import { t } from "../../lib/i18n.ts";
 
 type OnChange = (next: ViewConfig) => void;
 
@@ -101,7 +102,7 @@ export function ViewTabs({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   return (
-    <div className="db-tabs" role="tablist" aria-label="Vistas">
+    <div className="db-tabs" role="tablist" aria-label={t("Vistas")}>
       {views.map((v) => (
         <span key={v.id} className="db-tab-wrap">
           <button
@@ -110,7 +111,7 @@ export function ViewTabs({
             className="db-tab"
             aria-selected={v.id === activeId}
             aria-expanded={v.id === activeId ? settingsOpen : undefined}
-            title={v.id === activeId ? "Ajustes de la vista" : undefined}
+            title={v.id === activeId ? t("Ajustes de la vista") : undefined}
             onClick={() => (v.id === activeId ? onToggleSettings() : onSelect(v.id))}
           >
             {(() => {
@@ -130,8 +131,8 @@ export function ViewTabs({
             <button
               type="button"
               className="db-tab-close"
-              aria-label={`Borrar la vista ${v.name}`}
-              title="Borrar la vista"
+              aria-label={t("Borrar la vista {name}", { name: v.name })}
+              title={t("Borrar la vista")}
               onClick={() => onDelete(v)}
             >
               <X size={12} strokeWidth={1.75} aria-hidden="true" />
@@ -142,8 +143,8 @@ export function ViewTabs({
       <button
         type="button"
         className="db-icon-btn"
-        aria-label="Añadir vista"
-        title="Añadir vista"
+        aria-label={t("Añadir vista")}
+        title={t("Añadir vista")}
         aria-expanded={menuOpen}
         onClick={() => setMenuOpen((open) => !open)}
       >
@@ -195,11 +196,11 @@ export function ViewSettingsPanel({
     <div
       className="db-panel"
       role="group"
-      aria-label={`Vista ${view.name}`}
+      aria-label={t("Vista {name}", { name: view.name })}
       onKeyDown={(e) => e.key === "Escape" && onClose()}
     >
       <label>
-        Nombre de la vista
+        {t("Nombre de la vista")}
         <input
           autoFocus
           type="text"
@@ -216,26 +217,26 @@ export function ViewSettingsPanel({
       <div className="db-panel-actions">
         {confirming ? (
           <>
-            <span>¿Borrar la vista? Los datos no se borran.</span>
+            <span>{t("¿Borrar la vista? Los datos no se borran.")}</span>
             <button type="button" onClick={onDelete}>
-              Sí, borrar
+              {t("Sí, borrar")}
             </button>
             <button type="button" onClick={() => setConfirming(false)}>
-              No
+              {t("No")}
             </button>
           </>
         ) : (
           <button
             type="button"
             disabled={!canDelete}
-            title={canDelete ? undefined : "Una base de datos necesita al menos una vista"}
+            title={canDelete ? undefined : t("Una base de datos necesita al menos una vista")}
             onClick={() => setConfirming(true)}
           >
-            Borrar vista
+            {t("Borrar vista")}
           </button>
         )}
         <button type="button" onClick={onClose}>
-          Cerrar
+          {t("Cerrar")}
         </button>
       </div>
     </div>
@@ -256,23 +257,23 @@ export function SortPanel({
   const all = withTitle(properties);
   const set = (sorts: SortRule[]) => onChange({ ...config, sorts });
   return (
-    <div className="db-panel" role="group" aria-label="Ordenar">
+    <div className="db-panel" role="group" aria-label={t("Ordenar")}>
       {config.sorts.length === 0 && (
-        <p className="db-panel-meta">Sin orden: las filas salen por fecha de creación.</p>
+        <p className="db-panel-meta">{t("Sin orden: las filas salen por fecha de creación.")}</p>
       )}
       {config.sorts.map((rule, i) => (
         <div key={i} className="db-rule">
           <PropertySelect
             value={rule.property}
             properties={all}
-            label={`Ordenar por (regla ${i + 1})`}
+            label={t("Ordenar por (regla {n1})", { n1: i + 1 })}
             onChange={(property) =>
               set(config.sorts.map((r, j) => (j === i ? { ...r, property } : r)))
             }
           />
           <select
             value={rule.direction}
-            aria-label={`Dirección (regla ${i + 1})`}
+            aria-label={t("Dirección (regla {n1})", { n1: i + 1 })}
             onChange={(e) =>
               set(
                 config.sorts.map((r, j) =>
@@ -281,13 +282,13 @@ export function SortPanel({
               )
             }
           >
-            <option value="asc">Ascendente</option>
-            <option value="desc">Descendente</option>
+            <option value="asc">{t("Ascendente")}</option>
+            <option value="desc">{t("Descendente")}</option>
           </select>
           <button
             type="button"
             className="db-icon-btn"
-            aria-label={`Quitar orden ${i + 1}`}
+            aria-label={t("Quitar orden {n1}", { n1: i + 1 })}
             onClick={() => set(config.sorts.filter((_, j) => j !== i))}
           >
             <X size={14} strokeWidth={1.75} aria-hidden="true" />
@@ -299,7 +300,7 @@ export function SortPanel({
           type="button"
           onClick={() => set([...config.sorts, { property: TITLE_ID, direction: "asc" }])}
         >
-          + Añadir orden
+          {t("+ Añadir orden")}
         </button>
       </div>
     </div>
@@ -323,11 +324,11 @@ function RuleValue({
     return (
       <select
         value={rule.value === false ? "false" : "true"}
-        aria-label="Valor del filtro"
+        aria-label={t("Valor del filtro")}
         onChange={(e) => onValue(e.target.value === "true")}
       >
-        <option value="true">Marcada</option>
-        <option value="false">Sin marcar</option>
+        <option value="true">{t("Marcada")}</option>
+        <option value="false">{t("Sin marcar")}</option>
       </select>
     );
   }
@@ -335,10 +336,10 @@ function RuleValue({
     return (
       <select
         value={typeof rule.value === "string" ? rule.value : ""}
-        aria-label="Valor del filtro"
+        aria-label={t("Valor del filtro")}
         onChange={(e) => onValue(e.target.value || undefined)}
       >
-        <option value="">Elegir etiqueta…</option>
+        <option value="">{t("Elegir etiqueta…")}</option>
         {(prop.config.options ?? []).map((o) => (
           <option key={o} value={o}>
             {o}
@@ -351,10 +352,10 @@ function RuleValue({
     return (
       <select
         value={typeof rule.value === "string" ? rule.value : ""}
-        aria-label="Valor del filtro"
+        aria-label={t("Valor del filtro")}
         onChange={(e) => onValue(e.target.value || undefined)}
       >
-        <option value="">Elegir fila…</option>
+        <option value="">{t("Elegir fila…")}</option>
         {targetRows.map((r) => (
           <option key={r.pageId} value={r.pageId}>
             {r.title}
@@ -399,19 +400,21 @@ export function FilterPanel({
     set(rules.map((r, j) => (j === i ? { ...r, ...change } : r)));
 
   return (
-    <div className="db-panel" role="group" aria-label="Filtrar">
-      {rules.length === 0 && <p className="db-panel-meta">Sin filtros: se ven todas las filas.</p>}
+    <div className="db-panel" role="group" aria-label={t("Filtrar")}>
+      {rules.length === 0 && (
+        <p className="db-panel-meta">{t("Sin filtros: se ven todas las filas.")}</p>
+      )}
       {rules.map((rule, i) => {
         const prop = byId.get(rule.property) ?? TITLE_PROPERTY;
         return (
           <div key={i} className="db-rule">
             {i === 0 ? (
-              <span className="db-rule-join">Donde</span>
+              <span className="db-rule-join">{t("Donde")}</span>
             ) : i === 1 ? (
               <select
                 className="db-rule-join"
                 value={config.filter.op}
-                aria-label="Combinar filtros"
+                aria-label={t("Combinar filtros")}
                 onChange={(e) => set(rules, e.target.value as "and" | "or")}
               >
                 <option value="and">Y</option>
@@ -423,7 +426,7 @@ export function FilterPanel({
             <PropertySelect
               value={rule.property}
               properties={all}
-              label={`Filtrar por (regla ${i + 1})`}
+              label={t("Filtrar por (regla {n1})", { n1: i + 1 })}
               onChange={(property) => {
                 // a different property means different operators and a value of another type
                 const next = byId.get(property) ?? TITLE_PROPERTY;
@@ -443,7 +446,7 @@ export function FilterPanel({
             />
             <select
               value={rule.operator}
-              aria-label={`Operador (regla ${i + 1})`}
+              aria-label={t("Operador (regla {n1})", { n1: i + 1 })}
               onChange={(e) => {
                 const operator = e.target.value as FilterRule["operator"];
                 patch(i, needsValue(operator) ? { operator } : { operator, value: undefined });
@@ -466,7 +469,7 @@ export function FilterPanel({
             <button
               type="button"
               className="db-icon-btn"
-              aria-label={`Quitar filtro ${i + 1}`}
+              aria-label={t("Quitar filtro {n1}", { n1: i + 1 })}
               onClick={() => set(rules.filter((_, j) => j !== i))}
             >
               <X size={14} strokeWidth={1.75} aria-hidden="true" />
@@ -479,7 +482,7 @@ export function FilterPanel({
           type="button"
           onClick={() => set([...rules, { property: TITLE_ID, operator: "contains" }])}
         >
-          + Añadir filtro
+          {t("+ Añadir filtro")}
         </button>
       </div>
     </div>
@@ -504,13 +507,13 @@ export function GroupPanel({
   // A board's columns are the options of a select (Rust enforces it too).
   const candidates = kind === "board" ? properties.filter((p) => p.type === "select") : properties;
   return (
-    <div className="db-panel" role="group" aria-label="Agrupar">
+    <div className="db-panel" role="group" aria-label={t("Agrupar")}>
       <label>
         {kind === "board"
-          ? "Columnas (propiedad de selección)"
+          ? t("Columnas (propiedad de selección)")
           : kind === "chart"
-            ? "Eje X (agrupar por)"
-            : "Agrupar por"}
+            ? t("Eje X (agrupar por)")
+            : t("Agrupar por")}
         <select
           value={group?.property ?? ""}
           onChange={(e) => {
@@ -524,7 +527,7 @@ export function GroupPanel({
             );
           }}
         >
-          <option value="">Ninguno</option>
+          <option value="">{t("Ninguno")}</option>
           {candidates.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
@@ -534,7 +537,7 @@ export function GroupPanel({
       </label>
       {group && prop?.type === "date" && (
         <label>
-          Agrupar fechas por
+          {t("Agrupar fechas por")}
           <select
             value={group.granularity ?? "month"}
             onChange={(e) =>
@@ -561,7 +564,7 @@ export function GroupPanel({
               onChange({ ...config, group: { ...group, hideEmpty: e.target.checked } })
             }
           />
-          Ocultar grupos vacíos
+          {t("Ocultar grupos vacíos")}
         </label>
       )}
     </div>
@@ -596,9 +599,9 @@ export function PropertiesPanel({
     onChange(updated);
   };
   return (
-    <div className="db-panel" role="group" aria-label="Propiedades">
-      <p className="db-panel-meta">Propiedades visibles en esta vista</p>
-      {properties.length === 0 && <p className="db-panel-meta">Aún no hay propiedades.</p>}
+    <div className="db-panel" role="group" aria-label={t("Propiedades")}>
+      <p className="db-panel-meta">{t("Propiedades visibles en esta vista")}</p>
+      {properties.length === 0 && <p className="db-panel-meta">{t("Aún no hay propiedades.")}</p>}
       {properties.map((p) => (
         <div key={p.id} className="db-rule">
           <label className="db-check">
@@ -606,7 +609,7 @@ export function PropertiesPanel({
             {p.name}
           </label>
           <button type="button" onClick={() => onEdit(p.id)}>
-            Editar
+            {t("Editar")}
           </button>
         </div>
       ))}
@@ -617,12 +620,12 @@ export function PropertiesPanel({
             checked={config.showPreview !== false}
             onChange={(e) => onChange({ ...config, showPreview: e.target.checked })}
           />
-          Mostrar imagen y texto de la página
+          {t("Mostrar imagen y texto de la página")}
         </label>
       )}
       <div className="db-panel-actions">
         <button type="button" onClick={onAdd}>
-          + Añadir propiedad
+          {t("+ Añadir propiedad")}
         </button>
       </div>
     </div>
@@ -646,21 +649,21 @@ export function DatePropertyPanel({
   const dates = properties.filter((p) => p.type === "date");
   const chosen = dates.find((p) => p.id === config.dateProperty) ?? dates[0];
   return (
-    <div className="db-panel" role="group" aria-label="Fecha">
+    <div className="db-panel" role="group" aria-label={t("Fecha")}>
       {dates.length === 0 ? (
         <>
           <p className="db-panel-meta">
-            Esta base de datos aún no tiene ninguna propiedad de fecha.
+            {t("Esta base de datos aún no tiene ninguna propiedad de fecha.")}
           </p>
           <div className="db-panel-actions">
             <button type="button" onClick={onAdd}>
-              + Añadir propiedad
+              {t("+ Añadir propiedad")}
             </button>
           </div>
         </>
       ) : (
         <label>
-          Mostrar por la fecha
+          {t("Mostrar por la fecha")}
           <select
             value={chosen?.id ?? ""}
             onChange={(e) => onChange({ ...config, dateProperty: e.target.value })}
@@ -674,7 +677,7 @@ export function DatePropertyPanel({
         </label>
       )}
       <p className="db-panel-meta">
-        Una fecha puede tener inicio y fin: en el cronograma forma una barra.
+        {t("Una fecha puede tener inicio y fin: en el cronograma forma una barra.")}
       </p>
     </div>
   );
@@ -695,21 +698,21 @@ export function PlacePropertyPanel({
   const places = properties.filter((p) => p.type === "place");
   const chosen = places.find((p) => p.id === config.placeProperty) ?? places[0];
   return (
-    <div className="db-panel" role="group" aria-label="Lugar">
+    <div className="db-panel" role="group" aria-label={t("Lugar")}>
       {places.length === 0 ? (
         <>
           <p className="db-panel-meta">
-            Esta base de datos aún no tiene ninguna propiedad de tipo lugar.
+            {t("Esta base de datos aún no tiene ninguna propiedad de tipo lugar.")}
           </p>
           <div className="db-panel-actions">
             <button type="button" onClick={onAdd}>
-              + Añadir propiedad
+              {t("+ Añadir propiedad")}
             </button>
           </div>
         </>
       ) : (
         <label>
-          Mostrar los pins de
+          {t("Mostrar los pins de")}
           <select
             value={chosen?.id ?? ""}
             onChange={(e) => onChange({ ...config, placeProperty: e.target.value })}

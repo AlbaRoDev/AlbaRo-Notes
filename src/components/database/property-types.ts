@@ -14,16 +14,17 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Property, PropertyKind, StatusGroup, TagColor, TextFormat } from "../../types";
+import { t } from "../../lib/i18n.ts";
 
 export const TYPE_LABELS: Record<PropertyKind, string> = {
-  text: "Texto",
-  number: "Número",
-  date: "Fecha",
-  select: "Seleccionar",
-  relation: "Relación",
-  place: "Lugar",
-  checkbox: "Casilla",
-  tags: "Selección múltiple",
+  text: t("Texto"),
+  number: t("Número"),
+  date: t("Fecha"),
+  select: t("Seleccionar"),
+  relation: t("Relación"),
+  place: t("Lugar"),
+  checkbox: t("Casilla"),
+  tags: t("Selección múltiple"),
 };
 
 /** The icon Notion-style column headers show before each property's name. */
@@ -54,30 +55,30 @@ export interface TypeChoice {
 }
 
 export const STATUS_GROUPS: { group: StatusGroup; label: string }[] = [
-  { group: "todo", label: "Por hacer" },
-  { group: "doing", label: "En curso" },
-  { group: "done", label: "Completado" },
+  { group: "todo", label: t("Por hacer") },
+  { group: "doing", label: t("En curso") },
+  { group: "done", label: t("Completado") },
 ];
 
 export const TYPE_CHOICES: TypeChoice[] = [
-  { id: "text", label: "Texto", icon: TYPE_ICONS.text, kind: "text" },
-  { id: "number", label: "Número", icon: TYPE_ICONS.number, kind: "number" },
-  { id: "select", label: "Seleccionar", icon: TYPE_ICONS.select, kind: "select" },
-  { id: "tags", label: "Selección múltiple", icon: TYPE_ICONS.tags, kind: "tags" },
+  { id: "text", label: t("Texto"), icon: TYPE_ICONS.text, kind: "text" },
+  { id: "number", label: t("Número"), icon: TYPE_ICONS.number, kind: "number" },
+  { id: "select", label: t("Seleccionar"), icon: TYPE_ICONS.select, kind: "select" },
+  { id: "tags", label: t("Selección múltiple"), icon: TYPE_ICONS.tags, kind: "tags" },
   {
     id: "status",
-    label: "Estado",
+    label: t("Estado"),
     icon: LoaderCircle,
     kind: "select",
     status: true,
   },
-  { id: "date", label: "Fecha", icon: TYPE_ICONS.date, kind: "date" },
-  { id: "checkbox", label: "Casilla", icon: TYPE_ICONS.checkbox, kind: "checkbox" },
+  { id: "date", label: t("Fecha"), icon: TYPE_ICONS.date, kind: "date" },
+  { id: "checkbox", label: t("Casilla"), icon: TYPE_ICONS.checkbox, kind: "checkbox" },
   { id: "url", label: "URL", icon: Link, kind: "text", format: "url" },
-  { id: "email", label: "Correo electrónico", icon: AtSign, kind: "text", format: "email" },
-  { id: "phone", label: "Teléfono", icon: Phone, kind: "text", format: "phone" },
-  { id: "relation", label: "Relación", icon: TYPE_ICONS.relation, kind: "relation" },
-  { id: "place", label: "Lugar", icon: TYPE_ICONS.place, kind: "place" },
+  { id: "email", label: t("Correo electrónico"), icon: AtSign, kind: "text", format: "email" },
+  { id: "phone", label: t("Teléfono"), icon: Phone, kind: "text", format: "phone" },
+  { id: "relation", label: t("Relación"), icon: TYPE_ICONS.relation, kind: "relation" },
+  { id: "place", label: t("Lugar"), icon: TYPE_ICONS.place, kind: "place" },
 ];
 
 /** The choice a stored property is: «Estado» is a select with `config.status`. */
@@ -93,16 +94,16 @@ export function typeChoiceOf(prop: Pick<Property, "type" | "config">): TypeChoic
 
 /** Notion's tag colours, in its menu order (CSS: `--tag-<colour>`). */
 export const TAG_COLORS: { color: TagColor; label: string }[] = [
-  { color: "default", label: "Predeterminado" },
-  { color: "gray", label: "Gris" },
-  { color: "brown", label: "Marrón" },
-  { color: "orange", label: "Naranja" },
-  { color: "yellow", label: "Amarillo" },
-  { color: "green", label: "Verde" },
-  { color: "blue", label: "Azul" },
-  { color: "purple", label: "Morado" },
-  { color: "pink", label: "Rosa" },
-  { color: "red", label: "Rojo" },
+  { color: "default", label: t("Predeterminado") },
+  { color: "gray", label: t("Gris") },
+  { color: "brown", label: t("Marrón") },
+  { color: "orange", label: t("Naranja") },
+  { color: "yellow", label: t("Amarillo") },
+  { color: "green", label: t("Verde") },
+  { color: "blue", label: t("Azul") },
+  { color: "purple", label: t("Morado") },
+  { color: "pink", label: t("Rosa") },
+  { color: "red", label: t("Rojo") },
 ];
 
 /** An option's colour: the one chosen for it, else one picked by its position (as Notion does for new options). */

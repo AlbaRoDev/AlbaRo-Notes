@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { MAX_ITEM_TITLE, type StoredEvent } from "./view-items";
 import "../database/DatabaseView.css"; // shared form controls (.db-panel, .db-input…)
+import { t } from "../../lib/i18n.ts";
 
 interface EventPanelProps {
   event: StoredEvent;
@@ -35,7 +36,7 @@ export function EventPanel({ event, noun, onChange, onDelete, onClose }: EventPa
       if (next.end && next.end < value) delete next.end; // moving the start past the end drops the end
     } else if (value) {
       if (value < event.start) {
-        setNote("La fecha de fin no puede ser anterior a la de inicio");
+        setNote(t("La fecha de fin no puede ser anterior a la de inicio"));
         input.value = event.end ?? "";
         return;
       }
@@ -52,17 +53,17 @@ export function EventPanel({ event, noun, onChange, onDelete, onClose }: EventPa
     <div
       className="db-panel"
       role="group"
-      aria-label={`Editar ${noun}`}
+      aria-label={t("Editar {noun}", { noun })}
       onKeyDown={(e) => e.key === "Escape" && onClose()}
     >
       <label>
-        Título
+        {t("Título")}
         <input
           autoFocus
           type="text"
           maxLength={MAX_ITEM_TITLE}
           defaultValue={event.title}
-          placeholder="Sin título"
+          placeholder={t("Sin título")}
           onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
           onBlur={(e) => {
             const title = e.currentTarget.value.trim();
@@ -72,7 +73,7 @@ export function EventPanel({ event, noun, onChange, onDelete, onClose }: EventPa
       </label>
       <div className="db-rule">
         <label>
-          Inicio
+          {t("Inicio")}
           <input
             type="date"
             defaultValue={event.start}
@@ -82,7 +83,7 @@ export function EventPanel({ event, noun, onChange, onDelete, onClose }: EventPa
           />
         </label>
         <label>
-          Fin (opcional)
+          {t("Fin (opcional)")}
           <input
             type="date"
             defaultValue={event.end ?? ""}
@@ -95,10 +96,10 @@ export function EventPanel({ event, noun, onChange, onDelete, onClose }: EventPa
       {note && <p className="db-error">{note}</p>}
       <div className="db-panel-actions">
         <button type="button" onClick={onDelete}>
-          Borrar {noun}
+          {t("Borrar {noun}", { noun })}
         </button>
         <button type="button" onClick={onClose}>
-          Cerrar
+          {t("Cerrar")}
         </button>
       </div>
     </div>

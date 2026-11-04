@@ -4,6 +4,7 @@ import { linkPage, pagesOfTask, unlinkPage } from "../../lib/db-client";
 import { hasDragItem, readDragItem } from "../../lib/drag-item";
 import { emitLinkChange, subscribeLinkChanges } from "../../lib/links-bus";
 import type { PageRef, PageSummary } from "../../types";
+import { t } from "../../lib/i18n.ts";
 
 /**
  * The pages linked to a task, under its properties: chips that open the page, a × to unlink and a
@@ -60,7 +61,7 @@ export function LinkedPages({
         change(() => linkPage(taskId, item.id));
       }}
     >
-      <span className="linked-pages-title">Páginas enlazadas</span>
+      <span className="linked-pages-title">{t("Páginas enlazadas")}</span>
       <div className="linked-pages-chips">
         {linked.map((page) => (
           <span key={page.id} className="db-chip linked-chip">
@@ -68,14 +69,14 @@ export function LinkedPages({
               type="button"
               className="linked-chip-open"
               onClick={() => onOpen(page.id)}
-              title="Abrir la página"
+              title={t("Abrir la página")}
             >
               <FileText size={12} aria-hidden="true" /> {page.title}
             </button>
             <button
               type="button"
-              aria-label={`Desenlazar ${page.title}`}
-              title="Quitar el enlace"
+              aria-label={t("Desenlazar {title}", { title: page.title })}
+              title={t("Quitar el enlace")}
               onClick={() => change(() => unlinkPage(taskId, page.id))}
             >
               <X size={12} aria-hidden="true" />
@@ -85,11 +86,11 @@ export function LinkedPages({
         <select
           className="db-input linked-add"
           value=""
-          aria-label="Enlazar una página"
+          aria-label={t("Enlazar una página")}
           onChange={(e) => e.target.value && change(() => linkPage(taskId, e.target.value))}
         >
           <option value="">
-            {linked.length === 0 ? "Enlazar una página… (o arrástrala aquí)" : "+ Enlazar"}
+            {linked.length === 0 ? t("Enlazar una página… (o arrástrala aquí)") : t("+ Enlazar")}
           </option>
           {candidates.map((p) => (
             <option key={p.id} value={p.id}>

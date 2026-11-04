@@ -10,6 +10,7 @@ import type {
 import { ChartCanvas } from "../views/ChartCanvas";
 import { AGGREGATE_LABELS, CHART_TYPE_LABELS, measureLabel, normalizeChart } from "./view-config";
 import "./DatabaseView.css";
+import { t } from "../../lib/i18n.ts";
 
 /** The chart view's body. Rust did the filtering, grouping and aggregating; this only draws. */
 export function DatabaseChart({
@@ -31,10 +32,10 @@ export function DatabaseChart({
     if (!config.group)
       return (
         <p className="db-loading">
-          Elige la propiedad del eje X en «Eje X» para dibujar el gráfico.
+          {t("Elige la propiedad del eje X en «Eje X» para dibujar el gráfico.")}
         </p>
       );
-    if (points.length === 0) return <p className="db-loading">No hay datos que mostrar.</p>;
+    if (points.length === 0) return <p className="db-loading">{t("No hay datos que mostrar.")}</p>;
   }
   // with avg / min / max, adding the groups up (a ring's total and shares) would mean nothing
   const additive = chart.aggregate === "count" || chart.aggregate === "sum";
@@ -69,9 +70,9 @@ export function ChartPanel({
     onChange({ ...config, chart: stored });
   };
   return (
-    <div className="db-panel" role="group" aria-label="Gráfico">
+    <div className="db-panel" role="group" aria-label={t("Gráfico")}>
       <label>
-        Tipo de gráfico
+        {t("Tipo de gráfico")}
         <select
           value={chart.type}
           onChange={(e) => save({ ...chart, type: e.target.value as ChartType })}
@@ -84,7 +85,7 @@ export function ChartPanel({
         </select>
       </label>
       <label>
-        Cálculo
+        {t("Cálculo")}
         <select
           value={chart.aggregate}
           onChange={(e) => {
@@ -104,11 +105,13 @@ export function ChartPanel({
         </select>
       </label>
       {numbers.length === 0 && (
-        <p className="db-panel-meta">Añade una propiedad de tipo número para sumar o promediar.</p>
+        <p className="db-panel-meta">
+          {t("Añade una propiedad de tipo número para sumar o promediar.")}
+        </p>
       )}
       {chart.aggregate !== "count" && (
         <label>
-          De la propiedad
+          {t("De la propiedad")}
           <select
             value={chart.value ?? ""}
             onChange={(e) => save({ ...chart, value: e.target.value })}
@@ -123,14 +126,14 @@ export function ChartPanel({
       )}
       {chart.type !== "number" && chart.type !== "line" && (
         <label>
-          Orden
+          {t("Orden")}
           <select
             value={chart.sort}
             onChange={(e) => save({ ...chart, sort: e.target.value as ChartSort })}
           >
-            <option value="x">Como el eje X</option>
-            <option value="desc">De mayor a menor</option>
-            <option value="asc">De menor a mayor</option>
+            <option value="x">{t("Como el eje X")}</option>
+            <option value="desc">{t("De mayor a menor")}</option>
+            <option value="asc">{t("De menor a mayor")}</option>
           </select>
         </label>
       )}

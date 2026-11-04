@@ -31,12 +31,13 @@ import { ScopeDialog } from "./ScopeDialog";
 import { TaskTray } from "./TaskTray";
 import { TimeGrid } from "./TimeGrid";
 import "./calendar.css";
+import { locale, t } from "../../lib/i18n.ts";
 
 type View = "day" | "week" | "month";
 const VIEWS: { id: View; label: string }[] = [
-  { id: "day", label: "Día" },
-  { id: "week", label: "Semana" },
-  { id: "month", label: "Mes" },
+  { id: "day", label: t("Día") },
+  { id: "week", label: t("Semana") },
+  { id: "month", label: t("Mes") },
 ];
 
 /** The same day of another month (or the last one when it is shorter). */
@@ -52,7 +53,7 @@ function titleOf(view: View, anchor: string): string {
   const [y, m, d] = anchor.split("-").map(Number);
   if (view === "month") return formatMonthYear(y, m);
   if (view === "day")
-    return new Date(y, m - 1, d).toLocaleDateString("es", {
+    return new Date(y, m - 1, d).toLocaleDateString(locale, {
       weekday: "long",
       day: "numeric",
       month: "long",
@@ -61,8 +62,19 @@ function titleOf(view: View, anchor: string): string {
   const week = weekDays(anchor);
   const [a, b] = [week[0].split("-").map(Number), week[6].split("-").map(Number)];
   return a[1] === b[1]
-    ? `${a[2]} – ${b[2]} de ${MONTH_NAMES[b[1] - 1].toLowerCase()} de ${b[0]}`
-    : `${a[2]} ${MONTH_NAMES[a[1] - 1].slice(0, 3).toLowerCase()} – ${b[2]} ${MONTH_NAMES[b[1] - 1].slice(0, 3).toLowerCase()} ${b[0]}`;
+    ? t("{d1} – {d2} de {month} de {year}", {
+        d1: a[2],
+        d2: b[2],
+        month: MONTH_NAMES[b[1] - 1].toLowerCase(),
+        year: b[0],
+      })
+    : t("{d1} {m1} – {d2} {m2} {year}", {
+        d1: a[2],
+        m1: MONTH_NAMES[a[1] - 1].slice(0, 3).toLowerCase(),
+        d2: b[2],
+        m2: MONTH_NAMES[b[1] - 1].slice(0, 3).toLowerCase(),
+        year: b[0],
+      });
 }
 
 /**
@@ -288,7 +300,7 @@ export function CalendarSection({ host }: { host: TaskHost }) {
   const newAppointment = (date: string, allDay: boolean) =>
     void create({
       taskId: null,
-      title: "Nueva cita",
+      title: t("Nueva cita"),
       start: allDay ? date : stamp(date, 9 * 60),
       end: allDay ? date : stamp(date, 10 * 60),
       allDay,
@@ -321,8 +333,8 @@ export function CalendarSection({ host }: { host: TaskHost }) {
       const field = target instanceof HTMLInputElement ? target : null;
       const untouched =
         field?.hasAttribute("data-cal-title") &&
-        selected.title === "Nueva cita" &&
-        field.value === "Nueva cita" &&
+        selected.title === t("Nueva cita") &&
+        field.value === t("Nueva cita") &&
         field.selectionStart === 0 &&
         field.selectionEnd === field.value.length;
       if (!untouched) return;
@@ -337,12 +349,22 @@ export function CalendarSection({ host }: { host: TaskHost }) {
       <div className="cal-main">
         <div className="cal-bar">
           <button type="button" className="cal-today" onClick={() => setAnchor(todayIso())}>
-            Hoy
+            {t("Hoy")}
           </button>
-          <button type="button" onClick={() => step(-1)} aria-label="Anterior" title="Anterior">
+          <button
+            type="button"
+            onClick={() => step(-1)}
+            aria-label={t("Anterior")}
+            title={t("Anterior")}
+          >
             <ChevronLeft size={16} aria-hidden="true" />
           </button>
-          <button type="button" onClick={() => step(1)} aria-label="Siguiente" title="Siguiente">
+          <button
+            type="button"
+            onClick={() => step(1)}
+            aria-label={t("Siguiente")}
+            title={t("Siguiente")}
+          >
             <ChevronRight size={16} aria-hidden="true" />
           </button>
           <h2>{titleOf(view, anchor)}</h2>
@@ -350,22 +372,22 @@ export function CalendarSection({ host }: { host: TaskHost }) {
             type="date"
             className="cal-date"
             value={anchor}
-            aria-label="Ir a una fecha"
+            aria-label={t("Ir a una fecha")}
             onChange={(e) => e.target.value && setAnchor(e.target.value)}
           />
           <span className="cal-bar-gap" />
           <label
             className="cal-toggle"
-            title="Muestra la «Fecha límite» de las tareas como banderas"
+            title={t("Muestra la «Fecha límite» de las tareas como banderas")}
           >
             <input
               type="checkbox"
               checked={showDeadlines}
               onChange={(e) => setShowDeadlines(e.target.checked)}
             />
-            Fechas límite
+            {t("Fechas límite")}
           </label>
-          <div className="cal-views" role="group" aria-label="Vista">
+          <div className="cal-views" role="group" aria-label={t("Vista")}>
             {VIEWS.map(({ id, label }) => (
               <button key={id} type="button" aria-pressed={view === id} onClick={() => setView(id)}>
                 {label}
@@ -375,7 +397,9 @@ export function CalendarSection({ host }: { host: TaskHost }) {
           <NotificationSettings onError={setError} />
           <button
             type="button"
-            title="Guarda todo el calendario como un archivo .ics para abrirlo en otra aplicación"
+            title={t(
+              "Guarda todo el calendario como un archivo .ics para abrirlo en otra aplicación",
+            )}
             onClick={() => {
               setSaved(null);
               exportCalendar(showDeadlines)
@@ -386,14 +410,14 @@ export function CalendarSection({ host }: { host: TaskHost }) {
                 .catch((e) => setError(String(e)));
             }}
           >
-            <Download size={14} aria-hidden="true" /> .ics
+            <Download size={14} aria-hidden="true" /> {t(".ics")}
           </button>
           <button
             type="button"
             className="cal-new"
             onClick={() => newAppointment(view === "month" ? todayIso() : anchor, false)}
           >
-            <Plus size={14} aria-hidden="true" /> Cita
+            <Plus size={14} aria-hidden="true" /> {t("Cita")}
           </button>
         </div>
         {error && (

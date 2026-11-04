@@ -25,12 +25,13 @@ import {
 import { useAttachmentUrl } from "../../hooks/useAttachmentUrl";
 import { focusLineAfterNode } from "./media-commands";
 import { ImageView } from "./ImageView";
+import { t } from "../../lib/i18n.ts";
 
 const KIND_LABEL: Record<MediaKind, { noun: string; Icon: typeof ImageIcon; accept?: string }> = {
-  image: { noun: "imagen", Icon: ImageIcon, accept: "image/*" },
-  video: { noun: "vídeo", Icon: Video, accept: "video/*" },
-  audio: { noun: "audio", Icon: Music, accept: "audio/*" },
-  file: { noun: "archivo", Icon: Paperclip },
+  image: { noun: t("imagen"), Icon: ImageIcon, accept: "image/*" },
+  video: { noun: t("vídeo"), Icon: Video, accept: "video/*" },
+  audio: { noun: t("audio"), Icon: Music, accept: "audio/*" },
+  file: { noun: t("archivo"), Icon: Paperclip },
 };
 
 export function MediaView(props: NodeViewProps) {
@@ -94,7 +95,7 @@ export function MediaPicker({
   const submitUrl = () => {
     const valid = asHttpUrl(url);
     if (!valid) {
-      setError("Introduce una URL http o https válida");
+      setError(t("Introduce una URL http o https válida"));
       return;
     }
     void run("Descargando…", async () => ({
@@ -117,8 +118,13 @@ export function MediaPicker({
     <NodeViewWrapper className="media-picker" contentEditable={false} data-kind={kind}>
       <div className="media-picker-head">
         <Icon size={16} strokeWidth={1.75} aria-hidden="true" />
-        <span>Añadir {noun}</span>
-        <button type="button" className="media-picker-close" aria-label="Cancelar" onClick={cancel}>
+        <span>{t("Añadir {noun}", { noun })}</span>
+        <button
+          type="button"
+          className="media-picker-close"
+          aria-label={t("Cancelar")}
+          onClick={cancel}
+        >
           <X size={14} strokeWidth={1.75} aria-hidden="true" />
         </button>
       </div>
@@ -133,15 +139,15 @@ export function MediaPicker({
           }}
         />
         <Upload size={14} strokeWidth={1.75} aria-hidden="true" />
-        Subir archivo
+        {t("Subir archivo")}
       </label>
       <div className="media-picker-url">
         <input
           autoFocus
           type="text"
           inputMode="url"
-          placeholder="…o pega un enlace y pulsa Intro"
-          aria-label={`URL de ${noun}`}
+          placeholder={t("…o pega un enlace y pulsa Intro")}
+          aria-label={t("URL de {noun}", { noun })}
           value={url}
           // readOnly, not disabled: a disabled input drops focus, so after a failed
           // attempt the user would have to click back in before retrying.
@@ -150,11 +156,11 @@ export function MediaPicker({
           onKeyDown={onUrlKeyDown}
         />
         <button type="button" disabled={!!busy || !url.trim()} onClick={submitUrl}>
-          Insertar
+          {t("Insertar")}
         </button>
       </div>
       <p className="media-picker-hint">
-        También puedes arrastrar o pegar archivos en el documento.
+        {t("También puedes arrastrar o pegar archivos en el documento.")}
       </p>
       {busy && (
         <p className="media-picker-status" role="status">
@@ -172,7 +178,7 @@ export function MediaPicker({
 
 function MediaResolved({ kind, node, updateAttributes, editor, getPos }: Props) {
   const file = node.attrs.file as string;
-  const name = (node.attrs.name as string | null) ?? "Archivo";
+  const name = (node.attrs.name as string | null) ?? t("Archivo");
   const size = node.attrs.size as number | null;
   const src = useAttachmentUrl(file);
   const [broken, setBroken] = useState(false);
@@ -195,7 +201,7 @@ function MediaResolved({ kind, node, updateAttributes, editor, getPos }: Props) 
       {broken ? (
         <p className="media-broken" role="alert">
           <FileText size={16} strokeWidth={1.75} aria-hidden="true" />
-          No se pudo cargar «{name}» (¿se movió o se borró el archivo?)
+          {t("No se pudo cargar «{name}» (¿se movió o se borró el archivo?)", { name })}
         </p>
       ) : (
         src &&
@@ -259,7 +265,7 @@ function FileCard({
             autoFocus
             type="text"
             maxLength={200}
-            aria-label="Nombre del archivo"
+            aria-label={t("Nombre del archivo")}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
@@ -280,7 +286,7 @@ function FileCard({
           <button
             type="button"
             className="file-card-name"
-            title="Clic para renombrar"
+            title={t("Clic para renombrar")}
             onClick={() => {
               setDraft(name);
               setEditing(true);
@@ -296,16 +302,16 @@ function FileCard({
         onClick={() => void act(async () => (await openAttachment(file), null))}
       >
         <ExternalLink size={14} strokeWidth={1.75} aria-hidden="true" />
-        Abrir
+        {t("Abrir")}
       </button>
       <button
         type="button"
         onClick={() =>
-          void act(async () => ((await saveAttachmentAs(file, name)) ? "Guardado" : null))
+          void act(async () => ((await saveAttachmentAs(file, name)) ? t("Guardado") : null))
         }
       >
         <Download size={14} strokeWidth={1.75} aria-hidden="true" />
-        Guardar como…
+        {t("Guardar como…")}
       </button>
       {message && (
         <p className="file-card-message" role="status">

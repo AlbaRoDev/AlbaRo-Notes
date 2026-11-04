@@ -5,6 +5,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { geocodePlace, type GeocodeResult } from "../../lib/db-client";
 import { commitOnBlur, type Commit } from "./cell-commit";
 import { OptionCell } from "./OptionCell";
+import { t } from "../../lib/i18n.ts";
 
 interface CellProps {
   prop: Property;
@@ -68,7 +69,7 @@ function PlaceCell({
     try {
       const found = await geocodePlace(query);
       setResults(found);
-      if (found.length === 0) setSearchError("Sin resultados");
+      if (found.length === 0) setSearchError(t("Sin resultados"));
     } catch (err) {
       setResults(null);
       setSearchError(String(err));
@@ -97,14 +98,14 @@ function PlaceCell({
           type="text"
           maxLength={200}
           defaultValue={place.name ?? ""}
-          placeholder="Lugar o dirección"
+          placeholder={t("Lugar o dirección")}
           aria-label={prop.name}
         />
         <button
           type="button"
           className="db-icon-btn"
-          aria-label={`Buscar ${prop.name}`}
-          title="Buscar el lugar en internet"
+          aria-label={t("Buscar {name}", { name: prop.name })}
+          title={t("Buscar el lugar en internet")}
           disabled={searching}
           onClick={() => void search()}
         >
@@ -120,8 +121,8 @@ function PlaceCell({
           min={-90}
           max={90}
           defaultValue={place.lat ?? ""}
-          placeholder="lat"
-          aria-label={`${prop.name} (latitud)`}
+          placeholder={t("lat")}
+          aria-label={t("{name} (latitud)", { name: prop.name })}
         />
         <input
           ref={lngRef}
@@ -131,13 +132,13 @@ function PlaceCell({
           min={-180}
           max={180}
           defaultValue={place.lng ?? ""}
-          placeholder="lng"
-          aria-label={`${prop.name} (longitud)`}
+          placeholder={t("lng")}
+          aria-label={t("{name} (longitud)", { name: prop.name })}
         />
       </div>
       {searchError && <span className="db-place-note">{searchError}</span>}
       {results && results.length > 0 && (
-        <ul className="db-place-results" aria-label="Resultados de la búsqueda">
+        <ul className="db-place-results" aria-label={t("Resultados de la búsqueda")}>
           {results.map((r) => (
             <li key={`${r.lat},${r.lng}`}>
               <button type="button" onClick={() => void pick(r)} title={`${r.lat}, ${r.lng}`}>
@@ -212,12 +213,12 @@ function DateCell({
             className="db-input"
             type="date"
             defaultValue={end ?? ""}
-            aria-label={`${prop.name} (fin)`}
+            aria-label={t("{name} (fin)", { name: prop.name })}
           />
           <button
             type="button"
             className="db-icon-btn"
-            aria-label={`Quitar fecha de fin de ${prop.name}`}
+            aria-label={t("Quitar fecha de fin de {name}", { name: prop.name })}
             onClick={() => {
               setWithEnd(false);
               if (end) void commit(start || null); // drops the end right away
@@ -230,8 +231,8 @@ function DateCell({
         <button
           type="button"
           className="db-icon-btn db-date-add-end"
-          aria-label={`Añadir fecha de fin a ${prop.name}`}
-          title="Añadir fecha de fin"
+          aria-label={t("Añadir fecha de fin a {name}", { name: prop.name })}
+          title={t("Añadir fecha de fin")}
           onClick={() => {
             setWithEnd(true);
             requestAnimationFrame(() => endRef.current?.focus());
@@ -272,8 +273,8 @@ export function Cell({ prop, value, commit, targetRows, single, wrap }: CellProp
               <button
                 type="button"
                 className="db-icon-btn"
-                aria-label={`Abrir ${prop.name}`}
-                title="Abrir"
+                aria-label={t("Abrir {name}", { name: prop.name })}
+                title={t("Abrir")}
                 onClick={() =>
                   void openUrl(linkOf(format, current)).catch((e) => console.error("openUrl", e))
                 }
@@ -359,7 +360,7 @@ export function Cell({ prop, value, commit, targetRows, single, wrap }: CellProp
               {titleOf(id)}
               <button
                 type="button"
-                aria-label={`Quitar ${titleOf(id)}`}
+                aria-label={t("Quitar {n1}", { n1: titleOf(id) })}
                 onClick={() => void commit(linked.filter((l) => l !== id))}
               >
                 ×
@@ -369,7 +370,7 @@ export function Cell({ prop, value, commit, targetRows, single, wrap }: CellProp
           <select
             className="db-input db-relation-add"
             value=""
-            aria-label={`Añadir a ${prop.name}`}
+            aria-label={t("Añadir a {name}", { name: prop.name })}
             onChange={(e) => e.target.value && void commit([...linked, e.target.value])}
           >
             <option value="">+</option>

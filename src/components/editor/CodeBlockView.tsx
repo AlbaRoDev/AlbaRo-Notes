@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import { Check, Copy } from "lucide-react";
 import { CODE_LANGUAGES, PLAIN_TEXT } from "./code-languages";
+import { t } from "../../lib/i18n.ts";
 
 const COPIED_BADGE_MS = 1500;
 
@@ -36,7 +37,7 @@ export function CodeBlockView({ node, updateAttributes, editor, getPos }: NodeVi
     <NodeViewWrapper className="code-block">
       <div className="code-block-toolbar" contentEditable={false}>
         <select
-          aria-label="Lenguaje del bloque de código"
+          aria-label={t("Lenguaje del bloque de código")}
           value={language}
           onChange={(e) => {
             updateAttributes({ language: e.target.value });
@@ -60,10 +61,10 @@ export function CodeBlockView({ node, updateAttributes, editor, getPos }: NodeVi
             <Copy size={14} strokeWidth={1.75} aria-hidden="true" />
           )}
           {copyState === "copied"
-            ? "Copiado"
+            ? t("Copiado")
             : copyState === "failed"
-              ? "No se pudo copiar"
-              : "Copiar"}
+              ? t("No se pudo copiar")
+              : t("Copiar")}
         </button>
       </div>
       <pre>

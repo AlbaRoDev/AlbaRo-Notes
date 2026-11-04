@@ -5,6 +5,7 @@ import { IconGrid } from "../IconGrid";
 import { LucideByName } from "../PageIcon";
 import { PROP_ICONS } from "./prop-icons";
 import { typeChoiceOf } from "./property-types";
+import { t } from "../../lib/i18n.ts";
 
 /** A column's icon: the one the user picked (an icon of the library or an emoji), else its type's. */
 export function PropIcon({
@@ -60,14 +61,14 @@ export function IconPicker({
           type="text"
           value={emoji}
           maxLength={8}
-          placeholder="O escribe un emoji…"
-          aria-label="Emoji para el icono"
+          placeholder={t("O escribe un emoji…")}
+          aria-label={t("Emoji para el icono")}
           onChange={(e) => setEmoji(e.target.value)}
         />
       </form>
       {current && (
         <button type="button" className="pm-icon-reset" onClick={() => onPick(null)}>
-          Quitar el icono
+          {t("Quitar el icono")}
         </button>
       )}
     </div>

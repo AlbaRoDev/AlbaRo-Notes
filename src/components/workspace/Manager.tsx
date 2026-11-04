@@ -7,35 +7,36 @@ import { BoardsSection } from "../boards/BoardsSection";
 import { CalendarSection } from "../calendar/CalendarSection";
 import { FamiliesSection } from "../families/FamiliesSection";
 import { TasksSection, type TaskHost } from "./Tasks";
+import { t } from "../../lib/i18n.ts";
 
 const SECTIONS = [
   {
     id: "calendar",
-    label: "Calendario",
+    label: t("Calendario"),
     Icon: CalendarDays,
 
-    blurb: "Día, semana y mes con horas; arrastra tareas desde cualquier vista.",
+    blurb: t("Día, semana y mes con horas; arrastra tareas desde cualquier vista."),
   },
   {
     id: "tasks",
-    label: "Tareas",
+    label: t("Tareas"),
     Icon: ListChecks,
 
-    blurb: "Tu base de tareas, con las categorías que quieras.",
+    blurb: t("Tu base de tareas, con las categorías que quieras."),
   },
   {
     id: "boards",
-    label: "Tableros",
+    label: t("Tableros"),
     Icon: Columns3,
 
-    blurb: "Listas y tarjetas como en Trello; una tarea puede estar en varios tableros.",
+    blurb: t("Listas y tarjetas como en Trello; una tarea puede estar en varios tableros."),
   },
   {
     id: "families",
-    label: "Familias",
+    label: t("Familias"),
     Icon: Shapes,
 
-    blurb: "Agrupa las tareas por lo que tienen en común, en burbujas o en orden.",
+    blurb: t("Agrupa las tareas por lo que tienen en común, en burbujas o en orden."),
   },
 ] as const satisfies readonly {
   id: string;
@@ -59,7 +60,7 @@ export function ManagerMain({ host }: { host: TaskHost }) {
 
   return (
     <div className="manager">
-      <nav className="manager-tabs" aria-label="Secciones del Gestor">
+      <nav className="manager-tabs" aria-label={t("Secciones del Gestor")}>
         {SECTIONS.map(({ id, label, Icon }) => (
           <button
             key={id}
@@ -106,14 +107,14 @@ export function ManagerCompanion({
   const tasks = baseId ? pages.filter((p) => p.databaseId === baseId) : [];
   return (
     <div className="companion">
-      <h2 className="companion-title">Gestor</h2>
+      <h2 className="companion-title">{t("Gestor")}</h2>
       <section className="companion-section">
         <h3>
           <ListChecks size={14} aria-hidden />
-          Tareas
+          {t("Tareas")}
         </h3>
         {tasks.length === 0 ? (
-          <p className="companion-empty">Aún no hay tareas: se crean en el Gestor.</p>
+          <p className="companion-empty">{t("Aún no hay tareas: se crean en el Gestor.")}</p>
         ) : (
           <ul>
             {tasks.map((task) => (
@@ -124,7 +125,9 @@ export function ManagerCompanion({
                   draggable
                   onDragStart={(e) => startItemDrag(e, { kind: "task", id: task.id })}
                   onClick={() => onOpenPage(task.id)}
-                  title={`${task.title} — arrástrala a una nota para mencionarla`}
+                  title={t("{title} — arrástrala a una nota para mencionarla", {
+                    title: task.title,
+                  })}
                 >
                   <ListChecks size={15} strokeWidth={1.75} aria-hidden />
                   <span>{task.title}</span>

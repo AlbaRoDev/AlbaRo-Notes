@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
+import { t } from "../../lib/i18n.ts";
 
 interface HeadingEntry {
   pos: number;
@@ -42,15 +43,15 @@ export function TableOfContentsView({ editor }: NodeViewProps) {
 
   return (
     <NodeViewWrapper className="toc-block" contentEditable={false}>
-      <div className="toc-title">Índice</div>
+      <div className="toc-title">{t("Índice")}</div>
       {headings.length === 0 ? (
-        <p className="toc-empty">Sin encabezados en esta página</p>
+        <p className="toc-empty">{t("Sin encabezados en esta página")}</p>
       ) : (
         <ul>
           {headings.map((h) => (
             <li key={h.pos}>
               <button type="button" data-level={h.level} onClick={() => goToHeading(h.pos)}>
-                {h.text || "Sin título"}
+                {h.text || t("Sin título")}
               </button>
             </li>
           ))}

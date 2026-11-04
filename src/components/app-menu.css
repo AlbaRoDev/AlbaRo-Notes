@@ -202,3 +202,10 @@
   background: rgba(var(--ink), 0.08);
   color: var(--text);
 }
+
+.app-menu-items .app-menu-check {
+  margin-left: auto;
+  padding-left: 1.5rem;
+  box-sizing: content-box;
+  color: var(--accent);
+}

@@ -9,6 +9,7 @@ import {
 } from "../../lib/repeat-text";
 import type { Repeat } from "../../types";
 import { leaveOnEnter } from "./entry-input";
+import { t } from "../../lib/i18n.ts";
 
 const WEEKDAY_LETTERS = ["L", "M", "X", "J", "V", "S", "D"];
 const rule = (freq: Repeat["freq"], extra: Partial<Repeat> = {}): Repeat => ({
@@ -34,34 +35,34 @@ const sameShape = (a: Repeat, b: Repeat) =>
 function presets(date: string): { id: string; label: string; rule: Repeat }[] {
   const f = dayFacts(date);
   const out = [
-    { id: "daily", label: "Todos los días", rule: rule("daily") },
+    { id: "daily", label: t("Todos los días"), rule: rule("daily") },
     {
       id: "workdays",
-      label: "Todos los días laborables (lunes a viernes)",
+      label: t("Todos los días laborables (lunes a viernes)"),
       rule: rule("weekly", { weekdays: [0, 1, 2, 3, 4] }),
     },
     {
       id: "weekly",
-      label: `Todas las semanas (el ${f.name})`,
+      label: t("Todas las semanas (el {name})", { name: f.name }),
       rule: rule("weekly", { weekdays: [f.wd] }),
     },
-    { id: "monthly", label: `Todos los meses (el día ${f.d})`, rule: rule("monthly") },
+    { id: "monthly", label: t("Todos los meses (el día {d})", { d: f.d }), rule: rule("monthly") },
   ];
   if (f.nth)
     out.push({
       id: "monthly-nth",
-      label: `Todos los meses (el ${ORDINALS[f.nth]} ${f.name})`,
+      label: t("Todos los meses (el {n1} {name})", { n1: ORDINALS[f.nth], name: f.name }),
       rule: rule("monthly", { weekdays: [f.wd], nth: f.nth }),
     });
   if (f.isLastOfKind)
     out.push({
       id: "monthly-last",
-      label: `Todos los meses (el último ${f.name})`,
+      label: t("Todos los meses (el último {name})", { name: f.name }),
       rule: rule("monthly", { weekdays: [f.wd], nth: -1 }),
     });
   out.push({
     id: "yearly",
-    label: `Todos los años (el ${f.d} de ${f.month})`,
+    label: t("Todos los años (el {d} de {month})", { d: f.d, month: f.month }),
     rule: rule("yearly"),
   });
   return out;
@@ -127,7 +128,7 @@ export function RepeatField({
   return (
     <div className="cal-repeat">
       <label>
-        Repetir
+        {t("Repetir")}
         <select
           value={!repeat ? "none" : (matching?.id ?? "custom")}
           onChange={(e) => {
@@ -140,29 +141,29 @@ export function RepeatField({
             if (picked) onChange(repeat ? keepEnding(picked.rule) : picked.rule);
           }}
         >
-          <option value="none">No se repite</option>
+          <option value="none">{t("No se repite")}</option>
           {choices.map((c) => (
             <option key={c.id} value={c.id}>
               {c.label}
             </option>
           ))}
-          <option value="custom">Personalizado…</option>
+          <option value="custom">{t("Personalizado…")}</option>
         </select>
       </label>
       {repeat && <p className="cal-repeat-summary">{describeRepeat(repeat, startDate)}</p>}
 
       {repeat && unit && (
         <fieldset className="cal-repeat-custom" ref={customRef}>
-          <legend>Personalizar</legend>
+          <legend>{t("Personalizar")}</legend>
           <div className="cal-repeat-every">
-            <span>Cada</span>
+            <span>{t("Cada")}</span>
             <input
               key={`interval-${revision}-${repeat.interval}`}
               type="number"
               min={1}
               max={99}
               defaultValue={repeat.interval}
-              aria-label="Cada cuántos"
+              aria-label={t("Cada cuántos")}
               onBlur={(e) => {
                 const interval = Math.round(Number(e.currentTarget.value));
                 if (interval >= 1 && interval <= 99 && interval !== repeat.interval)
@@ -173,7 +174,7 @@ export function RepeatField({
             />
             <select
               value={repeat.freq}
-              aria-label="Unidad"
+              aria-label={t("Unidad")}
               onChange={(e) => {
                 const freq = e.target.value as Repeat["freq"];
                 onChange({
@@ -199,7 +200,7 @@ export function RepeatField({
           </div>
 
           {repeat.freq === "weekly" && (
-            <div className="cal-repeat-days" role="group" aria-label="Días de la semana">
+            <div className="cal-repeat-days" role="group" aria-label={t("Días de la semana")}>
               {WEEKDAY_LETTERS.map((letter, day) => {
                 const on = repeat.weekdays.includes(day);
                 return (
@@ -225,7 +226,9 @@ export function RepeatField({
 
           {(repeat.freq === "monthly" || repeat.freq === "yearly") && (
             <label>
-              {repeat.freq === "monthly" ? "Cada mes, el" : `Cada año, en ${facts.month}, el`}
+              {repeat.freq === "monthly"
+                ? t("Cada mes, el")
+                : t("Cada año, en {month}, el", { month: facts.month })}
               <select
                 value={monthlyBy}
                 onChange={(e) => {
@@ -238,21 +241,25 @@ export function RepeatField({
                   });
                 }}
               >
-                <option value="day">día {facts.d}</option>
+                <option value="day">{t("día {d}", { d: facts.d })}</option>
                 {(facts.nth || repeat.nth) && (
                   <option value="nth">
                     {ORDINALS[repeat.nth && repeat.nth > 0 ? repeat.nth : (facts.nth ?? 1)]}{" "}
                     {WEEKDAY_NAMES[weekdayOfRule]}
                   </option>
                 )}
-                <option value="last">último {WEEKDAY_NAMES[weekdayOfRule]}</option>
-                {repeat.freq === "monthly" && <option value="lastday">último día del mes</option>}
+                <option value="last">
+                  {t("último {day}", { day: WEEKDAY_NAMES[weekdayOfRule] })}
+                </option>
+                {repeat.freq === "monthly" && (
+                  <option value="lastday">{t("último día del mes")}</option>
+                )}
               </select>
             </label>
           )}
 
           <label>
-            Termina
+            {t("Termina")}
             <select
               value={ends}
               onChange={(e) => {
@@ -267,9 +274,9 @@ export function RepeatField({
                 });
               }}
             >
-              <option value="never">Nunca</option>
-              <option value="until">El día</option>
-              <option value="count">Después de</option>
+              <option value="never">{t("Nunca")}</option>
+              <option value="until">{t("El día")}</option>
+              <option value="count">{t("Después de")}</option>
             </select>
           </label>
           {ends === "until" && (
@@ -277,7 +284,7 @@ export function RepeatField({
               key={`until-${revision}-${repeat.until}`}
               type="date"
               min={startDate}
-              aria-label="Último día de la repetición"
+              aria-label={t("Último día de la repetición")}
               defaultValue={repeat.until ?? ""}
               onBlur={(e) => {
                 const until = e.currentTarget.value;
@@ -293,7 +300,7 @@ export function RepeatField({
                 min={1}
                 max={999}
                 defaultValue={repeat.count ?? 10}
-                aria-label="Número de veces"
+                aria-label={t("Número de veces")}
                 onBlur={(e) => {
                   const count = Math.round(Number(e.currentTarget.value));
                   if (count >= 1 && count <= 999 && count !== repeat.count)
@@ -302,7 +309,7 @@ export function RepeatField({
                 }}
                 onKeyDown={leaveOnEnter}
               />
-              <span>veces</span>
+              <span>{t("veces")}</span>
             </div>
           )}
         </fieldset>

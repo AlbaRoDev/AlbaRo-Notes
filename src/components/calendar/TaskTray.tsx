@@ -14,6 +14,7 @@ import type {
 } from "../../types";
 import { FilterPanel, GroupPanel, SortPanel } from "../database/DatabaseViewConfig";
 import { TITLE_ID, normalizeConfig } from "../database/view-config";
+import { t } from "../../lib/i18n.ts";
 
 /** What the tray says: the calendar's by default; a board words its own. */
 interface TrayLabels {
@@ -26,18 +27,18 @@ interface TrayLabels {
 }
 
 const CALENDAR_LABELS: TrayLabels = {
-  pending: "Por programar",
-  hint: "Arrastra una tarea al calendario; se puede programar varias veces.",
-  pendingEmpty: "No hay tareas.",
-  dragTitle: "arrástrala al calendario",
+  pending: t("Por programar"),
+  hint: t("Arrastra una tarea al calendario; se puede programar varias veces."),
+  pendingEmpty: t("No hay tareas."),
+  dragTitle: t("arrástrala al calendario"),
   repeatable: true,
 };
 
 type PanelKind = "filter" | "sort" | "group";
 const PANELS: [PanelKind, string, LucideIcon][] = [
-  ["filter", "Filtrar", ListFilter],
-  ["sort", "Ordenar", ArrowUpDown],
-  ["group", "Agrupar", Layers],
+  ["filter", t("Filtrar"), ListFilter],
+  ["sort", t("Ordenar"), ArrowUpDown],
+  ["group", t("Agrupar"), Layers],
 ];
 
 /** A stored config can name a property that was deleted since: Rust would refuse it, so those rules are dropped. */
@@ -149,28 +150,32 @@ export function TaskTray({
   };
 
   return (
-    <section className="cal-tray" aria-label="Tareas">
-      <h3>Tareas</h3>
+    <section className="cal-tray" aria-label={t("Tareas")}>
+      <h3>{t("Tareas")}</h3>
       <div className="cal-tray-tools">
         <input
           type="search"
           value={query}
-          placeholder="Buscar…"
-          aria-label="Buscar tareas"
+          placeholder={t("Buscar…")}
+          aria-label={t("Buscar tareas")}
           onChange={(e) => setQuery(e.target.value)}
         />
         {!labels.repeatable && (
-          <div className="cal-tray-seg" role="group" aria-label="Qué tareas mostrar">
+          <div className="cal-tray-seg" role="group" aria-label={t("Qué tareas mostrar")}>
             <button type="button" aria-pressed={!all} onClick={() => setAll(false)}>
               {labels.pending}
             </button>
             <button type="button" aria-pressed={all} onClick={() => setAll(true)}>
-              Todas
+              {t("Todas")}
             </button>
           </div>
         )}
         {database && (
-          <div className="cal-tray-config" role="group" aria-label="Filtrar, ordenar y agrupar">
+          <div
+            className="cal-tray-config"
+            role="group"
+            aria-label={t("Filtrar, ordenar y agrupar")}
+          >
             {PANELS.map(([kind, label, Icon]) => (
               <button
                 key={kind}
@@ -216,7 +221,9 @@ export function TaskTray({
       )}
       <p className="cal-tray-hint">{labels.hint}</p>
       {empty ? (
-        <p className="cal-tray-empty">{all || active ? "No hay tareas." : labels.pendingEmpty}</p>
+        <p className="cal-tray-empty">
+          {all || active ? t("No hay tareas.") : labels.pendingEmpty}
+        </p>
       ) : (
         sections.map(
           (s) =>

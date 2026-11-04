@@ -3,6 +3,7 @@ import { useAttachmentUrl } from "../../hooks/useAttachmentUrl";
 import type { CellValue, DatabaseRow, Property, RowPreview } from "../../types";
 import { cellKey } from "./cell-commit";
 import { Cell } from "./DatabaseCells";
+import { t } from "../../lib/i18n.ts";
 
 /** A run of rows: the whole view, or one group / board column. */
 export interface Section {
@@ -92,7 +93,7 @@ function Title({ row, onOpen }: { row: DatabaseRow; onOpen: CardsProps["onOpen"]
       type="button"
       className="card-title"
       onClick={() => onOpen(row.pageId)}
-      title="Abrir como página"
+      title={t("Abrir como página")}
     >
       {row.title}
     </button>
@@ -144,8 +145,9 @@ export function DatabaseCards(props: CardsProps) {
     if (!board.property) {
       return (
         <p className="db-loading">
-          Elige una propiedad de selección en «Agrupar»: sus opciones serán las columnas del
-          tablero.
+          {t(
+            "Elige una propiedad de selección en «Agrupar»: sus opciones serán las columnas del tablero.",
+          )}
         </p>
       );
     }
@@ -165,8 +167,8 @@ export function DatabaseCards(props: CardsProps) {
               <button
                 type="button"
                 className="db-icon-btn"
-                aria-label={`Añadir fila a ${section.label}`}
-                title="Añadir fila a esta columna"
+                aria-label={t("Añadir fila a {label}", { label: section.label ?? "" })}
+                title={t("Añadir fila a esta columna")}
                 onClick={() => board.onAdd(section.key)}
               >
                 <Plus size={14} strokeWidth={1.75} aria-hidden="true" />

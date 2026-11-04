@@ -19,6 +19,7 @@ import { emitDatabaseChange } from "../../lib/database-bus";
 import { todayIso } from "../../lib/date-utils";
 import { TYPE_LABELS } from "../database/property-types";
 import "./AiPanel.css";
+import { t } from "../../lib/i18n.ts";
 
 type Turn =
   | { role: "user"; content: string }
@@ -43,8 +44,8 @@ function RichText({ text }: { text: string }) {
 }
 
 function showValue(value: unknown): string {
-  if (value === null || value === undefined || value === "") return "vacío";
-  if (typeof value === "boolean") return value ? "marcada" : "sin marcar";
+  if (value === null || value === undefined || value === "") return t("vacío");
+  if (typeof value === "boolean") return value ? t("marcada") : t("sin marcar");
   if (Array.isArray(value)) return value.join(", ");
   if (typeof value === "object") return String((value as { name?: string }).name ?? "");
   return String(value);
@@ -96,7 +97,7 @@ export function AiPanel({
       // only the local mode has a model to embed with (on the CPU, and only the pages that changed)
       if (s.mode !== "local" || !s.running || !hasModel(s, s.embedModel)) return;
       // Bring semantic search up to date in the background (only changed pages are embedded).
-      setIndexing("Preparando la búsqueda por significado…");
+      setIndexing(t("Preparando la búsqueda por significado…"));
       void aiIndex()
         .then(() => setIndexing(null))
         .catch(() => setIndexing(null));
@@ -170,22 +171,28 @@ export function AiPanel({
   };
 
   return (
-    <aside className="ai-panel" data-open={open} aria-label="Asistente de IA" aria-hidden={!open}>
+    <aside
+      className="ai-panel"
+      data-open={open}
+      aria-label={t("Asistente de IA")}
+      aria-hidden={!open}
+    >
       <header className="ai-head">
         <Sparkles size={16} aria-hidden="true" />
-        <span className="ai-head-title">Asistente</span>
+        <span className="ai-head-title">{t("Asistente")}</span>
         <span className="ai-mode-label">
           {mode === "local"
             ? model
             : mode === "online"
-              ? (ONLINE_PROVIDERS.find((p) => p.id === settings?.onlineProvider)?.label ?? "Online")
+              ? (ONLINE_PROVIDERS.find((p) => p.id === settings?.onlineProvider)?.label ??
+                t("Online"))
               : ""}
         </span>
         <button
           type="button"
           className="ai-icon"
-          title="Ajustes de la IA"
-          aria-label="Ajustes de la IA"
+          title={t("Ajustes de la IA")}
+          aria-label={t("Ajustes de la IA")}
           disabled={busy}
           onClick={() => setConfiguring((c) => !c)}
         >
@@ -194,8 +201,8 @@ export function AiPanel({
         <button
           type="button"
           className="ai-icon"
-          title="Nueva conversación"
-          aria-label="Nueva conversación"
+          title={t("Nueva conversación")}
+          aria-label={t("Nueva conversación")}
           disabled={busy || turns.length === 0}
           onClick={() => {
             setTurns([]);
@@ -207,8 +214,8 @@ export function AiPanel({
         <button
           type="button"
           className="ai-icon"
-          title="Cerrar (Esc)"
-          aria-label="Cerrar asistente"
+          title={t("Cerrar (Esc)")}
+          aria-label={t("Cerrar asistente")}
           onClick={onClose}
         >
           <X size={16} />
@@ -226,48 +233,54 @@ export function AiPanel({
             onCancel={mode === "off" ? undefined : () => setConfiguring(false)}
           />
         )}
-        {status === null && <p className="ai-note">Cargando…</p>}
+        {status === null && <p className="ai-note">{t("Cargando…")}</p>}
         {!setup && mode === "local" && status && !status.running && (
           <div className="ai-note ai-warning" role="alert">
-            Ollama no está en marcha en este equipo. Ábrelo (menú Inicio → Ollama) y pulsa
-            «Reintentar».
+            {t(
+              "Ollama no está en marcha en este equipo. Ábrelo (menú Inicio → Ollama) y pulsa «Reintentar».",
+            )}
             <button type="button" onClick={refresh}>
-              Reintentar
+              {t("Reintentar")}
             </button>
           </div>
         )}
         {!setup && mode === "local" && status?.running && !hasModel(status, model) && (
           <div className="ai-note ai-warning" role="alert">
-            Falta el modelo «{model}». Descárgalo con <code>ollama pull {model}</code> o elige otro
-            en los ajustes (el engranaje).
+            {t("Falta el modelo «{model}». Descárgalo con", { model })}{" "}
+            <code>ollama pull {model}</code> {t("o elige otro en los ajustes (el engranaje).")}
           </div>
         )}
         {!setup && mode === "local" && status?.running && !hasModel(status, status.embedModel) && (
           <p className="ai-note">
-            Sin <code>{status.embedModel}</code> la búsqueda es solo por palabras (
-            <code>ollama pull {status.embedModel}</code> para buscar también por significado).
+            {t("Sin")} <code>{status.embedModel}</code> {t("la búsqueda es solo por palabras (")}
+            <code>ollama pull {status.embedModel}</code>{" "}
+            {t("para buscar también por significado).")}
           </p>
         )}
         {!setup && mode === "online" && !status?.running && (
           <div className="ai-note ai-warning" role="alert">
-            Falta la clave de API o tu consentimiento. Revísalo en los ajustes (el engranaje).
+            {t(
+              "Falta la clave de API o tu consentimiento. Revísalo en los ajustes (el engranaje).",
+            )}
           </div>
         )}
         {!setup && turns.length === 0 && ready && (
           <div className="ai-empty">
             <Sparkles size={22} aria-hidden="true" />
-            <p>Pregunta sobre tus notas o pídeme que prepare algo.</p>
+            <p>{t("Pregunta sobre tus notas o pídeme que prepare algo.")}</p>
             <ul>
-              <li>«¿Qué tareas tengo pendientes?»</li>
-              <li>«Resume la página de recetas»</li>
-              <li>«Marca “Desplegar” como completada»</li>
-              <li>«Crea una página con la lista de la compra»</li>
+              <li>{t("«¿Qué tareas tengo pendientes?»")}</li>
+              <li>{t("«Resume la página de recetas»")}</li>
+              <li>{t("«Marca “Desplegar” como completada»")}</li>
+              <li>{t("«Crea una página con la lista de la compra»")}</li>
             </ul>
             <p className="ai-fine">
               {mode === "online"
-                ? "Online: el texto de las notas que consulto se envía al servicio que elegiste. "
-                : "Funciona en tu equipo con Ollama. "}
-              Nada se cambia sin que pulses «Aplicar».
+                ? t(
+                    "Online: el texto de las notas que consulto se envía al servicio que elegiste. ",
+                  )
+                : t("Funciona en tu equipo con Ollama. ")}
+              {t("Nada se cambia sin que pulses «Aplicar».")}
             </p>
           </div>
         )}
@@ -298,42 +311,59 @@ export function AiPanel({
                       {p.kind === "updateValues" ? (
                         <>
                           <div className="ai-proposal-title">
-                            «{p.databaseName}» · {p.propertyName} →{" "}
-                            <strong>{showValue(p.newValue)}</strong> en {p.rows.length}{" "}
-                            {p.rows.length === 1 ? "fila" : "filas"}
+                            {t("«{db}» · {prop} →", { db: p.databaseName, prop: p.propertyName })}{" "}
+                            <strong>{showValue(p.newValue)}</strong>{" "}
+                            {t(p.rows.length === 1 ? "en {n} fila" : "en {n} filas", {
+                              n: p.rows.length,
+                            })}
                           </div>
                           <div className="ai-proposal-preview">
                             {p.rows
                               .slice(0, 6)
                               .map(
                                 (r) =>
-                                  `${r.title || "Sin título"}: ${
+                                  `${r.title || t("Sin título")}: ${
                                     typeof p.newValue === "boolean" && !r.oldValue
-                                      ? "sin marcar"
+                                      ? t("sin marcar")
                                       : showValue(r.oldValue)
                                   } → ${showValue(p.newValue)}`,
                               )
                               .join("\n")}
-                            {p.rows.length > 6 && `\n…y ${p.rows.length - 6} más`}
+                            {p.rows.length > 6 && t("\n…y {n1} más", { n1: p.rows.length - 6 })}
                           </div>
                         </>
                       ) : p.kind === "changeType" ? (
                         <>
                           <div className="ai-proposal-title">
-                            «{p.databaseName}» · convertir «{p.propertyName}» de{" "}
-                            {TYPE_LABELS[p.from]} a <strong>{TYPE_LABELS[p.to]}</strong>
+                            {t("«{db}» · convertir «{prop}» de {from} a", {
+                              db: p.databaseName,
+                              prop: p.propertyName,
+                              from: TYPE_LABELS[p.from],
+                            })}{" "}
+                            <strong>{TYPE_LABELS[p.to]}</strong>
                           </div>
                           <div className="ai-proposal-preview">
                             {p.marked.length > 0
-                              ? `Quedarán marcadas las filas con: ${p.marked.join(", ")}. Las demás, sin marcar.`
-                              : `Lo que no encaje en el tipo nuevo se vacía (ahora ${p.values} ${p.values === 1 ? "fila tiene" : "filas tienen"} valor).`}
+                              ? t("Quedarán marcadas las filas con: {n1}. Las demás, sin marcar.", {
+                                  n1: p.marked.join(", "),
+                                })
+                              : t(
+                                  p.values === 1
+                                    ? "Lo que no encaje en el tipo nuevo se vacía (ahora 1 fila tiene valor)."
+                                    : "Lo que no encaje en el tipo nuevo se vacía (ahora {n} filas tienen valor).",
+                                  { n: p.values },
+                                )}
                           </div>
                         </>
                       ) : p.kind === "createPage" ? (
                         <>
                           <div className="ai-proposal-title">
-                            Crear la página «{p.title}»
-                            {p.parentTitle && <> dentro de «{p.parentTitle}»</>}
+                            {p.parentTitle
+                              ? t("Crear la página «{title}» dentro de «{parent}»", {
+                                  title: p.title,
+                                  parent: p.parentTitle,
+                                })
+                              : t("Crear la página «{title}»", { title: p.title })}
                           </div>
                           {p.paragraphs.length > 0 && (
                             <div className="ai-proposal-preview">
@@ -356,25 +386,25 @@ export function AiPanel({
                               className="ai-apply"
                               onClick={() => void apply(p)}
                             >
-                              Aplicar
+                              {t("Aplicar")}
                             </button>
                             <button type="button" onClick={() => discard(p)}>
-                              Descartar
+                              {t("Descartar")}
                             </button>
                           </>
                         )}
-                        {s.state === "applying" && <span>Aplicando…</span>}
+                        {s.state === "applying" && <span>{t("Aplicando…")}</span>}
                         {s.state === "applied" && (
                           <>
                             <span className="ai-done">
-                              <Check size={14} aria-hidden="true" /> Aplicado
+                              <Check size={14} aria-hidden="true" /> {t("Aplicado")}
                             </span>
                             <button type="button" onClick={() => onOpenPage(s.pageId)}>
-                              Abrir
+                              {t("Abrir")}
                             </button>
                           </>
                         )}
-                        {s.state === "discarded" && <span>Descartado</span>}
+                        {s.state === "discarded" && <span>{t("Descartado")}</span>}
                         {s.state === "error" && (
                           <span className="ai-error" role="alert">
                             {s.message}
@@ -391,7 +421,7 @@ export function AiPanel({
                         key={s.id}
                         type="button"
                         onClick={() => onOpenPage(s.id)}
-                        title="Abrir"
+                        title={t("Abrir")}
                       >
                         <FileText size={13} aria-hidden="true" />
                         {s.title}
@@ -404,8 +434,8 @@ export function AiPanel({
           )}
         {!setup && busy && (
           <div className="ai-thinking">
-            <Loader2 size={15} className="ai-spin" aria-hidden="true" /> Pensando…
-            {mode === "local" && " (si hace rato que no lo usas, carga el modelo y tarda más)"}
+            <Loader2 size={15} className="ai-spin" aria-hidden="true" /> {t("Pensando…")}
+            {mode === "local" && t(" (si hace rato que no lo usas, carga el modelo y tarda más)")}
           </div>
         )}
       </div>
@@ -425,13 +455,13 @@ export function AiPanel({
           value={draft}
           placeholder={
             ready
-              ? "Pregunta o pide algo…"
+              ? t("Pregunta o pide algo…")
               : mode === "off"
-                ? "La IA está desactivada"
-                : "El asistente no está disponible"
+                ? t("La IA está desactivada")
+                : t("El asistente no está disponible")
           }
           disabled={!ready}
-          aria-label="Mensaje para el asistente"
+          aria-label={t("Mensaje para el asistente")}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -445,7 +475,7 @@ export function AiPanel({
         <button
           type="submit"
           className="ai-send"
-          aria-label="Enviar"
+          aria-label={t("Enviar")}
           disabled={!ready || busy || !draft.trim()}
         >
           <ArrowUp size={16} />

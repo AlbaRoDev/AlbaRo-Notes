@@ -15,6 +15,7 @@ import {
   FolderInput,
   House,
   Leaf,
+  Languages,
   Monitor,
   Moon,
   MousePointer,
@@ -22,6 +23,7 @@ import {
   Sparkles,
   Sun,
   Trash2,
+  Type,
 } from "lucide-react";
 import { AiPanel } from "./components/ai/AiPanel";
 import { AI_INLINE_EVENT } from "./components/editor/AiAssist";
@@ -42,7 +44,7 @@ import { TaskPeek } from "./components/workspace/TaskPeek";
 import type { TaskHost } from "./components/workspace/Tasks";
 import { useLayout } from "./components/workspace/use-layout";
 import { Workspace } from "./components/workspace/Workspace";
-import { setCursorPref, setStylePref, setThemePref, toggleTheme } from "./lib/theme";
+import { setCursorPref, setFontPref, setStylePref, setThemePref, toggleTheme } from "./lib/theme";
 import {
   createDatabasePage,
   createPage,
@@ -63,6 +65,7 @@ import { requestUpdateCheck } from "./lib/app-update";
 import { renamePage } from "./lib/rename";
 import type { PageSummary } from "./types";
 import "./App.css";
+import { setLang, t } from "./lib/i18n.ts";
 
 function App() {
   // The database check only says something when it fails; its schema version goes in the tooltip of the app version.
@@ -75,7 +78,7 @@ function App() {
   useEffect(() => {
     dbPing()
       .then(setDbSchema)
-      .catch((err) => setDbError(`No se puede abrir la base de datos: ${err}`));
+      .catch((err) => setDbError(t("No se puede abrir la base de datos: {err}", { err })));
     // the version comes from tauri.conf.json, so there is no second copy in the interface to forget
     getVersion()
       .then(setVersion)
@@ -162,12 +165,12 @@ function App() {
       below === 0
         ? ""
         : below === 1
-          ? " Se moverá también la subpágina o fila que contiene."
-          : ` Se moverán también las ${below} subpáginas y filas que contiene.`;
+          ? t(" Se moverá también la subpágina o fila que contiene.")
+          : t(" Se moverán también las {below} subpáginas y filas que contiene.", { below });
     const ok = await askConfirm({
-      title: `¿Mover «${page?.title || "Sin título"}» a la papelera?`,
-      detail: `${inside} Podrás restaurarla desde la papelera durante 30 días.`.trim(),
-      confirmLabel: "Mover a la papelera",
+      title: t("¿Mover «{title}» a la papelera?", { title: page?.title || t("Sin título") }),
+      detail: `${inside} ${t("Podrás restaurarla desde la papelera durante 30 días.")}`.trim(),
+      confirmLabel: t("Mover a la papelera"),
     });
     if (!ok) return false;
     try {
@@ -378,124 +381,180 @@ function App() {
   const commands: PaletteCommand[] = [
     {
       id: "go-notes",
-      label: "Ir a Notas",
-      keywords: "páginas apuntes documentos",
+      label: t("Ir a Notas"),
+      keywords: t("páginas apuntes documentos"),
       icon: FileText,
-      hint: "Ctrl+1",
+      hint: t("Ctrl+1"),
       run: () => enter("notes"),
     },
     {
       id: "go-manager",
-      label: "Ir al Gestor",
-      keywords: "calendario tareas tableros familias agenda",
+      label: t("Ir al Gestor"),
+      keywords: t("calendario tareas tableros familias agenda"),
       icon: CalendarCheck,
-      hint: "Ctrl+2",
+      hint: t("Ctrl+2"),
       run: () => enter("manager"),
     },
     {
       id: "trash",
-      label: "Abrir la papelera",
-      keywords: "borrado eliminado restaurar recuperar deshacer",
+      label: t("Abrir la papelera"),
+      keywords: t("borrado eliminado restaurar recuperar deshacer"),
       icon: Trash2,
       run: () => setTrashOpen(true),
     },
     {
       id: "go-home",
-      label: "Pantalla de inicio",
-      keywords: "inicio portada elegir",
+      label: t("Pantalla de inicio"),
+      keywords: t("inicio portada elegir"),
       icon: House,
       run: goHome,
     },
     {
       id: "ask-ai",
-      label: "Preguntar a la IA",
-      keywords: "asistente inteligencia artificial ollama chat",
+      label: t("Preguntar a la IA"),
+      keywords: t("asistente inteligencia artificial ollama chat"),
       icon: Sparkles,
-      hint: "Ctrl+J",
+      hint: t("Ctrl+J"),
       run: openAi,
     },
     {
       id: "new-page",
-      label: "Nueva página",
-      keywords: "crear añadir nota documento",
+      label: t("Nueva página"),
+      keywords: t("crear añadir nota documento"),
       icon: FilePlus,
       run: () => handleCreate("page"),
     },
     {
       id: "import-files",
-      label: "Importar documentos…",
-      keywords: "abrir markdown md docx word html texto archivos páginas",
+      label: t("Importar documentos…"),
+      keywords: t("abrir markdown md docx word html texto archivos páginas"),
       icon: FileDown,
       run: () => window.dispatchEvent(new Event(IMPORT_FILES_EVENT)),
     },
     {
       id: "import-folder",
-      label: "Importar una carpeta…",
-      keywords: "abrir markdown md notas obsidian directorio páginas",
+      label: t("Importar una carpeta…"),
+      keywords: t("abrir markdown md notas obsidian directorio páginas"),
       icon: FolderInput,
       run: () => window.dispatchEvent(new Event(IMPORT_FOLDER_EVENT)),
     },
     {
       id: "new-database",
-      label: "Nueva base de datos",
-      keywords: "crear añadir tabla",
+      label: t("Nueva base de datos"),
+      keywords: t("crear añadir tabla"),
       icon: Database,
       run: () => handleCreate("database"),
     },
     {
       id: "theme-light",
-      label: "Tema claro",
-      keywords: "modo apariencia día",
+      label: t("Tema claro"),
+      keywords: t("modo apariencia día"),
       icon: Sun,
       run: () => setThemePref("light"),
     },
     {
       id: "theme-dark",
-      label: "Tema oscuro",
-      keywords: "modo apariencia noche",
+      label: t("Tema oscuro"),
+      keywords: t("modo apariencia noche"),
       icon: Moon,
-      hint: "Ctrl+Shift+L",
+      hint: t("Ctrl+Shift+L"),
       run: () => setThemePref("dark"),
     },
     {
       id: "style-themed",
-      label: "Estilo de estaciones",
-      keywords: "colores paleta primavera verano otoño invierno navidad temporada",
+      label: t("Estilo de estaciones"),
+      keywords: t("colores paleta primavera verano otoño invierno navidad temporada"),
       icon: Leaf,
       run: () => setStylePref("themed"),
     },
     {
       id: "style-sober",
-      label: "Estilo sobrio",
-      keywords: "colores paleta notion clásico",
+      label: t("Estilo sobrio"),
+      keywords: t("colores paleta notion clásico"),
       icon: Circle,
       run: () => setStylePref("sober"),
     },
     {
       id: "cursor-minimal",
-      label: "Puntero minimalista",
-      keywords: "ratón cursor flecha mano apariencia fino sin color",
+      label: t("Puntero minimalista"),
+      keywords: t("ratón cursor flecha mano apariencia fino sin color"),
       icon: MousePointer2,
       run: () => setCursorPref("minimal"),
     },
     {
       id: "cursor-system",
-      label: "Puntero del sistema",
-      keywords: "ratón cursor flecha mano apariencia",
+      label: t("Puntero del sistema"),
+      keywords: t("ratón cursor flecha mano apariencia"),
       icon: MousePointer,
       run: () => setCursorPref("system"),
     },
     {
+      id: "lang-es",
+      label: "Idioma: español",
+      keywords: "language idioma lengua español spanish",
+      icon: Languages,
+      run: () => setLang("es"),
+    },
+    {
+      id: "lang-en",
+      label: "Language: English",
+      keywords: "language idioma lengua english inglés",
+      icon: Languages,
+      run: () => setLang("en"),
+    },
+    {
+      id: "font-system",
+      label: t("Letra del sistema"),
+      keywords: t("tipografía fuente letra apariencia"),
+      icon: Type,
+      run: () => setFontPref("system"),
+    },
+    {
+      id: "font-serif",
+      label: t("Letra con serifa"),
+      keywords: t("tipografía fuente letra apariencia"),
+      icon: Type,
+      run: () => setFontPref("serif"),
+    },
+    {
+      id: "font-garamond",
+      label: t("Letra Garamond"),
+      keywords: t("tipografía fuente letra apariencia"),
+      icon: Type,
+      run: () => setFontPref("garamond"),
+    },
+    {
+      id: "font-antiqua",
+      label: t("Letra Antiqua"),
+      keywords: t("tipografía fuente letra apariencia"),
+      icon: Type,
+      run: () => setFontPref("antiqua"),
+    },
+    {
+      id: "font-fraktur",
+      label: t("Letra Fraktur"),
+      keywords: t("tipografía fuente letra apariencia"),
+      icon: Type,
+      run: () => setFontPref("fraktur"),
+    },
+    {
+      id: "font-mono",
+      label: t("Letra monoespaciada"),
+      keywords: t("tipografía fuente letra apariencia"),
+      icon: Type,
+      run: () => setFontPref("mono"),
+    },
+    {
       id: "check-updates",
-      label: "Buscar actualizaciones",
-      keywords: "versión nueva actualizar update instalar",
+      label: t("Buscar actualizaciones"),
+      keywords: t("versión nueva actualizar update instalar"),
       icon: Download,
       run: requestUpdateCheck,
     },
     {
       id: "theme-system",
-      label: "Tema del sistema",
-      keywords: "modo apariencia automático",
+      label: t("Tema del sistema"),
+      keywords: t("modo apariencia automático"),
       icon: Monitor,
       run: () => setThemePref("system"),
     },
@@ -559,7 +618,7 @@ function App() {
           {selectedPageId && (
             // Keyed by page so a page that fails to draw does not stop the next one from opening. Siblings need
             // different keys: with the same one React duplicated the header of every page visited.
-            <ErrorBoundary key={`editor-${selectedPageId}`} what="la página">
+            <ErrorBoundary key={`editor-${selectedPageId}`} what={t("la página")}>
               <PageEditor
                 // A database page's editor is title-only, so it needs its own editor instance.
                 key={selectedPage?.ownDatabaseId ? "database" : "page"}
@@ -599,7 +658,11 @@ function App() {
           {version && (
             <p
               className="app-footer"
-              title={dbSchema === null ? undefined : `Base de datos: esquema v${dbSchema}`}
+              title={
+                dbSchema === null
+                  ? undefined
+                  : t("Base de datos: esquema v{dbSchema}", { dbSchema })
+              }
             >
               AlbaRo Notes v{version}
             </p>

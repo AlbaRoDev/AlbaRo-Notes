@@ -2,6 +2,7 @@ import { useState, type KeyboardEvent } from "react";
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import { useKatex } from "../../lib/katex-lazy";
 import { renderLatex } from "../../lib/render-latex";
+import { t } from "../../lib/i18n.ts";
 
 export function EquationView({ node, updateAttributes, getPos, editor }: NodeViewProps) {
   const katex = useKatex();
@@ -57,7 +58,7 @@ export function EquationView({ node, updateAttributes, getPos, editor }: NodeVie
           type="text"
           maxLength={10_000} // mirrors MAX_LATEX_LEN in validate.rs
           value={draft}
-          placeholder="LaTeX…"
+          placeholder={t("LaTeX…")}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e: KeyboardEvent) => {
             if (e.key === "Enter") {

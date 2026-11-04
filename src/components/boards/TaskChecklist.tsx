@@ -8,6 +8,7 @@ import {
 } from "../../lib/db-client";
 import type { ChecklistItem } from "../../types";
 import "./task-checklist.css";
+import { t } from "../../lib/i18n.ts";
 
 /** «2/5», or null when there is nothing to count. */
 function progressLabel(items: { checked: boolean }[]): string | null {
@@ -69,12 +70,12 @@ export function TaskChecklist({ taskId, onChanged }: { taskId: string; onChanged
                 checked={item.checked}
                 onChange={(e) => void run(() => setChecklistItem(taskId, index, e.target.checked))}
               />
-              <span>{item.text || "(vacío)"}</span>
+              <span>{item.text || t("(vacío)")}</span>
             </label>
             <button
               type="button"
-              aria-label={`Quitar «${item.text}» de la lista`}
-              title="Quitar de la lista"
+              aria-label={t("Quitar «{text}» de la lista", { text: item.text })}
+              title={t("Quitar de la lista")}
               onClick={() => void run(() => removeChecklistItem(taskId, index))}
             >
               <X size={12} aria-hidden="true" />
@@ -87,8 +88,8 @@ export function TaskChecklist({ taskId, onChanged }: { taskId: string; onChanged
         className="task-checklist-add"
         value={draft}
         maxLength={200}
-        placeholder="Añadir un elemento…"
-        aria-label="Añadir un elemento a la lista"
+        placeholder={t("Añadir un elemento…")}
+        aria-label={t("Añadir un elemento a la lista")}
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={(e) => {
           if (e.key !== "Enter" || !draft.trim()) return;

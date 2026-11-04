@@ -3,6 +3,7 @@ import { ListChecks } from "lucide-react";
 import { tasksOfPage } from "../../lib/db-client";
 import { subscribeLinkChanges } from "../../lib/links-bus";
 import type { PageRef, PageSummary } from "../../types";
+import { t } from "../../lib/i18n.ts";
 
 /** «Tareas relacionadas»: the tasks that link to this page, under it. Nothing is shown when there are none. */
 export function RelatedTasks({
@@ -33,12 +34,12 @@ export function RelatedTasks({
 
   if (tasks.length === 0) return null;
   return (
-    <section className="related-tasks" aria-label="Tareas relacionadas">
-      <h3>Tareas relacionadas</h3>
+    <section className="related-tasks" aria-label={t("Tareas relacionadas")}>
+      <h3>{t("Tareas relacionadas")}</h3>
       <ul>
         {tasks.map((task) => (
           <li key={task.id}>
-            <button type="button" onClick={() => onOpen(task.id)} title="Abrir la tarea">
+            <button type="button" onClick={() => onOpen(task.id)} title={t("Abrir la tarea")}>
               <ListChecks size={14} aria-hidden="true" /> {task.title}
             </button>
           </li>

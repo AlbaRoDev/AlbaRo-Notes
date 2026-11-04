@@ -1,4 +1,6 @@
-import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+import { locale, t } from "./i18n.ts";
+import { convertFileSrc } from "@tauri-apps/api/core";
+import { invoke } from "./invoke.ts";
 import { appDataDir, join } from "@tauri-apps/api/path";
 
 export type MediaKind = "image" | "video" | "audio" | "file";
@@ -47,11 +49,11 @@ export function asHttpUrl(value: unknown): string | null {
 export function errorMessage(e: unknown): string {
   if (typeof e === "string") return e;
   if (e instanceof Error) return e.message;
-  return "Error desconocido";
+  return t("Error desconocido");
 }
 
 export function formatSize(bytes: number): string {
-  const nf = new Intl.NumberFormat("es", { maximumFractionDigits: 1 });
+  const nf = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${nf.format(bytes / 1024)} KB`;
   return `${nf.format(bytes / (1024 * 1024))} MB`;
@@ -67,7 +69,9 @@ export function mediaKindOf(mime: string): MediaKind {
 /** Copies a File into the app's attachments folder. The bytes travel as a raw IPC body — no JSON, no base64. */
 export async function storeAttachment(file: File): Promise<AttachmentInfo> {
   if (file.size > MAX_ATTACHMENT_BYTES) {
-    throw new Error(`El archivo supera el límite de ${MAX_ATTACHMENT_BYTES / (1024 * 1024)} MB`);
+    throw new Error(
+      t("El archivo supera el límite de {mb} MB", { mb: MAX_ATTACHMENT_BYTES / (1024 * 1024) }),
+    );
   }
   // Header values must be ASCII; Rust sanitizes again.
   const ext = (file.name.includes(".") ? (file.name.split(".").pop() ?? "") : "").replace(

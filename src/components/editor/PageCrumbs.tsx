@@ -5,6 +5,7 @@ import type { PageSummary } from "../../types";
 import { PageIcon } from "../PageIcon";
 import { PageRef } from "./PageRef";
 import { linkablePages } from "../../lib/page-links";
+import { t } from "../../lib/i18n.ts";
 
 /** How long the pointer rests on a step before its list opens, and how long the list waits before closing when it leaves. */
 const OPEN_MS = 150;
@@ -20,7 +21,7 @@ function Crumb({ page }: { page: PageSummary }) {
           <PageIcon icon={page.icon} size={14} />
         </span>
       )}
-      <span className="page-crumb-title">{page.title || "Sin título"}</span>
+      <span className="page-crumb-title">{page.title || t("Sin título")}</span>
     </>
   );
 }
@@ -172,7 +173,7 @@ function PageMenu({
       ref={box}
       className="crumb-menu"
       role="menu"
-      aria-label="Páginas de este nivel"
+      aria-label={t("Páginas de este nivel")}
       style={{ left: anchor.left, top: anchor.top, width: MENU_WIDTH }}
       onMouseEnter={() => onPointer?.(true)}
       onMouseLeave={() => onPointer?.(false)}

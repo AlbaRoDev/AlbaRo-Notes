@@ -9,7 +9,6 @@ use serde::Serialize;
 use serde_json::json;
 
 pub const ROLE: &str = "tasks";
-const TITLE: &str = "Tareas";
 
 #[derive(Serialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -47,16 +46,22 @@ pub fn ensure_task_base(conn: &Connection) -> Result<TaskBase, String> {
     // the database's name is its page's title
     tx.execute(
         "UPDATE blocks SET content = ?1 WHERE page_id = ?2 AND type = 'doc' AND parent_id IS NULL",
-        [db::database_page_doc(TITLE).to_string(), page.id.clone()],
+        [db::database_page_doc(crate::lang::pick("Tareas", "Tasks")).to_string(), page.id.clone()],
     )
     .map_err(sql)?;
 
-    let state = databases::add_property(&tx, &database_id, "Estado", "select", &json!({ "options": ["Por hacer", "En curso", "Hecha"] }))?;
-    for (option, color) in [("Por hacer", "gray"), ("En curso", "yellow"), ("Hecha", "green")] {
+    use crate::lang::pick;
+    let states = [
+        (pick("Por hacer", "To do"), "gray"),
+        (pick("En curso", "In progress"), "yellow"),
+        (pick("Hecha", "Done"), "green"),
+    ];
+    let state = databases::add_property(&tx, &database_id, pick("Estado", "Status"), "select", &json!({ "options": states.map(|(o, _)| o) }))?;
+    for (option, color) in states {
         databases::set_option_color(&tx, &state.id, option, color)?;
     }
-    databases::add_property(&tx, &database_id, "Fecha límite", "date", &json!({}))?;
-    databases::add_property(&tx, &database_id, "Categorías", "tags", &json!({ "options": [] }))?;
+    databases::add_property(&tx, &database_id, pick("Fecha límite", "Due date"), "date", &json!({}))?;
+    databases::add_property(&tx, &database_id, pick("Categorías", "Categories"), "tags", &json!({ "options": [] }))?;
     tx.commit().map_err(sql)?;
     Ok(TaskBase { page_id: page.id, database_id })
 }

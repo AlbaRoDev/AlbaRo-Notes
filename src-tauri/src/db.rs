@@ -740,7 +740,11 @@ pub(crate) fn derive_page_title(conn: &Connection, page_id: &str) -> rusqlite::R
         .and_then(|doc| extract_first_heading_text(&doc))
         .unwrap_or_default();
 
-    Ok(if title.is_empty() { "Sin título".to_string() } else { title })
+    Ok(if title.is_empty() {
+        crate::lang::pick("Sin título", "Untitled").to_string()
+    } else {
+        title
+    })
 }
 
 pub fn list_pages(conn: &Connection) -> rusqlite::Result<Vec<PageSummary>> {
@@ -919,7 +923,7 @@ pub(crate) fn insert_page(conn: &Connection, parent_id: Option<&str>, database_i
 
     Ok(PageSummary {
         id: page_id,
-        title: "Sin título".to_string(),
+        title: crate::lang::pick("Sin título", "Untitled").to_string(),
         parent_id: parent_id.map(str::to_string),
         database_id: database_id.map(str::to_string),
         kind: kind.to_string(),

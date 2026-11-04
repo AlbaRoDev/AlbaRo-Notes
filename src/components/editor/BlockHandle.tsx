@@ -8,6 +8,7 @@ import { ChevronRight, Copy, GripVertical, Plus, Trash2 } from "lucide-react";
 import { selectBlock } from "./BlockSelect";
 import { turnInto, type TurnKind } from "./block-commands";
 import "./BlockHandle.css";
+import { t } from "../../lib/i18n.ts";
 
 // Constants, not inline objects: the handle re-registers its plugin (and hides) whenever these change.
 const POSITION = { placement: "left-start" } as const;
@@ -25,18 +26,18 @@ const NESTED = {
 
 // What «Convertir en» offers, and the blocks it applies to (the text ones: not media, tables or databases).
 const TURN_OPTIONS: { kind: TurnKind; label: string }[] = [
-  { kind: "paragraph", label: "Texto" },
-  { kind: "h1", label: "Encabezado 1" },
-  { kind: "h2", label: "Encabezado 2" },
-  { kind: "h3", label: "Encabezado 3" },
-  { kind: "h4", label: "Encabezado 4" },
-  { kind: "task", label: "Checklist" },
-  { kind: "bullet", label: "Lista con viñetas" },
-  { kind: "ordered", label: "Lista numerada" },
-  { kind: "toggle", label: "Lista desplegable" },
-  { kind: "code", label: "Bloque de código" },
-  { kind: "quote", label: "Cita" },
-  { kind: "callout", label: "Destacado" },
+  { kind: "paragraph", label: t("Texto") },
+  { kind: "h1", label: t("Encabezado 1") },
+  { kind: "h2", label: t("Encabezado 2") },
+  { kind: "h3", label: t("Encabezado 3") },
+  { kind: "h4", label: t("Encabezado 4") },
+  { kind: "task", label: t("Checklist") },
+  { kind: "bullet", label: t("Lista con viñetas") },
+  { kind: "ordered", label: t("Lista numerada") },
+  { kind: "toggle", label: t("Lista desplegable") },
+  { kind: "code", label: t("Bloque de código") },
+  { kind: "quote", label: t("Cita") },
+  { kind: "callout", label: t("Destacado") },
 ];
 const TURNABLE = [
   "paragraph",
@@ -174,8 +175,8 @@ export function BlockHandle({ editor }: { editor: Editor }) {
         <button
           type="button"
           className="block-handle-plus"
-          aria-label="Añadir un bloque debajo"
-          title="Añadir un bloque debajo"
+          aria-label={t("Añadir un bloque debajo")}
+          title={t("Añadir un bloque debajo")}
           onMouseDown={(e) => e.preventDefault()}
           onClick={addBelow}
         >
@@ -183,9 +184,9 @@ export function BlockHandle({ editor }: { editor: Editor }) {
         </button>
         <span
           className="block-handle-grip"
-          title="Arrastra para mover el bloque; pulsa para ver las opciones"
+          title={t("Arrastra para mover el bloque; pulsa para ver las opciones")}
           role="button"
-          aria-label="Opciones del bloque"
+          aria-label={t("Opciones del bloque")}
           onClick={openMenu}
         >
           <GripVertical size={16} />
@@ -206,7 +207,7 @@ export function BlockHandle({ editor }: { editor: Editor }) {
                 aria-expanded={turning}
                 onClick={() => setTurning((t) => !t)}
               >
-                <ChevronRight size={14} aria-hidden="true" /> Convertir en
+                <ChevronRight size={14} aria-hidden="true" /> {t("Convertir en")}
               </button>
             )}
             {turning &&
@@ -222,10 +223,10 @@ export function BlockHandle({ editor }: { editor: Editor }) {
                 </button>
               ))}
             <button type="button" role="menuitem" onClick={duplicateBlock}>
-              <Copy size={14} aria-hidden="true" /> Duplicar
+              <Copy size={14} aria-hidden="true" /> {t("Duplicar")}
             </button>
             <button type="button" role="menuitem" onClick={removeBlock}>
-              <Trash2 size={14} aria-hidden="true" /> Borrar
+              <Trash2 size={14} aria-hidden="true" /> {t("Borrar")}
             </button>
           </div>,
           document.body,

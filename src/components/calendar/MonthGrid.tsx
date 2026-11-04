@@ -5,6 +5,7 @@ import { hasDragItem, readDragItem } from "../../lib/drag-item";
 import { useState } from "react";
 import type { CalendarEntry, Deadline } from "../../types";
 import { keyOf } from "./entry-input";
+import { t } from "../../lib/i18n.ts";
 
 /** Chips shown per day before «+N más». */
 const SHOWN = 3;
@@ -84,21 +85,25 @@ export function MonthGrid({
                 }}
               >
                 <div className="cal-month-num">
-                  <button type="button" onClick={() => onOpenDay(date)} title="Abrir el día">
+                  <button type="button" onClick={() => onOpenDay(date)} title={t("Abrir el día")}>
                     {Number(date.slice(8))}
                   </button>
                   <button
                     type="button"
                     className="cal-add"
                     onClick={() => onCreateOnDay(date)}
-                    aria-label={`Nueva cita el ${date}`}
-                    title="Nueva cita"
+                    aria-label={t("Nueva cita el {date}", { date })}
+                    title={t("Nueva cita")}
                   >
                     <Plus size={13} aria-hidden="true" />
                   </button>
                 </div>
                 {due.slice(0, SHOWN).map((d) => (
-                  <div key={d.taskId} className="cal-deadline" title={`Fecha límite: ${d.title}`}>
+                  <div
+                    key={d.taskId}
+                    className="cal-deadline"
+                    title={t("Fecha límite: {title}", { title: d.title })}
+                  >
                     ⚑ {d.title}
                   </div>
                 ))}
@@ -118,7 +123,7 @@ export function MonthGrid({
                 ))}
                 {items.length > SHOWN && (
                   <button type="button" className="cal-more" onClick={() => onOpenDay(date)}>
-                    +{items.length - SHOWN} más
+                    {t("+{count} más", { count: items.length - SHOWN })}
                   </button>
                 )}
               </div>

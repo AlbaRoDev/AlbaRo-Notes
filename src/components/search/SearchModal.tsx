@@ -4,6 +4,7 @@ import { Database, FileText, Search, type LucideIcon } from "lucide-react";
 import { searchPages } from "../../lib/db-client";
 import type { SearchResult } from "../../types";
 import "./SearchModal.css";
+import { t } from "../../lib/i18n.ts";
 
 // Rust wraps each match in these private-use characters (search.rs MARK_START / MARK_END).
 const MARK_START = String.fromCharCode(0xe000);
@@ -104,10 +105,13 @@ export function SearchModal({
   // While typing, matching actions come first (they're few and exact); with an empty box, recent pages do.
   const sections: { title: string; items: Item[] }[] = [
     {
-      title: searching ? "Páginas" : "Recientes",
+      title: searching ? t("Páginas") : t("Recientes"),
       items: pages.map((page) => ({ kind: "page", page }) as Item),
     },
-    { title: "Acciones", items: actions.map((command) => ({ kind: "command", command }) as Item) },
+    {
+      title: t("Acciones"),
+      items: actions.map((command) => ({ kind: "command", command }) as Item),
+    },
   ];
   if (searching) sections.reverse();
   const items = sections.flatMap((s) => s.items);
@@ -140,14 +144,14 @@ export function SearchModal({
 
   return createPortal(
     <div className="search-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="search-modal" role="dialog" aria-modal="true" aria-label="Buscar">
+      <div className="search-modal" role="dialog" aria-modal="true" aria-label={t("Buscar")}>
         <div className="search-input-row">
           <Search size={18} aria-hidden="true" />
           <input
             autoFocus
             type="text"
             maxLength={200}
-            placeholder="Busca páginas, bases de datos y filas, o una acción…"
+            placeholder={t("Busca páginas, bases de datos y filas, o una acción…")}
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
@@ -155,7 +159,7 @@ export function SearchModal({
             }}
             onKeyDown={onKeyDown}
             role="combobox"
-            aria-label="Buscar"
+            aria-label={t("Buscar")}
             aria-expanded={items.length > 0}
             aria-controls="search-results"
             aria-activedescendant={items.length ? `search-item-${selected}` : undefined}
@@ -233,22 +237,24 @@ export function SearchModal({
           </p>
         )}
         {results && items.length === 0 && !error && (
-          <p className="search-empty">{searching ? "Sin resultados" : "Todavía no hay páginas"}</p>
+          <p className="search-empty">
+            {searching ? t("Sin resultados") : t("Todavía no hay páginas")}
+          </p>
         )}
         <div className="search-footer">
           <span>
             <kbd>↑</kbd>
-            <kbd>↓</kbd> moverse
+            <kbd>↓</kbd> {t("moverse")}
           </span>
           <span>
-            <kbd>Intro</kbd> elegir
+            <kbd>{t("Intro")}</kbd> {t("elegir")}
           </span>
           <span>
-            <kbd>Esc</kbd> cerrar
+            <kbd>{t("Esc")}</kbd> {t("cerrar")}
           </span>
           <span className="search-footer-end">
-            <kbd>Ctrl</kbd>
-            <kbd>K</kbd> abrir desde cualquier sitio
+            <kbd>{t("Ctrl")}</kbd>
+            <kbd>K</kbd> {t("abrir desde cualquier sitio")}
           </span>
         </div>
       </div>

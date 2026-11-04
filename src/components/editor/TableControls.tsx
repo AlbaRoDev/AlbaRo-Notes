@@ -4,6 +4,7 @@ import type { Editor } from "@tiptap/react";
 import { TextSelection } from "@tiptap/pm/state";
 import { GripHorizontal, GripVertical, Plus } from "lucide-react";
 import { MAX_TABLE_COLS, MAX_TABLE_ROWS } from "./LimitedTable";
+import { t } from "../../lib/i18n.ts";
 
 interface Hover {
   table: HTMLTableElement;
@@ -131,26 +132,26 @@ export function TableControls({ editor }: { editor: Editor | null }) {
     menu?.kind === "row"
       ? [
           {
-            label: "Insertar fila encima",
+            label: t("Insertar fila encima"),
             off: rows >= MAX_TABLE_ROWS,
             go: () => at(menu.hover.row, 0).addRowBefore().run(),
           },
           {
-            label: "Insertar fila debajo",
+            label: t("Insertar fila debajo"),
             off: rows >= MAX_TABLE_ROWS,
             go: () => at(menu.hover.row, 0).addRowAfter().run(),
           },
           ...(menu.hover.row === 0
             ? [
                 {
-                  label: "Fila de encabezado",
+                  label: t("Fila de encabezado"),
                   off: false,
                   go: () => at(0, 0).toggleHeaderRow().run(),
                 },
               ]
             : []),
           {
-            label: "Borrar fila",
+            label: t("Borrar fila"),
             off: rows <= 1,
             go: () => at(menu.hover.row, 0).deleteRow().run(),
           },
@@ -158,26 +159,26 @@ export function TableControls({ editor }: { editor: Editor | null }) {
       : menu
         ? [
             {
-              label: "Insertar columna a la izquierda",
+              label: t("Insertar columna a la izquierda"),
               off: cols >= MAX_TABLE_COLS,
               go: () => at(0, menu.hover.col).addColumnBefore().run(),
             },
             {
-              label: "Insertar columna a la derecha",
+              label: t("Insertar columna a la derecha"),
               off: cols >= MAX_TABLE_COLS,
               go: () => at(0, menu.hover.col).addColumnAfter().run(),
             },
             ...(menu.hover.col === 0
               ? [
                   {
-                    label: "Columna de encabezado",
+                    label: t("Columna de encabezado"),
                     off: false,
                     go: () => at(0, 0).toggleHeaderColumn().run(),
                   },
                 ]
               : []),
             {
-              label: "Borrar columna",
+              label: t("Borrar columna"),
               off: cols <= 1,
               go: () => at(0, menu.hover.col).deleteColumn().run(),
             },
@@ -191,8 +192,8 @@ export function TableControls({ editor }: { editor: Editor | null }) {
         className="table-ui-grip"
         // on the table's left border, as Notion's (the block's own handle is further left)
         style={{ left: box.left - 6, top: rowBox.top + rowBox.height / 2 - 10 }}
-        title="Opciones de la fila"
-        aria-label="Opciones de la fila"
+        title={t("Opciones de la fila")}
+        aria-label={t("Opciones de la fila")}
         onMouseDown={(e) => e.preventDefault()}
         onClick={(e) => openMenu("row", e)}
       >
@@ -202,8 +203,8 @@ export function TableControls({ editor }: { editor: Editor | null }) {
         type="button"
         className="table-ui-grip table-ui-grip-col"
         style={{ left: cellBox.left + cellBox.width / 2 - 10, top: box.top - 6 }}
-        title="Opciones de la columna"
-        aria-label="Opciones de la columna"
+        title={t("Opciones de la columna")}
+        aria-label={t("Opciones de la columna")}
         onMouseDown={(e) => e.preventDefault()}
         onClick={(e) => openMenu("col", e)}
       >
@@ -214,8 +215,8 @@ export function TableControls({ editor }: { editor: Editor | null }) {
           type="button"
           className="table-ui-add"
           style={{ left: box.left, top: box.bottom + 2, width: right - box.left, height: 16 }}
-          title="Añadir una fila"
-          aria-label="Añadir una fila"
+          title={t("Añadir una fila")}
+          aria-label={t("Añadir una fila")}
           onMouseDown={(e) => e.preventDefault()}
           onClick={() =>
             run(() =>
@@ -233,8 +234,8 @@ export function TableControls({ editor }: { editor: Editor | null }) {
           type="button"
           className="table-ui-add"
           style={{ left: right + 2, top: box.top, width: 16, height: box.height }}
-          title="Añadir una columna"
-          aria-label="Añadir una columna"
+          title={t("Añadir una columna")}
+          aria-label={t("Añadir una columna")}
           onMouseDown={(e) => e.preventDefault()}
           onClick={() =>
             run(() =>
@@ -265,7 +266,7 @@ export function TableControls({ editor }: { editor: Editor | null }) {
             role="menuitem"
             onClick={() => run(() => at(0, 0).deleteTable().run())}
           >
-            Borrar tabla
+            {t("Borrar tabla")}
           </button>
         </div>
       )}

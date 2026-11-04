@@ -1,6 +1,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { answerConfirm, pendingQuestion, subscribeConfirm } from "../lib/confirm";
 import "./confirm-host.css";
+import { t } from "../lib/i18n.ts";
 
 /** The dialog behind `askConfirm`. Enter confirms (the button has the focus), Esc or a click outside cancels. */
 export function ConfirmHost() {
@@ -29,7 +30,7 @@ export function ConfirmHost() {
         {question.detail && <p>{question.detail}</p>}
         <div className="confirm-actions">
           <button type="button" onClick={() => answerConfirm(false)}>
-            Cancelar
+            {t("Cancelar")}
           </button>
           <button
             type="button"

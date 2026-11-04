@@ -5,6 +5,7 @@ import type { DatabaseSummary } from "../../types";
 import { focusLineAfterNode } from "../editor/media-commands";
 import { DatabaseTable } from "./DatabaseTable";
 import "./DatabaseView.css";
+import { t } from "../../lib/i18n.ts";
 
 /** Shown while the view has no source yet («Vista de base de datos»): pick one of the existing databases. */
 function SourcePicker({
@@ -26,21 +27,23 @@ function SourcePicker({
   }, []);
 
   return (
-    <div className="db-root db-panel" role="group" aria-label="Elegir base de datos">
+    <div className="db-root db-panel" role="group" aria-label={t("Elegir base de datos")}>
       {databases === undefined ? (
-        <p className="db-loading">Cargando…</p>
+        <p className="db-loading">{t("Cargando…")}</p>
       ) : databases.length === 0 ? (
-        <p className="db-loading">Aún no hay bases de datos: crea una desde el «+» del sidebar.</p>
+        <p className="db-loading">
+          {t("Aún no hay bases de datos: crea una desde el «+» del sidebar.")}
+        </p>
       ) : (
         <label>
-          Base de datos de origen
+          {t("Base de datos de origen")}
           <select
             autoFocus
             defaultValue=""
             onChange={(e) => e.target.value && onPick(e.target.value)}
           >
             <option value="" disabled>
-              Elegir…
+              {t("Elegir…")}
             </option>
             {databases.map((d) => (
               <option key={d.id} value={d.id}>
@@ -52,7 +55,7 @@ function SourcePicker({
       )}
       <div className="db-panel-actions">
         <button type="button" onClick={onCancel}>
-          Cancelar
+          {t("Cancelar")}
         </button>
       </div>
     </div>

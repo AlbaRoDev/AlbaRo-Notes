@@ -1,28 +1,23 @@
 import type { Repeat } from "../types";
-import { MONTH_NAMES, addDays, dayNumber } from "./date-utils.ts";
+import { MONTH_NAMES, WEEKDAYS_LONG, addDays, dayNumber } from "./date-utils.ts";
+import { locale, t } from "./i18n.ts";
 
 // The words of a repeat rule: the facts of the day an entry starts on and the rule read back in Spanish.
 // Pure on purpose, so tests/repeat-text.test.mjs can check them without a screen.
 
 export const FREQ_UNITS: { id: Repeat["freq"]; one: string; many: string }[] = [
-  { id: "daily", one: "día", many: "días" },
-  { id: "weekly", one: "semana", many: "semanas" },
-  { id: "monthly", one: "mes", many: "meses" },
-  { id: "yearly", one: "año", many: "años" },
+  { id: "daily", one: t("día"), many: t("días") },
+  { id: "weekly", one: t("semana"), many: t("semanas") },
+  { id: "monthly", one: t("mes"), many: t("meses") },
+  { id: "yearly", one: t("año"), many: t("años") },
 ];
 
-export const WEEKDAY_NAMES = [
-  "lunes",
-  "martes",
-  "miércoles",
-  "jueves",
-  "viernes",
-  "sábado",
-  "domingo",
-];
-/** «los lunes», «los sábados»: the plural of the weekdays that change. */
-const WEEKDAY_PLURAL = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábados", "domingos"];
-export const ORDINALS = ["", "primer", "segundo", "tercer", "cuarto"];
+export const WEEKDAY_NAMES = WEEKDAYS_LONG;
+/** «los lunes», «los sábados»: the plural of the weekdays (in Spanish only Saturday and Sunday change). */
+const WEEKDAY_PLURAL = WEEKDAY_NAMES.map((n, i) =>
+  locale.startsWith("es") && i < 5 ? n : n + "s",
+);
+export const ORDINALS = ["", t("primer"), t("segundo"), t("tercer"), t("cuarto")];
 
 /** 0 = Monday … 6 = Sunday. */
 const weekdayOf = (date: string) => (((dayNumber(date) + 3) % 7) + 7) % 7;
@@ -39,25 +34,39 @@ export const defaultRepeatEnd = (freq: Repeat["freq"], startDate: string) =>
 export function describeRepeat(r: Repeat, startDate: string): string {
   const f = dayFacts(startDate);
   const unit = FREQ_UNITS.find((u) => u.id === r.freq)!;
-  let text = r.interval === 1 ? `Cada ${unit.one}` : `Cada ${r.interval} ${unit.many}`;
+  let text =
+    r.interval === 1
+      ? t("Cada {unit}", { unit: unit.one })
+      : t("Cada {n} {unit}", { n: r.interval, unit: unit.many });
   const days = [...r.weekdays].sort();
   if (r.freq === "weekly") {
     const names = (days.length ? days : [f.wd]).map((d) => WEEKDAY_PLURAL[d]);
-    if (days.length === 5 && days.join() === "0,1,2,3,4") text += ", de lunes a viernes";
-    else if (names.length === 1) text += `, el ${WEEKDAY_NAMES[(days.length ? days : [f.wd])[0]]}`;
-    else text += `, los ${names.slice(0, -1).join(", ")} y ${names[names.length - 1]}`;
+    if (days.length === 5 && days.join() === "0,1,2,3,4") text += t(", de lunes a viernes");
+    else if (names.length === 1)
+      text += t(", el {day}", { day: WEEKDAY_NAMES[(days.length ? days : [f.wd])[0]] });
+    else
+      text += t(", los {days} y {last}", {
+        days: names.slice(0, -1).join(", "),
+        last: names[names.length - 1],
+      });
   } else if (r.freq === "monthly" || r.freq === "yearly") {
-    const of = r.freq === "yearly" ? ` de ${f.month}` : "";
+    const of = r.freq === "yearly" ? t(" de {month}", { month: f.month }) : "";
     const wd = WEEKDAY_NAMES[days[0] ?? f.wd];
-    if (r.lastDay) text += ", el último día del mes";
-    else if (r.nth === -1) text += `, el último ${wd}${of}`;
-    else if (r.nth) text += `, el ${ORDINALS[r.nth]} ${wd}${of}`;
-    else text += r.freq === "yearly" ? `, el ${f.d} de ${f.month}` : `, el día ${f.d}`;
+    if (r.lastDay) text += t(", el último día del mes");
+    else if (r.nth === -1) text += t(", el último {wd}{of}", { wd, of });
+    else if (r.nth) text += t(", el {ordinal} {wd}{of}", { ordinal: ORDINALS[r.nth], wd, of });
+    else if (r.freq === "yearly") text += t(", el {d} de {month}", { d: f.d, month: f.month });
+    else text += t(", el día {d}", { d: f.d });
   }
   if (r.until) {
     const [y, m, d] = r.until.split("-").map(Number);
-    text += `, hasta el ${d} de ${MONTH_NAMES[m - 1].toLowerCase()} de ${y}`;
-  } else if (r.count) text += `, ${r.count} ${r.count === 1 ? "vez" : "veces"}`;
+    text += t(", hasta el {d} de {month} de {y}", {
+      d,
+      month: MONTH_NAMES[m - 1].toLowerCase(),
+      y,
+    });
+  } else if (r.count)
+    text += t(r.count === 1 ? ", {count} vez" : ", {count} veces", { count: r.count });
   return text;
 }
 

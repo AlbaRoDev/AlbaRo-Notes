@@ -1,6 +1,6 @@
 // updates of the app itself. Rust looks for them in the background and only tells;
 // nothing is downloaded until `installAppUpdate` (the user's button). See src-tauri/src/app_update.rs.
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from "./invoke.ts";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 
 export interface AppUpdate {

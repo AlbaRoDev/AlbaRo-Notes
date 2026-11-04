@@ -1,12 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { ChevronRight, ExternalLink, RefreshCw, Search, Info, PanelLeft, X } from "lucide-react";
+import {
+  Check,
+  ChevronRight,
+  ExternalLink,
+  Info,
+  PanelLeft,
+  RefreshCw,
+  Search,
+  X,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import appIcon from "../../src-tauri/icons/128x128.png";
 import { requestUpdateCheck } from "../lib/app-update";
 import type { PaletteCommand } from "./search/SearchModal";
 import "./app-menu.css";
+import { getLang, t } from "../lib/i18n.ts";
+import { getFontPref } from "../lib/theme";
 
 const REPOSITORY = "https://github.com/AlbaRoDev/AlbaRo-Notes";
 const RELEASES = `${REPOSITORY}/releases`;
@@ -15,6 +26,8 @@ interface Entry {
   label: string;
   icon: LucideIcon;
   hint?: string;
+  /** The current choice of a group of options (language, typeface). */
+  checked?: boolean;
   run: () => void;
 }
 type Item = Entry | "separator";
@@ -71,6 +84,9 @@ export function AppMenu({
     const c = commands.find((x) => x.id === id);
     return c ? [{ label: c.label, icon: c.icon, hint: c.hint, run: c.run }] : [];
   };
+  // an option of a group (language, typeface): the palette's command, with a tick when it is the one in use
+  const choice = (id: string, checked: boolean): Entry[] =>
+    byId(id).map((entry) => ({ ...entry, checked }));
   const link = (label: string, url: string): Entry => ({
     label,
     icon: ExternalLink,
@@ -79,9 +95,9 @@ export function AppMenu({
   const sidebarToggle: Entry[] = hasSidebar
     ? [
         {
-          label: "Mostrar u ocultar la barra lateral",
+          label: t("Mostrar u ocultar la barra lateral"),
           icon: PanelLeft,
-          hint: "Ctrl+\\",
+          hint: t("Ctrl+\\"),
           // the sidebar listens for its own shortcut: this is the same key
           run: () =>
             window.dispatchEvent(new KeyboardEvent("keydown", { key: "\\", ctrlKey: true })),
@@ -92,12 +108,12 @@ export function AppMenu({
   const menus: { id: string; label: string; items: Item[] }[] = [
     {
       id: "file",
-      label: "Archivo",
+      label: t("Archivo"),
       items: ["new-page", "new-database", "import-files", "import-folder"].flatMap(byId),
     },
     {
       id: "view",
-      label: "Ver",
+      label: t("Ver"),
       items: [
         ...sidebarToggle,
         ...(hasSidebar ? (["separator"] as const) : []),
@@ -109,24 +125,41 @@ export function AppMenu({
       ],
     },
     {
+      id: "language",
+      label: t("Idioma"),
+      items: [...choice("lang-es", getLang() === "es"), ...choice("lang-en", getLang() === "en")],
+    },
+    {
+      id: "font",
+      label: t("Tipografía"),
+      items: [
+        ...choice("font-system", getFontPref() === "system"),
+        ...choice("font-serif", getFontPref() === "serif"),
+        ...choice("font-mono", getFontPref() === "mono"),
+        ...choice("font-garamond", getFontPref() === "garamond"),
+        ...choice("font-antiqua", getFontPref() === "antiqua"),
+        ...choice("font-fraktur", getFontPref() === "fraktur"),
+      ],
+    },
+    {
       id: "go",
-      label: "Ir",
+      label: t("Ir"),
       items: [
         ...["go-home", "go-notes", "go-manager"].flatMap(byId),
         "separator",
-        { label: "Buscar", icon: Search, hint: "Ctrl+K", run: onSearch },
+        { label: t("Buscar"), icon: Search, hint: t("Ctrl+K"), run: onSearch },
         ...byId("ask-ai"),
       ],
     },
     {
       id: "help",
-      label: "Ayuda",
+      label: t("Ayuda"),
       items: [
-        { label: "Buscar actualizaciones…", icon: RefreshCw, run: requestUpdateCheck },
-        { label: "Acerca de AlbaRo Notes", icon: Info, run: () => setAbout(true) },
+        { label: t("Buscar actualizaciones…"), icon: RefreshCw, run: requestUpdateCheck },
+        { label: t("Acerca de AlbaRo Notes"), icon: Info, run: () => setAbout(true) },
         "separator",
-        link("Repositorio en GitHub", REPOSITORY),
-        link("Versiones publicadas", RELEASES),
+        link(t("Repositorio en GitHub"), REPOSITORY),
+        link(t("Versiones publicadas"), RELEASES),
       ],
     },
   ];
@@ -144,14 +177,14 @@ export function AppMenu({
         className="app-menu-button"
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label="Menú de AlbaRo Notes"
-        title="Menú de AlbaRo Notes"
+        aria-label={t("Menú de AlbaRo Notes")}
+        title={t("Menú de AlbaRo Notes")}
         onClick={() => (open ? close() : setOpen(true))}
       >
         <img src={appIcon} alt="" className="app-menu-icon" />
       </button>
       {open && (
-        <div className="app-menu-pop" role="menu" aria-label="Menú de AlbaRo Notes">
+        <div className="app-menu-pop" role="menu" aria-label={t("Menú de AlbaRo Notes")}>
           <div className="app-menu-categories">
             {menus.map((m) => (
               <button
@@ -184,6 +217,9 @@ export function AppMenu({
                     <item.icon size={15} strokeWidth={1.75} aria-hidden="true" />
                     <span>{item.label}</span>
                     {item.hint && <kbd>{item.hint}</kbd>}
+                    {item.checked && (
+                      <Check size={14} className="app-menu-check" aria-hidden="true" />
+                    )}
                   </button>
                 ),
               )}
@@ -223,18 +259,20 @@ function About({
         className="about"
         role="dialog"
         aria-modal="true"
-        aria-label="Acerca de AlbaRo Notes"
+        aria-label={t("Acerca de AlbaRo Notes")}
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <button type="button" className="about-close" aria-label="Cerrar" onClick={onClose}>
+        <button type="button" className="about-close" aria-label={t("Cerrar")} onClick={onClose}>
           <X size={14} />
         </button>
         <img src={appIcon} alt="" className="about-icon" />
-        <h2>AlbaRo Notes</h2>
-        <p>{version ? `Versión ${version}` : "Versión desconocida"}</p>
-        {dbSchema !== null && <p className="about-faint">Base de datos: esquema v{dbSchema}</p>}
+        <h2>{t("AlbaRo Notes")}</h2>
+        <p>{version ? t("Versión {version}", { version }) : t("Versión desconocida")}</p>
+        {dbSchema !== null && (
+          <p className="about-faint">{t("Base de datos: esquema v{dbSchema}", { dbSchema })}</p>
+        )}
         <p className="about-faint">
-          Código abierto, licencia MIT. Tus notas se quedan en este equipo.
+          {t("Código abierto, licencia MIT. Tus notas se quedan en este equipo.")}
         </p>
         <div className="about-actions">
           <button
@@ -244,13 +282,13 @@ function About({
               requestUpdateCheck();
             }}
           >
-            <RefreshCw size={14} aria-hidden="true" /> Buscar actualizaciones
+            <RefreshCw size={14} aria-hidden="true" /> {t("Buscar actualizaciones")}
           </button>
           <button
             type="button"
             onClick={() => void openUrl(RELEASES).catch((e) => console.error("openUrl", e))}
           >
-            <ExternalLink size={14} aria-hidden="true" /> Versiones
+            <ExternalLink size={14} aria-hidden="true" /> {t("Versiones")}
           </button>
         </div>
       </div>

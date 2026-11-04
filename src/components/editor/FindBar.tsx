@@ -11,6 +11,7 @@ import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { findState, goToMatch, setFindQuery } from "./PageSearch";
 import { clearCells, createCellHits, findCells, markCells } from "./table-find";
 import "./FindBar.css";
+import { t } from "../../lib/i18n.ts";
 
 /**
  * The find bar of a page (Ctrl+F): a box for the words, how many were found, previous and next, and close.
@@ -96,13 +97,13 @@ export function FindBar({
   };
 
   return (
-    <div className="find-bar" role="search" aria-label="Buscar en la página">
+    <div className="find-bar" role="search" aria-label={t("Buscar en la página")}>
       <input
         ref={input}
         type="text"
         value={query}
-        placeholder="Buscar en la página…"
-        aria-label="Buscar en la página"
+        placeholder={t("Buscar en la página…")}
+        aria-label={t("Buscar en la página")}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === "Escape") {
@@ -115,25 +116,34 @@ export function FindBar({
         }}
       />
       <span className="find-bar-count" aria-live="polite">
-        {query ? (total ? `${shown + 1} de ${total}` : "Sin resultados") : ""}
+        {query
+          ? total
+            ? t("{shown} de {total}", { shown: shown + 1, total })
+            : t("Sin resultados")
+          : ""}
       </span>
       <button
         type="button"
-        title="Anterior (Mayús+Intro)"
-        aria-label="Anterior"
+        title={t("Anterior (Mayús+Intro)")}
+        aria-label={t("Anterior")}
         onClick={() => step(-1)}
       >
         <ChevronUp size={15} aria-hidden="true" />
       </button>
       <button
         type="button"
-        title="Siguiente (Intro)"
-        aria-label="Siguiente"
+        title={t("Siguiente (Intro)")}
+        aria-label={t("Siguiente")}
         onClick={() => step(1)}
       >
         <ChevronDown size={15} aria-hidden="true" />
       </button>
-      <button type="button" title="Cerrar (Esc)" aria-label="Cerrar la búsqueda" onClick={close}>
+      <button
+        type="button"
+        title={t("Cerrar (Esc)")}
+        aria-label={t("Cerrar la búsqueda")}
+        onClick={close}
+      >
         <X size={15} aria-hidden="true" />
       </button>
     </div>

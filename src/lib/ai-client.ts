@@ -1,24 +1,25 @@
 // the AI, through Rust: off by default, then either local (Ollama) or online (the
 // user's own API key). The model only reaches the notes through Rust's tools; changes it wants
 // to make come back as proposals the user applies or discards.
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from "./invoke.ts";
 import { listen } from "@tauri-apps/api/event";
 import type { PropertyKind } from "../types";
+import { t } from "./i18n.ts";
 
 export type AiMode = "off" | "local" | "online";
 
 /** Models that read handwriting (they must accept images): bigger than the chat ones. */
 export const LOCAL_VISION_CHOICES = [
-  { name: "qwen2.5vl:7b", label: "~6 GB · el recomendado" },
-  { name: "qwen2.5vl:3b", label: "~3 GB · más ligero, lee peor" },
+  { name: "qwen2.5vl:7b", label: t("~6 GB · el recomendado") },
+  { name: "qwen2.5vl:3b", label: t("~3 GB · más ligero, lee peor") },
   { name: "llama3.2-vision", label: "~8 GB" },
 ];
 
 /** Models offered in the settings (Ollama can run others: the installed ones are listed too). */
 export const LOCAL_MODEL_CHOICES = [
-  { name: "qwen2.5:3b", label: "Ligero · ~2 GB · equipos modestos" },
-  { name: "qwen2.5:7b", label: "Equilibrado · ~4,7 GB" },
-  { name: "qwen2.5:14b", label: "Potente · ~9 GB · tarjeta gráfica potente" },
+  { name: "qwen2.5:3b", label: t("Ligero · ~2 GB · equipos modestos") },
+  { name: "qwen2.5:7b", label: t("Equilibrado · ~4,7 GB") },
+  { name: "qwen2.5:14b", label: t("Potente · ~9 GB · tarjeta gráfica potente") },
 ];
 export type AiProvider = "groq" | "gemini" | "openrouter" | "anthropic";
 
@@ -42,42 +43,48 @@ export const ONLINE_PROVIDERS: {
 }[] = [
   {
     id: "groq",
-    label: "Groq",
+    label: t("Groq"),
     free: true,
     keyUrl: "console.groq.com/keys",
     model: "llama-3.3-70b-versatile",
     models: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "qwen/qwen3-32b"],
-    note: "Plan gratuito sin tarjeta, muy rápido; con límite de peticiones por minuto y por día.",
+    note: t(
+      "Plan gratuito sin tarjeta, muy rápido; con límite de peticiones por minuto y por día.",
+    ),
     visionModel: "meta-llama/llama-4-scout-17b-16e-instruct",
   },
   {
     id: "gemini",
-    label: "Google Gemini",
+    label: t("Google Gemini"),
     free: true,
     keyUrl: "aistudio.google.com/apikey",
     model: "gemini-2.5-flash",
     models: ["gemini-2.5-flash", "gemini-2.5-flash-lite"],
-    note: "Plan gratuito con límites. Google puede usar lo que envíes en el plan gratuito para mejorar sus productos: no lo uses con notas privadas.",
+    note: t(
+      "Plan gratuito con límites. Google puede usar lo que envíes en el plan gratuito para mejorar sus productos: no lo uses con notas privadas.",
+    ),
     visionModel: "gemini-2.5-flash",
   },
   {
     id: "openrouter",
-    label: "OpenRouter",
+    label: t("OpenRouter"),
     free: true,
     keyUrl: "openrouter.ai/keys",
     model: "meta-llama/llama-3.3-70b-instruct:free",
     models: ["meta-llama/llama-3.3-70b-instruct:free", "qwen/qwen3-32b:free"],
-    note: "Modelos gratuitos (los que acaban en :free), con límites bajos; cada modelo tiene su propia política de datos.",
+    note: t(
+      "Modelos gratuitos (los que acaban en :free), con límites bajos; cada modelo tiene su propia política de datos.",
+    ),
     visionModel: "openrouter/free",
   },
   {
     id: "anthropic",
-    label: "Anthropic (de pago)",
+    label: t("Anthropic (de pago)"),
     free: false,
     keyUrl: "console.anthropic.com",
     model: "claude-haiku-4-5-20251001",
     models: ["claude-haiku-4-5-20251001", "claude-sonnet-5-5"],
-    note: "De pago por uso; por defecto Anthropic no entrena con los datos de su API.",
+    note: t("De pago por uso; por defecto Anthropic no entrena con los datos de su API."),
     visionModel: "claude-haiku-4-5-20251001",
   },
 ];

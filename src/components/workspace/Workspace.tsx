@@ -13,6 +13,7 @@ import {
   type Layout,
 } from "../../lib/workspace";
 import "./workspace.css";
+import { t } from "../../lib/i18n.ts";
 
 /** Each zone keeps at least this much (px) unless it is folded away altogether. */
 const MIN_ZONE = 240;
@@ -138,12 +139,16 @@ export function Workspace({
           type="button"
           className="ws-icon-button"
           onClick={onHome}
-          title="Pantalla de inicio"
-          aria-label="Pantalla de inicio"
+          title={t("Pantalla de inicio")}
+          aria-label={t("Pantalla de inicio")}
         >
           <House size={16} />
         </button>
-        <div className="workspace-switch" role="group" aria-label="Cambiar entre Notas y Gestor">
+        <div
+          className="workspace-switch"
+          role="group"
+          aria-label={t("Cambiar entre Notas y Gestor")}
+        >
           {(["notes", "manager"] as const).map((half) => {
             const { label, Icon, key } = HALVES[half];
             return (
@@ -170,8 +175,8 @@ export function Workspace({
             type="button"
             className="workspace-rail"
             onClick={unfold}
-            title={`Mostrar ${HALVES[layout.main].label}`}
-            aria-label={`Mostrar ${HALVES[layout.main].label}`}
+            title={t("Mostrar {label}", { label: HALVES[layout.main].label })}
+            aria-label={t("Mostrar {label}", { label: HALVES[layout.main].label })}
           >
             <ChevronsRight size={16} />
           </button>
@@ -192,7 +197,7 @@ export function Workspace({
             data-dragging={dragSplit !== null}
             role="separator"
             aria-orientation="vertical"
-            aria-label="Redimensionar el panel compañero (doble clic: plegar)"
+            aria-label={t("Redimensionar el panel compañero (doble clic: plegar)")}
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={Math.round(ratio * 100)}
@@ -211,14 +216,14 @@ export function Workspace({
             className="workspace-zone workspace-companion"
             style={{ flexGrow: 1 - ratio }}
             data-folded={companionFolded || undefined}
-            aria-label={`${HALVES[companionHalf].label} (panel compañero)`}
+            aria-label={t("{label} (panel compañero)", { label: HALVES[companionHalf].label })}
           >
             <button
               type="button"
               className="workspace-companion-close"
               onClick={() => onSplit(1)}
-              title="Cerrar el panel"
-              aria-label="Cerrar el panel compañero"
+              title={t("Cerrar el panel")}
+              aria-label={t("Cerrar el panel compañero")}
             >
               <ChevronsRight size={18} />
             </button>
@@ -230,8 +235,8 @@ export function Workspace({
             type="button"
             className="workspace-rail"
             onClick={unfold}
-            title={`Mostrar ${HALVES[companionHalf].label}`}
-            aria-label={`Mostrar ${HALVES[companionHalf].label}`}
+            title={t("Mostrar {label}", { label: HALVES[companionHalf].label })}
+            aria-label={t("Mostrar {label}", { label: HALVES[companionHalf].label })}
           >
             <ChevronsLeft size={16} />
           </button>

@@ -19,16 +19,17 @@ import { TaskPeek } from "../workspace/TaskPeek";
 import type { TaskHost } from "../workspace/Tasks";
 import { BoardView, EditableName } from "./BoardView";
 import "./boards.css";
+import { t } from "../../lib/i18n.ts";
 
 const CURRENT_KEY = "boards.current";
 const FIELDS_KEY = "boards.fields.";
 const TRAY_KEY = "boards.tray";
 
 const TRAY_LABELS = {
-  pending: "Fuera del tablero",
-  hint: "Arrastra una tarea a una lista; una tarea puede estar en varios tableros.",
-  pendingEmpty: "Todas las tareas están en este tablero.",
-  dragTitle: "arrástrala a una lista",
+  pending: t("Fuera del tablero"),
+  hint: t("Arrastra una tarea a una lista; una tarea puede estar en varios tableros."),
+  pendingEmpty: t("Todas las tareas están en este tablero."),
+  dragTitle: t("arrástrala a una lista"),
 };
 
 /**
@@ -163,13 +164,13 @@ export function BoardsSection({ host }: { host: TaskHost }) {
       </p>
     );
   }
-  if (!base) return <p className="tasks-loading">Preparando los tableros…</p>;
+  if (!base) return <p className="tasks-loading">{t("Preparando los tableros…")}</p>;
   const open = openTask && pages.some((p) => p.id === openTask) ? openTask : null;
 
   return (
     <div className="boards">
       <div className="boards-main">
-        <div className="boards-bar" role="group" aria-label="Tableros">
+        <div className="boards-bar" role="group" aria-label={t("Tableros")}>
           {boards.map((b) => (
             <button
               key={b.id}
@@ -185,7 +186,7 @@ export function BoardsSection({ host }: { host: TaskHost }) {
           ))}
           {newName === null ? (
             <button type="button" className="boards-new" onClick={() => setNewName("")}>
-              <Plus size={14} aria-hidden /> Tablero
+              <Plus size={14} aria-hidden /> {t("Tablero")}
             </button>
           ) : (
             <form
@@ -200,8 +201,8 @@ export function BoardsSection({ host }: { host: TaskHost }) {
                 value={newName}
                 maxLength={100}
                 autoFocus
-                placeholder="Nombre del tablero"
-                aria-label="Nombre del tablero nuevo"
+                placeholder={t("Nombre del tablero")}
+                aria-label={t("Nombre del tablero nuevo")}
                 onChange={(e) => setNewName(e.target.value)}
                 onKeyDown={(e) => e.key === "Escape" && setNewName(null)}
                 onBlur={() => !newName.trim() && setNewName(null)}
@@ -220,14 +221,18 @@ export function BoardsSection({ host }: { host: TaskHost }) {
               <EditableName
                 className="board-name"
                 value={board.name}
-                label="Nombre del tablero"
+                label={t("Nombre del tablero")}
                 onCommit={(name) => void write(() => renameBoard(board.id, name))}
               />
               <details className="board-fields">
-                <summary title="Qué propiedades de la tarea se ven en las tarjetas">
-                  <Tag size={14} aria-hidden /> Etiquetas y campos
+                <summary title={t("Qué propiedades de la tarea se ven en las tarjetas")}>
+                  <Tag size={14} aria-hidden /> {t("Etiquetas y campos")}
                 </summary>
-                <div className="board-fields-menu" role="group" aria-label="Campos de las tarjetas">
+                <div
+                  className="board-fields-menu"
+                  role="group"
+                  aria-label={t("Campos de las tarjetas")}
+                >
                   {pickable.map((p) => (
                     <label key={p.id}>
                       <input
@@ -242,7 +247,7 @@ export function BoardsSection({ host }: { host: TaskHost }) {
               </details>
               {confirmDelete ? (
                 <span className="board-confirm">
-                  ¿Borrar el tablero con sus listas y tarjetas? Las tareas se conservan.
+                  {t("¿Borrar el tablero con sus listas y tarjetas? Las tareas se conservan.")}
                   <button
                     type="button"
                     onClick={() => {
@@ -250,18 +255,18 @@ export function BoardsSection({ host }: { host: TaskHost }) {
                       void write(() => deleteBoard(board.id));
                     }}
                   >
-                    Borrar
+                    {t("Borrar")}
                   </button>
                   <button type="button" onClick={() => setConfirmDelete(false)}>
-                    No
+                    {t("No")}
                   </button>
                 </span>
               ) : (
                 <button
                   type="button"
                   className="board-icon-btn"
-                  aria-label="Borrar el tablero"
-                  title="Borrar el tablero (las tareas no se borran)"
+                  aria-label={t("Borrar el tablero")}
+                  title={t("Borrar el tablero (las tareas no se borran)")}
                   onClick={() => setConfirmDelete(true)}
                 >
                   <Trash2 size={14} aria-hidden />
@@ -281,9 +286,9 @@ export function BoardsSection({ host }: { host: TaskHost }) {
           </>
         ) : (
           <div className="boards-empty">
-            <p>Aún no hay tableros.</p>
+            <p>{t("Aún no hay tableros.")}</p>
             <button type="button" onClick={() => setNewName("")}>
-              Crear el primero
+              {t("Crear el primero")}
             </button>
           </div>
         )}

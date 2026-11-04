@@ -3,6 +3,7 @@ import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import { useKatex } from "../../lib/katex-lazy";
 import { renderLatex } from "../../lib/render-latex";
 import { focusLineAfterNode } from "./media-commands";
+import { t } from "../../lib/i18n.ts";
 
 /** Mirrors MAX_LATEX_LEN in validate.rs. */
 const MAX_LATEX_LEN = 10_000;
@@ -62,7 +63,7 @@ export function EquationBlockView({ node, updateAttributes, getPos, editor }: No
           rows={3}
           maxLength={MAX_LATEX_LEN}
           value={draft}
-          placeholder="LaTeX…  (Ctrl+Enter para terminar)"
+          placeholder={t("LaTeX…  (Ctrl+Enter para terminar)")}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={onKeyDown}
           onBlur={() => {
@@ -82,10 +83,10 @@ export function EquationBlockView({ node, updateAttributes, getPos, editor }: No
               finish();
             }}
           >
-            Listo
+            {t("Listo")}
           </button>
           <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={removeSelf}>
-            Quitar
+            {t("Quitar")}
           </button>
         </div>
         {draft.trim() && katex && (
@@ -126,7 +127,7 @@ export function EquationBlockView({ node, updateAttributes, getPos, editor }: No
         // KaTeX has not arrived yet: the raw LaTeX stands in for it
         <div className="equation-pending">{latex}</div>
       ) : (
-        <span className="equation-block-empty">Añadir una ecuación</span>
+        <span className="equation-block-empty">{t("Añadir una ecuación")}</span>
       )}
     </NodeViewWrapper>
   );

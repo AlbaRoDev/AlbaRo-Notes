@@ -9,22 +9,29 @@ import {
   type AiSettings,
   type AiStatus,
 } from "../../lib/ai-client";
+import { t } from "../../lib/i18n.ts";
 
 const MODES: { mode: AiMode; title: string; text: string }[] = [
   {
     mode: "off",
-    title: "Desactivada",
-    text: "No se ejecuta nada: ni modelo, ni tarjeta gráfica, ni red. La app funciona igual sin IA.",
+    title: t("Desactivada"),
+    text: t(
+      "No se ejecuta nada: ni modelo, ni tarjeta gráfica, ni red. La app funciona igual sin IA.",
+    ),
   },
   {
     mode: "local",
-    title: "En este equipo (Ollama)",
-    text: "Privado: tus notas no salen del equipo. Hay que instalar Ollama (ollama.com) y descargar un modelo. Gasta memoria y, mientras responde, procesador o tarjeta gráfica; se libera a los 2 minutos.",
+    title: t("En este equipo (Ollama)"),
+    text: t(
+      "Privado: tus notas no salen del equipo. Hay que instalar Ollama (ollama.com) y descargar un modelo. Gasta memoria y, mientras responde, procesador o tarjeta gráfica; se libera a los 2 minutos.",
+    ),
   },
   {
     mode: "online",
-    title: "Online (gratis o de pago)",
-    text: "Funciona en cualquier equipo, sin tarjeta gráfica. Usas tu propia clave de un servicio con plan gratuito (Groq, Gemini, OpenRouter) o de pago (Anthropic). El texto de las notas que la IA consulte se envía a ese servicio.",
+    title: t("Online (gratis o de pago)"),
+    text: t(
+      "Funciona en cualquier equipo, sin tarjeta gráfica. Usas tu propia clave de un servicio con plan gratuito (Groq, Gemini, OpenRouter) o de pago (Anthropic). El texto de las notas que la IA consulte se envía a ese servicio.",
+    ),
   },
 ];
 
@@ -35,10 +42,16 @@ const MODES: { mode: AiMode; title: string; text: string }[] = [
 /** Where the saved key really is, said plainly. */
 function keyWhere(storage: AiSettings["keyStorage"]): string {
   if (storage === "system")
-    return "La clave se guarda en el almacén de credenciales del sistema, no en la carpeta de datos de la app (así no viaja en una copia de las notas).";
+    return t(
+      "La clave se guarda en el almacén de credenciales del sistema, no en la carpeta de datos de la app (así no viaja en una copia de las notas).",
+    );
   if (storage === "file")
-    return "Este sistema no ofrece un almacén de credenciales: la clave se guarda en un fichero de la carpeta de datos de la app, visible solo para tu usuario, y viaja en cualquier copia de esa carpeta.";
-  return "La clave se guardará en el almacén de credenciales del sistema si lo hay; si no, en un fichero de la carpeta de datos, visible solo para tu usuario.";
+    return t(
+      "Este sistema no ofrece un almacén de credenciales: la clave se guarda en un fichero de la carpeta de datos de la app, visible solo para tu usuario, y viaja en cualquier copia de esa carpeta.",
+    );
+  return t(
+    "La clave se guardará en el almacén de credenciales del sistema si lo hay; si no, en un fichero de la carpeta de datos, visible solo para tu usuario.",
+  );
 }
 
 export function AiSetup({
@@ -111,10 +124,11 @@ export function AiSetup({
         void save();
       }}
     >
-      <h2>Asistente de IA</h2>
+      <h2>{t("Asistente de IA")}</h2>
       <p className="ai-fine">
-        Es opcional y empieza desactivado. Elige dónde quieres que funcione; puedes cambiarlo cuando
-        quieras con el engranaje del asistente.
+        {t(
+          "Es opcional y empieza desactivado. Elige dónde quieres que funcione; puedes cambiarlo cuando quieras con el engranaje del asistente.",
+        )}
       </p>
 
       {MODES.map((m) => (
@@ -135,7 +149,7 @@ export function AiSetup({
       {mode === "local" && (
         <div className="ai-setup-fields">
           <label>
-            Modelo
+            {t("Modelo")}
             <select value={localModel} onChange={(e) => setLocalModel(e.target.value)}>
               {localNames.map((name) => (
                 <option key={name} value={name}>
@@ -146,7 +160,7 @@ export function AiSetup({
             </select>
           </label>
           <label>
-            Modelo para leer escritura a mano (lienzo)
+            {t("Modelo para leer escritura a mano (lienzo)")}
             <input
               type="text"
               list="ai-local-vision"
@@ -164,8 +178,9 @@ export function AiSetup({
             </datalist>
           </label>
           <p className="ai-fine">
-            Los modelos que ven imágenes pesan mucho (<code>ollama pull {localVision}</code>): en un
-            equipo modesto usa mejor un servicio online para la escritura a mano.
+            {t("Los modelos que ven imágenes pesan mucho (")}
+            <code>ollama pull {localVision}</code>
+            {t("): en un equipo modesto usa mejor un servicio online para la escritura a mano.")}
           </p>
           <label className="ai-check">
             <input
@@ -173,11 +188,12 @@ export function AiSetup({
               checked={cpuOnly}
               onChange={(e) => setCpuOnly(e.target.checked)}
             />
-            Solo procesador (no usar la tarjeta gráfica; más lento)
+            {t("Solo procesador (no usar la tarjeta gráfica; más lento)")}
           </label>
           <p className="ai-fine">
-            Si falta, descárgalo con <code>ollama pull {localModel}</code>. La búsqueda por
-            significado usa además <code>nomic-embed-text</code>, siempre en el procesador.
+            {t("Si falta, descárgalo con")} <code>ollama pull {localModel}</code>
+            {t(". La búsqueda por significado usa además")} <code>{t("nomic-embed-text")}</code>
+            {t(", siempre en el procesador.")}
           </p>
         </div>
       )}
@@ -185,7 +201,7 @@ export function AiSetup({
       {mode === "online" && (
         <div className="ai-setup-fields">
           <label>
-            Servicio
+            {t("Servicio")}
             <select
               value={provider}
               onChange={(e) => {
@@ -200,7 +216,7 @@ export function AiSetup({
               {ONLINE_PROVIDERS.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.label}
-                  {p.free ? " · plan gratuito" : ""}
+                  {p.free ? t(" · plan gratuito") : ""}
                 </option>
               ))}
             </select>
@@ -217,19 +233,19 @@ export function AiSetup({
               value={keyShown}
               placeholder={
                 settings.hasKey && sameProvider && apiKey === undefined
-                  ? "Guardada · deja vacío para conservarla"
-                  : "Pega aquí tu clave"
+                  ? t("Guardada · deja vacío para conservarla")
+                  : t("Pega aquí tu clave")
               }
               onChange={(e) => setApiKey(e.target.value)}
             />
           </label>
           {settings.hasKey && sameProvider && apiKey === undefined && (
             <button type="button" className="ai-link" onClick={() => setApiKey("")}>
-              Quitar la clave guardada
+              {t("Quitar la clave guardada")}
             </button>
           )}
           <label>
-            Modelo
+            {t("Modelo")}
             <input
               type="text"
               list="ai-online-models"
@@ -245,7 +261,7 @@ export function AiSetup({
             </datalist>
           </label>
           <label>
-            Modelo para leer escritura a mano (lienzo)
+            {t("Modelo para leer escritura a mano (lienzo)")}
             <input
               type="text"
               spellCheck={false}
@@ -260,15 +276,18 @@ export function AiSetup({
               checked={consent}
               onChange={(e) => setConsent(e.target.checked)}
             />
-            Entiendo que el texto de mis notas que la IA consulte, el que le pida escribir o
-            reescribir y las imágenes de escritura a mano que le envíe se mandan a {service.label}{" "}
-            por internet.
+            {t(
+              "Entiendo que el texto de mis notas que la IA consulte, el que le pida escribir o reescribir y las imágenes de escritura a mano que le envíe se mandan a {service} por internet.",
+              { service: service.label },
+            )}
           </label>
           <p className="ai-fine">
-            {keyWhere(settings.keyStorage)} Nunca vuelve a la interfaz. Sin modelo local no hay
-            búsqueda por significado: busca por palabras.
+            {keyWhere(settings.keyStorage)}{" "}
+            {t(
+              "Nunca vuelve a la interfaz. Sin modelo local no hay búsqueda por significado: busca por palabras.",
+            )}
           </p>
-          {!willHaveKey && <p className="ai-fine">Falta la clave.</p>}
+          {!willHaveKey && <p className="ai-fine">{t("Falta la clave.")}</p>}
         </div>
       )}
 
@@ -286,11 +305,11 @@ export function AiSetup({
             (mode === "online" && (!willHaveKey || !consent || !onlineModel || !onlineVision))
           }
         >
-          {saving ? "Guardando…" : "Guardar"}
+          {saving ? t("Guardando…") : t("Guardar")}
         </button>
         {onCancel && (
           <button type="button" onClick={onCancel}>
-            Cancelar
+            {t("Cancelar")}
           </button>
         )}
       </div>

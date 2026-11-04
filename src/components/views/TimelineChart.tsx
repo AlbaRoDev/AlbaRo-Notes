@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { dayNumber, formatDayMonth, fromDayNumber, todayIso } from "../../lib/date-utils";
 import type { DatedItem, UndatedItem } from "./view-items";
 import "./views.css";
+import { t } from "../../lib/i18n.ts";
 
 interface TimelineChartProps {
   items: DatedItem[];
@@ -14,7 +15,11 @@ interface TimelineChartProps {
 type Scale = "day" | "week" | "month";
 /** Pixels per day at each zoom level. */
 const PX_PER_DAY: Record<Scale, number> = { day: 40, week: 14, month: 4 };
-const SCALE_LABELS: Record<Scale, string> = { day: "Días", week: "Semanas", month: "Meses" };
+const SCALE_LABELS: Record<Scale, string> = {
+  day: t("Días"),
+  week: t("Semanas"),
+  month: t("Meses"),
+};
 /** Days a «previous / next» click moves the window. */
 const SHIFT_DAYS: Record<Scale, number> = { day: 14, week: 42, month: 180 };
 const LABEL_WIDTH = 176;
@@ -73,7 +78,7 @@ export function TimelineChart({ items, undated = [], selectedId, onOpen }: Timel
         <button
           type="button"
           className="db-icon-btn"
-          aria-label="Antes"
+          aria-label={t("Antes")}
           onClick={() => setShift((s) => s - SHIFT_DAYS[scale])}
         >
           <ChevronLeft size={16} aria-hidden="true" />
@@ -81,15 +86,15 @@ export function TimelineChart({ items, undated = [], selectedId, onOpen }: Timel
         <button
           type="button"
           className="db-icon-btn"
-          aria-label="Después"
+          aria-label={t("Después")}
           onClick={() => setShift((s) => s + SHIFT_DAYS[scale])}
         >
           <ChevronRight size={16} aria-hidden="true" />
         </button>
         <button type="button" className="calendar-today" onClick={() => setShift(0)}>
-          Hoy
+          {t("Hoy")}
         </button>
-        <span className="calendar-modes" role="group" aria-label="Escala">
+        <span className="calendar-modes" role="group" aria-label={t("Escala")}>
           {(Object.keys(SCALE_LABELS) as Scale[]).map((s) => (
             <button key={s} type="button" aria-pressed={scale === s} onClick={() => setScale(s)}>
               {SCALE_LABELS[s]}
@@ -144,7 +149,7 @@ export function TimelineChart({ items, undated = [], selectedId, onOpen }: Timel
 
       {undated.length > 0 && (
         <div className="calendar-undated">
-          <span className="db-panel-meta">Sin fecha</span>
+          <span className="db-panel-meta">{t("Sin fecha")}</span>
           {undated.map((item) => (
             <button
               key={item.id}

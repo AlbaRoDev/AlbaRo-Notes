@@ -11,6 +11,7 @@ mod families;
 mod fsprivate;
 mod history;
 mod ics;
+mod lang;
 mod maps;
 mod notifications;
 mod search;
@@ -124,6 +125,7 @@ pub fn run() {
             commands::get_notification_settings,
             commands::set_notification_settings,
             commands::test_notification,
+            commands::set_language,
             commands::list_boards,
             commands::get_board,
             commands::create_board,

@@ -9,10 +9,16 @@ import type {
   ViewConfig,
   ViewKind,
 } from "../../types";
+import { t } from "../../lib/i18n.ts";
 
 /** Sorting and filtering can also target the row's own title. */
 export const TITLE_ID = "title";
-export const TITLE_PROPERTY: Property = { id: TITLE_ID, name: "Título", type: "text", config: {} };
+export const TITLE_PROPERTY: Property = {
+  id: TITLE_ID,
+  name: t("Título"),
+  type: "text",
+  config: {},
+};
 
 /** Mirrors `operators_for` in views.rs — Rust is the authority and re-validates every rule. */
 export const OPERATORS: Record<PropertyKind, Operator[]> = {
@@ -29,30 +35,30 @@ export const OPERATORS: Record<PropertyKind, Operator[]> = {
 
 export const OPERATOR_LABELS: Record<Operator, string> = {
   contains: "contiene",
-  not_contains: "no contiene",
+  not_contains: t("no contiene"),
   is: "es",
-  is_not: "no es",
-  is_empty: "está vacío",
-  is_not_empty: "no está vacío",
+  is_not: t("no es"),
+  is_empty: t("está vacío"),
+  is_not_empty: t("no está vacío"),
   eq: "=",
   neq: "≠",
   gt: ">",
   gte: "≥",
   lt: "<",
   lte: "≤",
-  before: "es anterior a",
-  after: "es posterior a",
-  on_or_before: "es anterior o igual a",
-  on_or_after: "es posterior o igual a",
+  before: t("es anterior a"),
+  after: t("es posterior a"),
+  on_or_before: t("es anterior o igual a"),
+  on_or_after: t("es posterior o igual a"),
 };
 
 export const needsValue = (op: Operator) => op !== "is_empty" && op !== "is_not_empty";
 
 export const GRANULARITY_LABELS = {
-  day: "Día",
-  week: "Semana",
-  month: "Mes",
-  year: "Año",
+  day: t("Día"),
+  week: t("Semana"),
+  month: t("Mes"),
+  year: t("Año"),
 } as const;
 
 /** A stored config only holds what was set; this fills the rest in so panels can read it blindly. */
@@ -76,19 +82,19 @@ export function normalizeConfig(raw: Partial<ViewConfig> | undefined): ViewConfi
 }
 
 export const CHART_TYPE_LABELS: Record<ChartType, string> = {
-  bar: "Barras verticales",
-  hbar: "Barras horizontales",
-  line: "Líneas",
-  donut: "Anillos",
-  number: "Número",
+  bar: t("Barras verticales"),
+  hbar: t("Barras horizontales"),
+  line: t("Líneas"),
+  donut: t("Anillos"),
+  number: t("Número"),
 };
 
 export const AGGREGATE_LABELS: Record<Aggregate, string> = {
-  count: "Recuento",
-  sum: "Suma",
-  avg: "Promedio",
-  min: "Mínimo",
-  max: "Máximo",
+  count: t("Recuento"),
+  sum: t("Suma"),
+  avg: t("Promedio"),
+  min: t("Mínimo"),
+  max: t("Máximo"),
 };
 
 /** A chart config with its defaults filled in (what Rust assumes for anything missing). */
@@ -105,23 +111,23 @@ export function normalizeChart(raw: ChartConfig | undefined): NormalizedChart {
 }
 
 export const VIEW_KIND_LABELS: Record<ViewKind, string> = {
-  table: "Tabla",
-  list: "Lista",
-  gallery: "Galería",
-  feed: "Feed",
-  board: "Tablero",
-  calendar: "Calendario",
-  timeline: "Cronograma",
-  map: "Mapa",
-  form: "Formulario",
-  chart: "Gráfico",
-  dashboard: "Panel de control",
+  table: t("Tabla"),
+  list: t("Lista"),
+  gallery: t("Galería"),
+  feed: t("Feed"),
+  board: t("Tablero"),
+  calendar: t("Calendario"),
+  timeline: t("Cronograma"),
+  map: t("Mapa"),
+  form: t("Formulario"),
+  chart: t("Gráfico"),
+  dashboard: t("Panel de control"),
 };
 
 /** What a chart's Y axis says: «Recuento», or «Suma de Esfuerzo». */
 export function measureLabel(chart: NormalizedChart, properties: Property[]): string {
   const name = properties.find((p) => p.id === chart.value)?.name;
   return chart.aggregate === "count" || !name
-    ? "Recuento"
-    : `${AGGREGATE_LABELS[chart.aggregate]} de ${name}`;
+    ? t("Recuento")
+    : t("{aggregate} de {name}", { aggregate: AGGREGATE_LABELS[chart.aggregate], name });
 }

@@ -19,6 +19,7 @@ import { blocksToMarkdown } from "../../lib/markdown-blocks";
 import { readPref, writePref } from "../../lib/prefs";
 import type { PageInfo, PageSummary } from "../../types";
 import type { TaskHost } from "./Tasks";
+import { locale, t } from "../../lib/i18n.ts";
 
 const MIN_WIDTH = 380;
 const DEFAULT_WIDTH = 680;
@@ -39,7 +40,7 @@ function formatEdited(updatedAt: string): string {
   const date = new Date(`${updatedAt.replace(" ", "T")}Z`);
   return Number.isNaN(date.getTime())
     ? updatedAt
-    : date.toLocaleString("es", { dateStyle: "medium", timeStyle: "short" });
+    : date.toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
 }
 
 /** The «···» menu of a task's page, Notion's: a search box over the actions that make sense here, and the page's last edit. */
@@ -71,30 +72,30 @@ function TaskMenu({
   const actions: MenuAction[] = [
     {
       id: "copy",
-      label: "Copiar el contenido de la página",
-      keywords: "copiar texto markdown portapapeles",
+      label: t("Copiar el contenido de la página"),
+      keywords: t("copiar texto markdown portapapeles"),
       Icon: Copy,
       run: async () => {
         const doc = await getPageContent(page.id);
         await navigator.clipboard.writeText(blocksToMarkdown(doc?.content ?? []));
-        setNote("Copiado al portapapeles");
+        setNote(t("Copiado al portapapeles"));
       },
     },
     {
       id: "duplicate",
-      label: "Duplicar",
-      keywords: "copia clonar",
+      label: t("Duplicar"),
+      keywords: t("copia clonar"),
       Icon: CopyPlus,
       run: async () => {
         const copy = await duplicateRow(page.id);
         host.onPagesChanged();
-        setNote(`Duplicada como «${copy.title}»`);
+        setNote(t("Duplicada como «{title}»", { title: copy.title }));
       },
     },
     {
       id: "ai",
-      label: "Usar con la IA",
-      keywords: "asistente inteligencia artificial",
+      label: t("Usar con la IA"),
+      keywords: t("asistente inteligencia artificial"),
       Icon: Sparkles,
       run: () => {
         host.onOpenAi();
@@ -103,8 +104,8 @@ function TaskMenu({
     },
     {
       id: "delete",
-      label: "Borrar la tarea",
-      keywords: "papelera eliminar quitar",
+      label: t("Borrar la tarea"),
+      keywords: t("papelera eliminar quitar"),
       Icon: Trash2,
       danger: true,
       run: async () => {
@@ -118,15 +119,15 @@ function TaskMenu({
   );
 
   return (
-    <div className="peek-menu" role="menu" aria-label="Acciones de la tarea">
+    <div className="peek-menu" role="menu" aria-label={t("Acciones de la tarea")}>
       <label className="peek-menu-search">
         <Search size={15} aria-hidden />
         <input
           autoFocus
           type="text"
           value={query}
-          placeholder="Buscar acciones…"
-          aria-label="Buscar acciones"
+          placeholder={t("Buscar acciones…")}
+          aria-label={t("Buscar acciones")}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Escape") {
@@ -151,7 +152,7 @@ function TaskMenu({
           {label}
         </button>
       ))}
-      {shown.length === 0 && <p className="peek-menu-note">Ninguna acción coincide.</p>}
+      {shown.length === 0 && <p className="peek-menu-note">{t("Ninguna acción coincide.")}</p>}
       {note && (
         <p className="peek-menu-note" role="status">
           {note}
@@ -160,10 +161,10 @@ function TaskMenu({
       {info && (
         <div className="peek-menu-info">
           <span>
-            <Clock size={13} aria-hidden /> Última edición
+            <Clock size={13} aria-hidden /> {t("Última edición")}
           </span>
           <strong>{formatEdited(info.updatedAt)}</strong>
-          <span>{info.words === 1 ? "1 palabra" : `${info.words} palabras`}</span>
+          <span>{t(info.words === 1 ? "{n} palabra" : "{n} palabras", { n: info.words })}</span>
         </div>
       )}
     </div>
@@ -256,14 +257,14 @@ export function TaskPeek({
         data-resizing={resizing || undefined}
         style={full ? undefined : { width: `min(${width}px, 100%)` }}
         role="dialog"
-        aria-label="Tarea"
+        aria-label={t("Tarea")}
       >
         {!full && (
           <div
             className="task-peek-resize"
             role="separator"
             aria-orientation="vertical"
-            aria-label="Ajustar el ancho de la tarea"
+            aria-label={t("Ajustar el ancho de la tarea")}
             aria-valuenow={width}
             tabIndex={0}
             onPointerDown={startResize}
@@ -277,16 +278,16 @@ export function TaskPeek({
           <button
             type="button"
             onClick={requestClose}
-            aria-label="Cerrar la tarea"
-            title="Cerrar (Esc)"
+            aria-label={t("Cerrar la tarea")}
+            title={t("Cerrar (Esc)")}
           >
             <ChevronsRight size={18} aria-hidden />
           </button>
           <button
             type="button"
             onClick={() => setFull((f) => !f)}
-            aria-label={full ? "Salir de pantalla completa" : "Pantalla completa"}
-            title={full ? "Salir de pantalla completa" : "Pantalla completa"}
+            aria-label={full ? t("Salir de pantalla completa") : t("Pantalla completa")}
+            title={full ? t("Salir de pantalla completa") : t("Pantalla completa")}
           >
             {full ? <Minimize2 size={16} aria-hidden /> : <Maximize2 size={16} aria-hidden />}
           </button>
@@ -295,8 +296,8 @@ export function TaskPeek({
             type="button"
             data-on={page.favorite || undefined}
             aria-pressed={page.favorite}
-            aria-label={page.favorite ? "Quitar de favoritos" : "Añadir a favoritos"}
-            title={page.favorite ? "Quitar de favoritos" : "Añadir a favoritos"}
+            aria-label={page.favorite ? t("Quitar de favoritos") : t("Añadir a favoritos")}
+            title={page.favorite ? t("Quitar de favoritos") : t("Añadir a favoritos")}
             onClick={() => void setPageFavorite(page.id, !page.favorite).then(host.onPagesChanged)}
           >
             <Star size={16} aria-hidden fill={page.favorite ? "currentColor" : "none"} />
@@ -306,8 +307,8 @@ export function TaskPeek({
             className="peek-menu-button"
             aria-haspopup="menu"
             aria-expanded={menuOpen}
-            aria-label="Más acciones"
-            title="Más acciones"
+            aria-label={t("Más acciones")}
+            title={t("Más acciones")}
             onClick={() => setMenuOpen((open) => !open)}
           >
             <MoreHorizontal size={18} aria-hidden />

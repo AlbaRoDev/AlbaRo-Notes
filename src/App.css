@@ -100,6 +100,39 @@
   font-display: swap;
 }
 
+/* The typeface chosen from Ctrl+K (src/lib/theme.ts); the flag font stays first so country flags still draw. */
+:root[data-font="serif"] {
+  font-family:
+    "Twemoji Country Flags", Georgia, "Times New Roman", serif, "Segoe UI Emoji",
+    "Apple Color Emoji";
+}
+
+:root[data-font="garamond"] {
+  font-family:
+    "Twemoji Country Flags", "EB Garamond Variable", Garamond, Georgia, serif, "Segoe UI Emoji",
+    "Apple Color Emoji";
+  font-size: 17px; /* Garamond looks small at the same size */
+}
+
+:root[data-font="antiqua"] {
+  font-family:
+    "Twemoji Country Flags", "Libre Baskerville Variable", Baskerville, Georgia, serif,
+    "Segoe UI Emoji", "Apple Color Emoji";
+}
+
+:root[data-font="fraktur"] {
+  font-family:
+    "Twemoji Country Flags", "UnifrakturCook", "Old English Text MT", Georgia, serif,
+    "Segoe UI Emoji", "Apple Color Emoji";
+  font-size: 17px;
+}
+
+:root[data-font="mono"] {
+  font-family:
+    "Twemoji Country Flags", ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+    monospace, "Segoe UI Emoji", "Apple Color Emoji";
+}
+
 :root {
   /* Notion's stack: the platform UI font (Segoe UI on Windows, SF on macOS). */
   font-family:

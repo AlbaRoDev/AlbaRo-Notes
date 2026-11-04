@@ -7,6 +7,7 @@ import { CHART_TYPE_LABELS } from "../database/view-config";
 import { ChartCanvas } from "./ChartCanvas";
 import { MAX_CHART_ENTRIES, MAX_CHART_VALUE, MAX_ITEM_TITLE, type StoredEntry } from "./view-items";
 import "../database/DatabaseView.css"; // shared form controls
+import { t } from "../../lib/i18n.ts";
 
 /**
  * The standalone chart block: its numbers live in the block itself, unrelated to any
@@ -41,21 +42,21 @@ export function ChartBlockView({ node, updateAttributes, deleteNode, editor }: N
       ? [
           {
             key: "",
-            label: "Total",
+            label: t("Total"),
             value: numbers.length > 0 ? numbers.reduce((a, b) => a + b, 0) : null,
           },
         ]
-      : entries.map((e) => ({ key: e.id, label: e.title || "Sin título", value: e.value }));
+      : entries.map((e) => ({ key: e.id, label: e.title || t("Sin título"), value: e.value }));
 
   return (
     <NodeViewWrapper className="db-block view-block" contentEditable={false}>
       <div className="db-header">
         <ChartColumn size={14} strokeWidth={1.75} aria-hidden="true" />
-        <span className="db-title view-block-title">Gráfico</span>
+        <span className="db-title view-block-title">{t("Gráfico")}</span>
         <span className="db-header-actions">
           <select
             value={type}
-            aria-label="Tipo de gráfico"
+            aria-label={t("Tipo de gráfico")}
             onChange={(e) => updateAttributes({ chartType: e.target.value })}
           >
             {Object.entries(CHART_TYPE_LABELS).map(([id, label]) => (
@@ -66,12 +67,12 @@ export function ChartBlockView({ node, updateAttributes, deleteNode, editor }: N
           </select>
           {confirmRemove ? (
             <>
-              <span>¿Quitar (se pierden {entries.length})?</span>
+              <span>{t("¿Quitar (se pierden {count})?", { count: entries.length })}</span>
               <button type="button" onClick={remove}>
-                Sí, quitar
+                {t("Sí, quitar")}
               </button>
               <button type="button" onClick={() => setConfirmRemove(false)}>
-                No
+                {t("No")}
               </button>
             </>
           ) : (
@@ -79,7 +80,7 @@ export function ChartBlockView({ node, updateAttributes, deleteNode, editor }: N
               type="button"
               onClick={() => (entries.length > 0 ? setConfirmRemove(true) : remove())}
             >
-              Quitar
+              {t("Quitar")}
             </button>
           )}
         </span>
@@ -89,12 +90,12 @@ export function ChartBlockView({ node, updateAttributes, deleteNode, editor }: N
         <ChartCanvas
           type={type}
           points={points}
-          measure={type === "number" ? "Total" : "Valores"}
+          measure={type === "number" ? t("Total") : t("Valores")}
           additive
         />
       )}
 
-      <div className="chart-data" role="group" aria-label="Datos del gráfico">
+      <div className="chart-data" role="group" aria-label={t("Datos del gráfico")}>
         {entries.map((e) => {
           const current = e.value === null ? "" : String(e.value);
           return (
@@ -105,8 +106,8 @@ export function ChartBlockView({ node, updateAttributes, deleteNode, editor }: N
                 maxLength={MAX_ITEM_TITLE}
                 autoFocus={focusId === e.id}
                 defaultValue={e.title}
-                placeholder="Etiqueta"
-                aria-label="Etiqueta"
+                placeholder={t("Etiqueta")}
+                aria-label={t("Etiqueta")}
                 {...commitOnBlur(
                   e.title,
                   (v) => (change(e.id, { title: String(v ?? "").trim() }), Promise.resolve(true)),
@@ -119,8 +120,8 @@ export function ChartBlockView({ node, updateAttributes, deleteNode, editor }: N
                 step="any"
                 key={current}
                 defaultValue={current}
-                placeholder="Valor"
-                aria-label="Valor"
+                placeholder={t("Valor")}
+                aria-label={t("Valor")}
                 {...commitOnBlur(
                   current,
                   (v) => {
@@ -128,7 +129,7 @@ export function ChartBlockView({ node, updateAttributes, deleteNode, editor }: N
                       typeof v === "number" &&
                       (!Number.isFinite(v) || Math.abs(v) > MAX_CHART_VALUE)
                     ) {
-                      setNote("El valor es demasiado grande");
+                      setNote(t("El valor es demasiado grande"));
                       return Promise.resolve(false);
                     }
                     setNote(null);
@@ -141,8 +142,8 @@ export function ChartBlockView({ node, updateAttributes, deleteNode, editor }: N
               <button
                 type="button"
                 className="db-icon-btn"
-                aria-label="Borrar dato"
-                title="Borrar dato"
+                aria-label={t("Borrar dato")}
+                title={t("Borrar dato")}
                 onClick={() => save(entries.filter((x) => x.id !== e.id))}
               >
                 <X size={14} strokeWidth={1.75} aria-hidden="true" />
@@ -157,10 +158,10 @@ export function ChartBlockView({ node, updateAttributes, deleteNode, editor }: N
           disabled={entries.length >= MAX_CHART_ENTRIES}
           onClick={add}
         >
-          <Plus size={14} strokeWidth={1.75} aria-hidden="true" /> Añadir dato
+          <Plus size={14} strokeWidth={1.75} aria-hidden="true" /> {t("Añadir dato")}
         </button>
         {entries.length === 0 && (
-          <p className="db-loading">Aún no hay datos: pulsa «Añadir dato».</p>
+          <p className="db-loading">{t("Aún no hay datos: pulsa «Añadir dato».")}</p>
         )}
       </div>
     </NodeViewWrapper>

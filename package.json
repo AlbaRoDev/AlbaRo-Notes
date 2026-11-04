@@ -12,13 +12,16 @@
     "tauri": "node scripts/tauri.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test": "node --test tests/*.test.mjs",
+    "test": "node --import ./tests/lang-es.mjs --test tests/*.test.mjs",
     "knip": "knip",
     "notices": "node scripts/gen-notices.mjs",
     "notices:check": "node scripts/gen-notices.mjs --check"
   },
   "dependencies": {
+    "@fontsource-variable/eb-garamond": "^5.3.0",
+    "@fontsource-variable/libre-baskerville": "^5.3.0",
     "@fontsource-variable/playfair-display": "^5.3.0",
+    "@fontsource/unifrakturcook": "^5.3.0",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-opener": "^2",
     "@tiptap/core": "^3.31.3",

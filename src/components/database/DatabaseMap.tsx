@@ -1,5 +1,6 @@
 import type { DatabaseRow, PlaceValue, Property } from "../../types";
 import { MapCanvas, type MapPinData } from "../views/MapCanvas";
+import { t } from "../../lib/i18n.ts";
 
 interface Props {
   /** Rows after the view's filter and sort. */
@@ -19,8 +20,9 @@ export function DatabaseMap({ rows, placeProp, onOpen, onAddAt }: Props) {
   if (!placeProp) {
     return (
       <p className="db-loading">
-        Este mapa necesita una propiedad de tipo lugar: añade una desde «Propiedades» y elígela en
-        «Lugar».
+        {t(
+          "Este mapa necesita una propiedad de tipo lugar: añade una desde «Propiedades» y elígela en «Lugar».",
+        )}
       </p>
     );
   }

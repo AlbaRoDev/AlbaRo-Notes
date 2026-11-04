@@ -10,6 +10,7 @@ import { PropIcon } from "./PropIcon";
 import { typeChoiceOf } from "./property-types";
 import { useDatabase } from "./useDatabase";
 import "./DatabaseView.css";
+import { t } from "../../lib/i18n.ts";
 
 /**
  * The properties of a database row, shown above its page content (Notion's
@@ -26,12 +27,12 @@ export function RowProperties({ pageId, databaseId }: { pageId: string; database
   if (!data || !row) return null;
 
   return (
-    <div className="row-props" role="group" aria-label="Propiedades de la fila">
+    <div className="row-props" role="group" aria-label={t("Propiedades de la fila")}>
       <button
         type="button"
         className="row-props-source"
         onClick={() => onNavigate(data.pageId)}
-        title="Abrir la base de datos"
+        title={t("Abrir la base de datos")}
       >
         <ArrowLeft size={13} strokeWidth={1.75} aria-hidden="true" /> {data.name}
       </button>

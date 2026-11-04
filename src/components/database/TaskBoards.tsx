@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Columns3 } from "lucide-react";
 import { boardsOfTask } from "../../lib/db-client";
 import type { BoardInfo } from "../../types";
+import { t } from "../../lib/i18n.ts";
 
 /** The boards a task is on, under its linked pages. Read-only: cards are added and removed on the boards. */
 export function TaskBoards({ taskId }: { taskId: string }) {
@@ -18,7 +19,7 @@ export function TaskBoards({ taskId }: { taskId: string }) {
   if (boards.length === 0) return null;
   return (
     <div className="linked-pages">
-      <span className="linked-pages-title">En tableros</span>
+      <span className="linked-pages-title">{t("En tableros")}</span>
       <div className="linked-pages-chips">
         {boards.map((b) => (
           <span key={b.id} className="db-chip linked-chip">

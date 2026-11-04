@@ -37,6 +37,7 @@ import type { PageSummary } from "../../types";
 import "katex/dist/katex.min.css";
 import "./PageEditor.css";
 import "./media.css";
+import { t } from "../../lib/i18n.ts";
 
 const EMPTY_CONTENT: JSONContent = {
   type: "doc",
@@ -49,8 +50,9 @@ const EMPTY_DATABASE_PAGE: JSONContent = {
   content: [{ type: "heading", attrs: { level: 1 } }],
 };
 
-const BODY_PLACEHOLDER =
-  "Pulsa «Espacio» para activar la IA o escribe «/» para mostrar los comandos";
+const BODY_PLACEHOLDER = t(
+  "Pulsa «Espacio» para activar la IA o escribe «/» para mostrar los comandos",
+);
 
 const SAVE_DEBOUNCE_MS = 800;
 const SAVED_BADGE_DURATION_MS = 1500;
@@ -174,7 +176,7 @@ export function PageEditor({
           Placeholder.configure({
             showOnlyCurrent: false,
             placeholder: ({ pos, hasAnchor }) =>
-              pos === 0 ? "Sin título" : hasAnchor ? BODY_PLACEHOLDER : "",
+              pos === 0 ? t("Sin título") : hasAnchor ? BODY_PLACEHOLDER : "",
           }),
         ],
     content: ownDatabaseId ? EMPTY_DATABASE_PAGE : EMPTY_CONTENT,
@@ -395,7 +397,7 @@ export function PageEditor({
           </p>
         )}
         <span className="save-indicator" data-visible={saveStatus !== "idle"}>
-          {saveStatus === "saving" ? "Guardando…" : "Guardado"}
+          {saveStatus === "saving" ? t("Guardando…") : t("Guardado")}
         </span>
       </div>
     </EditorAppProvider>

@@ -5,6 +5,7 @@ import { geocodePlace, type GeocodeResult } from "../../lib/db-client";
 import { MapCanvas } from "./MapCanvas";
 import { MAX_ITEMS, MAX_ITEM_TITLE, type StoredPin } from "./view-items";
 import "../database/DatabaseView.css"; // shared form controls
+import { t } from "../../lib/i18n.ts";
 
 /** Edits one pin. Fields save when you leave them; coordinates only when both are real. */
 function PinPanel({
@@ -30,7 +31,7 @@ function PinPanel({
       Math.abs(la) <= 90 &&
       Math.abs(ln) <= 180;
     if (!ok) {
-      setNote("Latitud entre -90 y 90, longitud entre -180 y 180");
+      setNote(t("Latitud entre -90 y 90, longitud entre -180 y 180"));
       lat.value = String(pin.lat);
       lng.value = String(pin.lng);
       return;
@@ -43,17 +44,17 @@ function PinPanel({
     <div
       className="db-panel"
       role="group"
-      aria-label="Editar pin"
+      aria-label={t("Editar pin")}
       onKeyDown={(e) => e.key === "Escape" && onClose()}
     >
       <label>
-        Nombre del sitio
+        {t("Nombre del sitio")}
         <input
           autoFocus
           type="text"
           maxLength={MAX_ITEM_TITLE}
           defaultValue={pin.title}
-          placeholder="Sin título"
+          placeholder={t("Sin título")}
           onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
           onBlur={(e) => {
             const title = e.currentTarget.value.trim();
@@ -74,7 +75,7 @@ function PinPanel({
         }
       >
         <label>
-          Latitud
+          {t("Latitud")}
           <input
             type="number"
             step="any"
@@ -85,7 +86,7 @@ function PinPanel({
           />
         </label>
         <label>
-          Longitud
+          {t("Longitud")}
           <input
             type="number"
             step="any"
@@ -99,10 +100,10 @@ function PinPanel({
       {note && <p className="db-error">{note}</p>}
       <div className="db-panel-actions">
         <button type="button" onClick={onDelete}>
-          Borrar pin
+          {t("Borrar pin")}
         </button>
         <button type="button" onClick={onClose}>
-          Cerrar
+          {t("Cerrar")}
         </button>
       </div>
     </div>
@@ -134,7 +135,7 @@ export function MapBlockView({ node, updateAttributes, deleteNode, editor }: Nod
     try {
       const found = await geocodePlace(query);
       setResults(found);
-      if (found.length === 0) setSearchError("Sin resultados");
+      if (found.length === 0) setSearchError(t("Sin resultados"));
     } catch (err) {
       setResults(null);
       setSearchError(String(err));
@@ -161,21 +162,21 @@ export function MapBlockView({ node, updateAttributes, deleteNode, editor }: Nod
         type="search"
         name="q"
         maxLength={200}
-        placeholder="Buscar un lugar para añadir un pin…"
-        aria-label="Buscar un lugar"
+        placeholder={t("Buscar un lugar para añadir un pin…")}
+        aria-label={t("Buscar un lugar")}
       />
       <button
         type="submit"
         className="db-icon-btn"
-        aria-label="Buscar"
-        title="Buscar el lugar en internet"
+        aria-label={t("Buscar")}
+        title={t("Buscar el lugar en internet")}
         disabled={searching}
       >
         <Search size={14} strokeWidth={1.75} aria-hidden="true" />
       </button>
       {searchError && <span className="db-place-note">{searchError}</span>}
       {results && results.length > 0 && (
-        <ul className="db-place-results" aria-label="Resultados de la búsqueda">
+        <ul className="db-place-results" aria-label={t("Resultados de la búsqueda")}>
           {results.map((r) => (
             <li key={`${r.lat},${r.lng}`}>
               <button
@@ -203,16 +204,16 @@ export function MapBlockView({ node, updateAttributes, deleteNode, editor }: Nod
     <NodeViewWrapper className="db-block view-block" contentEditable={false}>
       <div className="db-header">
         <MapIcon size={14} strokeWidth={1.75} aria-hidden="true" />
-        <span className="db-title view-block-title">Mapa</span>
+        <span className="db-title view-block-title">{t("Mapa")}</span>
         <span className="db-header-actions">
           {confirmRemove ? (
             <>
-              <span>¿Quitar (se pierden {pins.length})?</span>
+              <span>{t("¿Quitar (se pierden {count})?", { count: pins.length })}</span>
               <button type="button" onClick={remove}>
-                Sí, quitar
+                {t("Sí, quitar")}
               </button>
               <button type="button" onClick={() => setConfirmRemove(false)}>
-                No
+                {t("No")}
               </button>
             </>
           ) : (
@@ -220,7 +221,7 @@ export function MapBlockView({ node, updateAttributes, deleteNode, editor }: Nod
               type="button"
               onClick={() => (pins.length > 0 ? setConfirmRemove(true) : remove())}
             >
-              Quitar
+              {t("Quitar")}
             </button>
           )}
         </span>
@@ -229,12 +230,12 @@ export function MapBlockView({ node, updateAttributes, deleteNode, editor }: Nod
       <MapCanvas
         pins={pins.map((p) => ({
           id: p.id,
-          title: p.title || "Sin título",
+          title: p.title || t("Sin título"),
           lat: p.lat,
           lng: p.lng,
         }))}
         selectedId={selectedId}
-        openLabel="Editar"
+        openLabel={t("Editar")}
         onOpen={setSelectedId}
         onAddAt={(lat, lng) => add({ title: "", lat, lng })}
         toolbar={toolbar}

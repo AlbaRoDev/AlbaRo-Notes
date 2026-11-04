@@ -378,6 +378,12 @@ pub fn test_notification(app: AppHandle) -> Result<(), String> {
     notifications::send_test(&app)
 }
 
+/// The page tells the language of the interface at start and when it changes (see lang.rs).
+#[tauri::command]
+pub fn set_language(code: String) {
+    crate::lang::set(&code);
+}
+
 /// boards. Every rule lives in `boards.rs`; these only lock the database and pass the call on.
 #[tauri::command]
 pub fn list_boards(state: State<DbState>) -> Result<Vec<boards::BoardInfo>, String> {

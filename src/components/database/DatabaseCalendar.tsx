@@ -1,6 +1,7 @@
 import type { DatabaseRow, Property } from "../../types";
 import { CalendarGrid } from "../views/CalendarGrid";
 import { rowsToDated } from "./rows-to-dated";
+import { t } from "../../lib/i18n.ts";
 
 interface Props {
   /** Rows after the view's filter and sort. */
@@ -17,8 +18,9 @@ export function DatabaseCalendar({ rows, dateProp, onOpen, onAddOn }: Props) {
   if (!dateProp) {
     return (
       <p className="db-loading">
-        Esta vista necesita una propiedad de fecha: añade una desde «Propiedades» y elígela en
-        «Fecha».
+        {t(
+          "Esta vista necesita una propiedad de fecha: añade una desde «Propiedades» y elígela en «Fecha».",
+        )}
       </p>
     );
   }

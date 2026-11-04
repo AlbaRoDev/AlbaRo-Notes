@@ -113,7 +113,31 @@ export function toggleTheme() {
 }
 
 /** Called once before the first render, so the page never flashes the wrong theme. */
+/** The typeface of the interface and the pages: the platform's own (Notion's), a serif, a monospace, Garamond,
+ * an Antiqua (Libre Baskerville) or a Fraktur (UnifrakturCook); the last three ship with the app (main.tsx). */
+const FONTS = ["system", "serif", "mono", "garamond", "antiqua", "fraktur"] as const;
+export type FontPref = (typeof FONTS)[number];
+
+const FONT_KEY = "font";
+
+export function getFontPref(): FontPref {
+  const stored = readPref(FONT_KEY);
+  return FONTS.find((f) => f === stored) ?? "system";
+}
+
+function applyFont() {
+  const font = getFontPref();
+  if (font === "system") delete document.documentElement.dataset.font;
+  else document.documentElement.dataset.font = font;
+}
+
+export function setFontPref(font: FontPref) {
+  writePref(FONT_KEY, font);
+  applyFont();
+}
+
 export function initTheme() {
+  applyFont();
   apply(getThemePref());
   systemDark.addEventListener("change", () => apply(getThemePref()));
   // a season that turns while the app stays open shows when the window is next looked at

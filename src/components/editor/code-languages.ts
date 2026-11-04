@@ -1,6 +1,7 @@
 import { createLowlight } from "lowlight";
 import type { LanguageFn } from "highlight.js";
 import plaintext from "highlight.js/lib/languages/plaintext";
+import { t } from "../../lib/i18n.ts";
 
 /**
  * "plaintext" is a real registered language so that a block with no language
@@ -27,7 +28,7 @@ const LANGUAGES: {
 }[] = [
   {
     value: "bash",
-    label: "Bash",
+    label: t("Bash"),
     aliases: ["sh", "zsh"],
     load: () => import("highlight.js/lib/languages/bash"),
   },
@@ -59,13 +60,13 @@ const LANGUAGES: {
   },
   {
     value: "java",
-    label: "Java",
+    label: t("Java"),
     aliases: ["jsp"],
     load: () => import("highlight.js/lib/languages/java"),
   },
   {
     value: "javascript",
-    label: "JavaScript",
+    label: t("JavaScript"),
     aliases: ["js", "jsx", "mjs", "cjs"],
     load: () => import("highlight.js/lib/languages/javascript"),
   },
@@ -77,45 +78,45 @@ const LANGUAGES: {
   },
   {
     value: "kotlin",
-    label: "Kotlin",
+    label: t("Kotlin"),
     aliases: ["kt", "kts", "ktm", "ktx"],
     load: () => import("highlight.js/lib/languages/kotlin"),
   },
   {
     value: "markdown",
-    label: "Markdown",
+    label: t("Markdown"),
     aliases: ["md", "mkdown", "mkd"],
     load: () => import("highlight.js/lib/languages/markdown"),
   },
   { value: "php", label: "PHP", aliases: [], load: () => import("highlight.js/lib/languages/php") },
   {
     value: "python",
-    label: "Python",
+    label: t("Python"),
     aliases: ["py", "gyp", "ipython"],
     load: () => import("highlight.js/lib/languages/python"),
   },
   {
     value: "ruby",
-    label: "Ruby",
+    label: t("Ruby"),
     aliases: ["rb", "gemspec", "podspec", "thor", "irb"],
     load: () => import("highlight.js/lib/languages/ruby"),
   },
   {
     value: "rust",
-    label: "Rust",
+    label: t("Rust"),
     aliases: ["rs"],
     load: () => import("highlight.js/lib/languages/rust"),
   },
   { value: "sql", label: "SQL", aliases: [], load: () => import("highlight.js/lib/languages/sql") },
   {
     value: "swift",
-    label: "Swift",
+    label: t("Swift"),
     aliases: [],
     load: () => import("highlight.js/lib/languages/swift"),
   },
   {
     value: "typescript",
-    label: "TypeScript",
+    label: t("TypeScript"),
     aliases: ["ts", "tsx", "mts", "cts"],
     load: () => import("highlight.js/lib/languages/typescript"),
   },
@@ -129,7 +130,7 @@ const LANGUAGES: {
 
 /** What the language selectors offer (no grammar: importing this costs nothing). */
 export const CODE_LANGUAGES: { value: string; label: string }[] = [
-  { value: PLAIN_TEXT, label: "Texto sin formato" },
+  { value: PLAIN_TEXT, label: t("Texto sin formato") },
   ...LANGUAGES.map(({ value, label }) => ({ value, label })),
 ];
 

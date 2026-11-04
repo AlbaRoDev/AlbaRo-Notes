@@ -3,6 +3,7 @@ import { NodeViewWrapper, NodeViewContent, type NodeViewProps } from "@tiptap/re
 import { Selection } from "@tiptap/pm/state";
 import type { Node as PMNode } from "@tiptap/pm/model";
 import { MAX_TABS, MAX_TAB_TITLE } from "./Tabs";
+import { t } from "../../lib/i18n.ts";
 
 /** Start position of the `index`-th tab of the `tabs` node at `pos`. */
 function tabStart(tabs: PMNode, pos: number, index: number) {
@@ -63,7 +64,7 @@ export function TabsView({ node, editor, getPos }: NodeViewProps) {
     const at = pos + node.nodeSize - 1;
     const tr = state.tr.insert(
       at,
-      tab.create({ title: `Pestaña ${count + 1}` }, paragraph.create()),
+      tab.create({ title: t("Pestaña {n1}", { n1: count + 1 }) }, paragraph.create()),
     );
     tr.setNodeAttribute(pos, "active", count);
     tr.setSelection(Selection.near(tr.doc.resolve(at + 1), 1));
@@ -135,7 +136,7 @@ export function TabsView({ node, editor, getPos }: NodeViewProps) {
               onChange={(e) => setDraft(e.target.value)}
               onBlur={commitRename}
               onKeyDown={onRenameKey}
-              aria-label="Nombre de la pestaña"
+              aria-label={t("Nombre de la pestaña")}
             />
           ) : (
             <button
@@ -145,7 +146,7 @@ export function TabsView({ node, editor, getPos }: NodeViewProps) {
               aria-selected={i === active}
               className="tabs-tab"
               data-active={i === active}
-              title="Doble clic para renombrar"
+              title={t("Doble clic para renombrar")}
               onClick={() => select(i)}
               onDoubleClick={() => startRename(i)}
             >
@@ -158,19 +159,19 @@ export function TabsView({ node, editor, getPos }: NodeViewProps) {
           className="tabs-add"
           onClick={addTab}
           disabled={count >= MAX_TABS}
-          aria-label="Añadir pestaña"
+          aria-label={t("Añadir pestaña")}
         >
           +
         </button>
         {count > 1 &&
           (confirming ? (
             <span className="tabs-confirm">
-              ¿Borrar «{titles[active]}» con su contenido?
+              {t("¿Borrar «{title}» con su contenido?", { title: titles[active] })}
               <button type="button" onClick={() => removeActive(true)}>
-                Sí
+                {t("Sí")}
               </button>
               <button type="button" onClick={() => setConfirming(false)}>
-                No
+                {t("No")}
               </button>
             </span>
           ) : (
@@ -178,7 +179,7 @@ export function TabsView({ node, editor, getPos }: NodeViewProps) {
               type="button"
               className="tabs-remove"
               onClick={() => removeActive(false)}
-              aria-label="Borrar pestaña activa"
+              aria-label={t("Borrar pestaña activa")}
             >
               ×
             </button>

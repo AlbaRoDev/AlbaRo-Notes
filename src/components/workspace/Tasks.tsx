@@ -11,6 +11,7 @@ import { emitLinkChange } from "../../lib/links-bus";
 import type { DragItem } from "../../lib/drag-item";
 import { emitDatabaseChange } from "../../lib/database-bus";
 import type { PageSummary } from "../../types";
+import { t } from "../../lib/i18n.ts";
 
 /** What the Gestor needs from the app to show a task (an ordinary row page) with its editor. */
 export interface TaskHost {
@@ -93,7 +94,7 @@ export function TasksSection({ host }: { host: TaskHost }) {
   // A page dropped on a task (a row of the table, or its open peek) links them.
   const dropOnTask = useCallback((taskId: string, item: DragItem) => {
     if (item.kind !== "page")
-      return setError("Arrastra una página sobre una tarea para enlazarlas");
+      return setError(t("Arrastra una página sobre una tarea para enlazarlas"));
     linkPage(taskId, item.id)
       .then(() => {
         setError(null);
@@ -122,7 +123,7 @@ export function TasksSection({ host }: { host: TaskHost }) {
       </p>
     );
   }
-  if (!base) return <p className="tasks-loading">Preparando las tareas…</p>;
+  if (!base) return <p className="tasks-loading">{t("Preparando las tareas…")}</p>;
 
   // A task deleted from the table while its peek was open leaves nothing to show.
   const open = openTask && pages.some((p) => p.id === openTask) ? openTask : null;
@@ -147,8 +148,8 @@ export function TasksSection({ host }: { host: TaskHost }) {
           value={draft}
           maxLength={200}
           readOnly={adding} // not disabled: a disabled input drops the focus
-          placeholder="Añadir una tarea…"
-          aria-label="Añadir una tarea"
+          placeholder={t("Añadir una tarea…")}
+          aria-label={t("Añadir una tarea")}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
             // ↓ goes into the table, to the first task's title

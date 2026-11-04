@@ -4,23 +4,21 @@
  * shift a day. A date property may hold a range (`start/end`, like Notion).
  */
 
-export const MONTH_NAMES = [
-  "Enero",
-  "Febrero",
-  "Marzo",
-  "Abril",
-  "Mayo",
-  "Junio",
-  "Julio",
-  "Agosto",
-  "Septiembre",
-  "Octubre",
-  "Noviembre",
-  "Diciembre",
-];
+const capital = (s: string) => s.charAt(0).toLocaleUpperCase(locale) + s.slice(1);
+const nameOf = (options: Intl.DateTimeFormatOptions, utcDate: number) =>
+  new Intl.DateTimeFormat(locale, { ...options, timeZone: "UTC" }).format(utcDate);
 
-/** Weeks start on Monday. */
-export const WEEKDAYS = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
+import { locale } from "./i18n.ts";
+
+export const MONTH_NAMES = Array.from({ length: 12 }, (_, i) =>
+  capital(nameOf({ month: "long" }, Date.UTC(2021, i, 1))),
+);
+
+/** Weeks start on Monday (4 Jan 2021 was one). */
+const weekdayNames = (weekday: "short" | "long") =>
+  Array.from({ length: 7 }, (_, i) => nameOf({ weekday }, Date.UTC(2021, 0, 4 + i)));
+export const WEEKDAYS = weekdayNames("short");
+export const WEEKDAYS_LONG = weekdayNames("long");
 
 const DAY_MS = 86_400_000;
 

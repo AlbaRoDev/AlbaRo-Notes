@@ -1686,9 +1686,10 @@ fn tools() -> Value {
 }
 
 fn system_prompt(today: &str, context: &str) -> String {
+    let language = crate::lang::pick("español", "inglés");
     format!(
         "Eres el asistente de AlbaRo Notes, una app de notas. \
-         Hoy es {today}. Responde siempre en español, breve y claro.\n\
+         Hoy es {today}. Responde siempre en {language}, breve y claro.\n\
          - Para cualquier pregunta sobre las notas del usuario usa primero buscar_entradas; para ver el contenido completo de un resultado, leer_pagina con su id.\n\
          - Para contar, listar o resumir las filas de una base de datos, léela con leer_pagina (usa su «filas_totales» y sus «recuentos»): \
            la búsqueda solo trae algunos resultados y sus fragmentos no sirven para contar.\n\

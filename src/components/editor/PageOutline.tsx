@@ -2,6 +2,7 @@ import { useEffect, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import type { Editor } from "@tiptap/core";
 import "./PageOutline.css";
+import { t } from "../../lib/i18n.ts";
 
 interface Heading {
   pos: number;
@@ -119,7 +120,11 @@ export function PageOutline({
   };
 
   return createPortal(
-    <nav className="page-outline" style={{ right: place.right }} aria-label="Índice de la página">
+    <nav
+      className="page-outline"
+      style={{ right: place.right }}
+      aria-label={t("Índice de la página")}
+    >
       <div className="page-outline-dashes" aria-hidden="true">
         {headings.map((h, i) => (
           <span

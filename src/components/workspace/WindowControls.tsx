@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Copy, Minus, Square, X } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { t } from "../../lib/i18n.ts";
 
 /**
  * Minimize, maximize and close, at the right end of the top bar: the window has no frame of its own
@@ -27,16 +28,16 @@ export function WindowControls() {
       <button
         type="button"
         onClick={() => void win().minimize()}
-        title="Minimizar"
-        aria-label="Minimizar"
+        title={t("Minimizar")}
+        aria-label={t("Minimizar")}
       >
         <Minus size={16} aria-hidden="true" />
       </button>
       <button
         type="button"
         onClick={() => void win().toggleMaximize()}
-        title={maximized ? "Restaurar" : "Maximizar"}
-        aria-label={maximized ? "Restaurar" : "Maximizar"}
+        title={maximized ? t("Restaurar") : t("Maximizar")}
+        aria-label={maximized ? t("Restaurar") : t("Maximizar")}
       >
         {maximized ? (
           <Copy size={13} aria-hidden="true" />
@@ -48,8 +49,8 @@ export function WindowControls() {
         type="button"
         data-close
         onClick={() => void win().close()}
-        title="Cerrar"
-        aria-label="Cerrar"
+        title={t("Cerrar")}
+        aria-label={t("Cerrar")}
       >
         <X size={17} aria-hidden="true" />
       </button>

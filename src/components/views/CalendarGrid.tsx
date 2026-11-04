@@ -12,6 +12,7 @@ import {
 } from "../../lib/date-utils";
 import type { DatedItem, UndatedItem } from "./view-items";
 import "./views.css";
+import { t } from "../../lib/i18n.ts";
 
 interface CalendarGridProps {
   items: DatedItem[];
@@ -75,7 +76,7 @@ export function CalendarGrid({
         <button
           type="button"
           className="db-icon-btn"
-          aria-label="Anterior"
+          aria-label={t("Anterior")}
           onClick={() => step(-1)}
         >
           <ChevronLeft size={16} aria-hidden="true" />
@@ -83,17 +84,17 @@ export function CalendarGrid({
         <button
           type="button"
           className="db-icon-btn"
-          aria-label="Siguiente"
+          aria-label={t("Siguiente")}
           onClick={() => step(1)}
         >
           <ChevronRight size={16} aria-hidden="true" />
         </button>
         <button type="button" className="calendar-today" onClick={() => setAnchor(today)}>
-          Hoy
+          {t("Hoy")}
         </button>
         <select
           className="db-input calendar-select"
-          aria-label="Mes"
+          aria-label={t("Mes")}
           value={month}
           onChange={(e) => jumpTo(year, Number(e.target.value))}
         >
@@ -106,7 +107,7 @@ export function CalendarGrid({
         <input
           className="db-input calendar-year"
           type="number"
-          aria-label="Año"
+          aria-label={t("Año")}
           min={1}
           max={9999}
           value={year}
@@ -118,10 +119,10 @@ export function CalendarGrid({
         <span className="calendar-title" aria-live="polite">
           {formatMonthYear(year, month)}
         </span>
-        <span className="calendar-modes" role="group" aria-label="Modo">
+        <span className="calendar-modes" role="group" aria-label={t("Modo")}>
           {(["month", "week"] as const).map((m) => (
             <button key={m} type="button" aria-pressed={mode === m} onClick={() => setMode(m)}>
-              {m === "month" ? "Mes" : "Semana"}
+              {m === "month" ? t("Mes") : t("Semana")}
             </button>
           ))}
         </span>
@@ -154,8 +155,8 @@ export function CalendarGrid({
                       <button
                         type="button"
                         className="db-icon-btn calendar-add"
-                        aria-label={`Añadir el ${day}`}
-                        title="Añadir en este día"
+                        aria-label={t("Añadir el {day}", { day })}
+                        title={t("Añadir en este día")}
                         onClick={() => onAddOn(day)}
                       >
                         <Plus size={12} strokeWidth={1.75} aria-hidden="true" />
@@ -187,7 +188,7 @@ export function CalendarGrid({
 
       {undated.length > 0 && (
         <div className="calendar-undated">
-          <span className="db-panel-meta">Sin fecha</span>
+          <span className="db-panel-meta">{t("Sin fecha")}</span>
           {undated.map((item) => (
             <button
               key={item.id}

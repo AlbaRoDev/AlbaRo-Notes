@@ -7,19 +7,20 @@ import {
   useIconLibrary,
 } from "../lib/icon-library";
 import "./IconGrid.css";
+import { t } from "../lib/i18n.ts";
 
 const PAGE = 240;
 
 const COLOR_LABELS: Record<string, string> = {
-  gray: "Gris",
-  brown: "Marrón",
-  orange: "Naranja",
-  yellow: "Amarillo",
-  green: "Verde",
-  blue: "Azul",
-  purple: "Morado",
-  pink: "Rosa",
-  red: "Rojo",
+  gray: t("Gris"),
+  brown: t("Marrón"),
+  orange: t("Naranja"),
+  yellow: t("Amarillo"),
+  green: t("Verde"),
+  blue: t("Azul"),
+  purple: t("Morado"),
+  pink: t("Rosa"),
+  red: t("Rojo"),
 };
 
 /**
@@ -51,8 +52,8 @@ export function IconGrid({
       <input
         autoFocus
         type="search"
-        placeholder="Busca un icono… (casa, corazón, rocket)"
-        aria-label="Buscar un icono"
+        placeholder={t("Busca un icono… (casa, corazón, rocket)")}
+        aria-label={t("Buscar un icono")}
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
@@ -60,24 +61,24 @@ export function IconGrid({
         }}
       />
       {withColor && (
-        <div className="icon-colors" role="group" aria-label="Color del icono">
+        <div className="icon-colors" role="group" aria-label={t("Color del icono")}>
           {[null, ...ICON_COLORS].map((c) => (
             <button
               key={c ?? "none"}
               type="button"
               className="icon-color"
               data-color={c ?? "none"}
-              aria-label={c ? COLOR_LABELS[c] : "Sin color"}
+              aria-label={c ? COLOR_LABELS[c] : t("Sin color")}
               aria-pressed={color === c}
-              title={c ? COLOR_LABELS[c] : "Sin color"}
+              title={c ? COLOR_LABELS[c] : t("Sin color")}
               onClick={() => setColor(c)}
             />
           ))}
         </div>
       )}
-      {!lib && <p className="icon-grid-note">Cargando…</p>}
-      {lib && found.length === 0 && <p className="icon-grid-note">Ningún icono coincide.</p>}
-      <div className="icon-grid" role="listbox" aria-label="Iconos">
+      {!lib && <p className="icon-grid-note">{t("Cargando…")}</p>}
+      {lib && found.length === 0 && <p className="icon-grid-note">{t("Ningún icono coincide.")}</p>}
+      <div className="icon-grid" role="listbox" aria-label={t("Iconos")}>
         {found.slice(0, limit).map((name) => {
           const Icon = lib![name];
           return (
@@ -102,7 +103,7 @@ export function IconGrid({
       </div>
       {found.length > limit && (
         <button type="button" className="icon-grid-more" onClick={() => setLimit((l) => l + PAGE)}>
-          Ver más ({found.length - limit})
+          {t("Ver más ({count})", { count: found.length - limit })}
         </button>
       )}
     </div>

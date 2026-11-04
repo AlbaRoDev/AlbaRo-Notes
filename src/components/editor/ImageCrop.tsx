@@ -1,5 +1,6 @@
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import type { CropRect } from "../../lib/image-edit";
+import { t } from "../../lib/i18n.ts";
 
 const MIN = 0.05; // smallest side, as a fraction of the picture
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
@@ -86,7 +87,7 @@ export function ImageCrop({
       ref={root}
       className="image-crop"
       role="group"
-      aria-label="Recortar la imagen"
+      aria-label={t("Recortar la imagen")}
       tabIndex={-1}
       onKeyDown={onKeyDown}
     >
@@ -106,10 +107,10 @@ export function ImageCrop({
       </div>
       <div className="image-crop-actions">
         <button type="button" autoFocus onClick={() => onApply(rect)}>
-          Recortar
+          {t("Recortar")}
         </button>
         <button type="button" onClick={onCancel}>
-          Cancelar
+          {t("Cancelar")}
         </button>
       </div>
     </div>

@@ -8,6 +8,7 @@ import { PageCover } from "./PageHeader";
 import { PageIcon } from "../PageIcon";
 import { PageRef } from "./PageRef";
 import "./PagePreviewCard.css";
+import { t } from "../../lib/i18n.ts";
 
 const WIDTH = 320;
 const HEIGHT = 280; // the card's most; used to decide whether it fits under the link
@@ -70,17 +71,17 @@ export function PagePreviewCard({
             <PageIcon icon={page.icon} size={20} />
           </span>
         )}
-        <strong>{page.title || "Sin título"}</strong>
+        <strong>{page.title || t("Sin título")}</strong>
       </div>
       <div className="page-preview-body">
         {items === null ? (
-          <span className="page-preview-note">Cargando…</span>
+          <span className="page-preview-note">{t("Cargando…")}</span>
         ) : page.kind === "database" ? (
           <span className="page-preview-note">
-            <Database size={13} aria-hidden="true" /> Base de datos
+            <Database size={13} aria-hidden="true" /> {t("Base de datos")}
           </span>
         ) : items.length === 0 ? (
-          <span className="page-preview-note">Página vacía</span>
+          <span className="page-preview-note">{t("Página vacía")}</span>
         ) : (
           items.map((item, i) => {
             if ("text" in item)

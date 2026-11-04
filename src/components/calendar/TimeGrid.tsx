@@ -16,6 +16,7 @@ import {
 import { hasDragItem, readDragItem } from "../../lib/drag-item";
 import type { CalendarEntry, Deadline, EntryInput } from "../../types";
 import { keyOf, toInput } from "./entry-input";
+import { t } from "../../lib/i18n.ts";
 
 /** Pixels per hour: 15 minutes are 12 px. */
 const HOUR_PX = 48;
@@ -162,7 +163,7 @@ export function TimeGrid({
   const createTimed = (date: string, start: number, end: number) =>
     onCreate({
       taskId: null,
-      title: "Nueva cita",
+      title: t("Nueva cita"),
       start: stamp(date, start),
       end: endFromAbs(dayNumber(date) * DAY_MINUTES + end),
       allDay: false,
@@ -288,7 +289,7 @@ export function TimeGrid({
       </div>
 
       <div className="cal-allday">
-        <div className="cal-gutter cal-gutter-label">todo el día</div>
+        <div className="cal-gutter cal-gutter-label">{t("todo el día")}</div>
         {days.map((date) => (
           <div
             key={date}
@@ -309,7 +310,11 @@ export function TimeGrid({
             {deadlines
               .filter((d) => d.date === date)
               .map((d) => (
-                <div key={d.taskId} className="cal-deadline" title={`Fecha límite: ${d.title}`}>
+                <div
+                  key={d.taskId}
+                  className="cal-deadline"
+                  title={t("Fecha límite: {title}", { title: d.title })}
+                >
                   ⚑ {d.title}
                 </div>
               ))}

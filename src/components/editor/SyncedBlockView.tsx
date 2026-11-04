@@ -16,6 +16,7 @@ import { SlashCommand } from "./slash-commands/SlashCommand";
 import { TableControls } from "./TableControls";
 import { getSyncedBlock, saveSyncedBlock } from "../../lib/db-client";
 import { broadcastSynced, subscribeSynced } from "../../lib/synced-bus";
+import { t } from "../../lib/i18n.ts";
 
 const EMPTY_DOC: JSONContent = { type: "doc", content: [{ type: "paragraph" }] };
 const SAVE_DEBOUNCE_MS = 600;
@@ -27,7 +28,7 @@ const syncedExtensions = [
   ItemDrop,
   SlashCommand,
   Placeholder.configure({
-    placeholder: "Contenido sincronizado — escribe «/» para ver los bloques",
+    placeholder: t("Contenido sincronizado — escribe «/» para ver los bloques"),
   }),
 ];
 
@@ -131,18 +132,22 @@ export function SyncedBlockView({ node, editor, getPos, deleteNode }: NodeViewPr
     <NodeViewWrapper className="synced-block" contentEditable={false}>
       <div className="synced-block-header">
         <span>
-          <RefreshCw size={12} strokeWidth={1.75} aria-hidden="true" /> Sincronizado
+          <RefreshCw size={12} strokeWidth={1.75} aria-hidden="true" /> {t("Sincronizado")}
         </span>
         <span className="synced-block-actions">
-          <button type="button" onClick={duplicate} title="Insertar otra copia sincronizada debajo">
-            <Copy size={12} strokeWidth={1.75} aria-hidden="true" /> Duplicar
+          <button
+            type="button"
+            onClick={duplicate}
+            title={t("Insertar otra copia sincronizada debajo")}
+          >
+            <Copy size={12} strokeWidth={1.75} aria-hidden="true" /> {t("Duplicar")}
           </button>
           <button
             type="button"
             onClick={remove}
-            title="Quitar esta copia (el contenido sigue en las demás)"
+            title={t("Quitar esta copia (el contenido sigue en las demás)")}
           >
-            Quitar
+            {t("Quitar")}
           </button>
         </span>
       </div>

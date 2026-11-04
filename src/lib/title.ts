@@ -1,6 +1,7 @@
 import type { JSONContent } from "@tiptap/react";
+import { t } from "./i18n.ts";
 
-const UNTITLED = "Sin título";
+const UNTITLED = t("Sin título");
 
 /** Extracts the page title from the document's first heading node, mirroring db.rs's derive_page_title. */
 export function deriveTitleFromDoc(doc: JSONContent): string {

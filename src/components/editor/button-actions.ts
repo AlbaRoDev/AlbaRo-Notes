@@ -1,4 +1,5 @@
 import type { JSONContent } from "@tiptap/react";
+import { t } from "../../lib/i18n.ts";
 
 /**
  * The only things a button can do — a closed set, so a saved/pasted button can
@@ -7,16 +8,16 @@ import type { JSONContent } from "@tiptap/react";
  * (`validate.rs`: BUTTON_INSERT_BLOCKS), which rejects anything else on save.
  */
 export const BUTTON_BLOCKS = {
-  paragraph: { label: "Texto", node: { type: "paragraph" } },
+  paragraph: { label: t("Texto"), node: { type: "paragraph" } },
   taskList: {
-    label: "Checklist",
+    label: t("Checklist"),
     node: {
       type: "taskList",
       content: [{ type: "taskItem", attrs: { checked: false }, content: [{ type: "paragraph" }] }],
     },
   },
-  callout: { label: "Destacado", node: { type: "callout", content: [{ type: "paragraph" }] } },
-  horizontalRule: { label: "Divisor", node: { type: "horizontalRule" } },
+  callout: { label: t("Destacado"), node: { type: "callout", content: [{ type: "paragraph" }] } },
+  horizontalRule: { label: t("Divisor"), node: { type: "horizontalRule" } },
 } satisfies Record<string, { label: string; node: JSONContent }>;
 
 export type ButtonBlockKind = keyof typeof BUTTON_BLOCKS;

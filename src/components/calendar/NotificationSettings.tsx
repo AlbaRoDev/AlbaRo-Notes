@@ -7,9 +7,10 @@ import {
   testNotification,
   type NotificationSettings as Settings,
 } from "../../lib/db-client";
+import { t } from "../../lib/i18n.ts";
 
 const leadLabel = (m: number) =>
-  m === 0 ? "A la hora" : m === 60 ? "1 hora antes" : `${m} min antes`;
+  m === 0 ? t("A la hora") : m === 60 ? t("1 hora antes") : t("{m} min antes", { m });
 
 /**
  * The bell in the calendar's bar: turns the system notifications of the entries on or off, picks how early they come
@@ -61,24 +62,24 @@ export function NotificationSettings({ onError }: { onError: (message: string | 
       <button
         type="button"
         aria-expanded={open}
-        aria-label="Avisos del calendario"
-        title="Avisos del sistema cuando llega la hora de una cita"
+        aria-label={t("Avisos del calendario")}
+        title={t("Avisos del sistema cuando llega la hora de una cita")}
         onClick={() => setOpen((v) => !v)}
       >
         <Icon size={14} aria-hidden="true" />
       </button>
       {open && (
-        <div className="cal-notify-pop" role="dialog" aria-label="Avisos del calendario">
+        <div className="cal-notify-pop" role="dialog" aria-label={t("Avisos del calendario")}>
           <label className="cal-notify-row">
             <input
               type="checkbox"
               checked={settings.enabled}
               onChange={(e) => change({ ...settings, enabled: e.target.checked })}
             />
-            Avisar de las citas con hora
+            {t("Avisar de las citas con hora")}
           </label>
           <label className="cal-notify-row">
-            Cuándo
+            {t("Cuándo")}
             <select
               value={settings.leadMinutes}
               disabled={!settings.enabled}
@@ -96,14 +97,15 @@ export function NotificationSettings({ onError }: { onError: (message: string | 
             onClick={() =>
               testNotification()
                 .then(() => onError(null))
-                .catch((e) => onError(`No se pudo mostrar el aviso: ${String(e)}`))
+                .catch((e) => onError(t("No se pudo mostrar el aviso: {n1}", { n1: String(e) })))
             }
           >
-            Probar un aviso
+            {t("Probar un aviso")}
           </button>
           <p className="cal-notify-hint">
-            Solo se avisa con la aplicación abierta. Las citas de todo el día y las fechas límite no
-            tienen hora, así que no avisan.
+            {t(
+              "Solo se avisa con la aplicación abierta. Las citas de todo el día y las fechas límite no tienen hora, así que no avisan.",
+            )}
           </p>
         </div>
       )}

@@ -19,17 +19,18 @@ import {
   type EmojiEntry,
 } from "./emoji-data";
 import "./PageHeader.css";
+import { t } from "../../lib/i18n.ts";
 
 const SEASON_LABELS: Record<Season, string> = {
-  spring: "Primavera",
-  summer: "Verano",
-  summerSun: "Playa",
-  autumn: "Otoño",
-  winter: "Invierno",
-  christmas: "Navidad",
-  halloween: "Halloween",
-  easter: "Semana Santa",
-  anniversary: "Aniversario",
+  spring: t("Primavera"),
+  summer: t("Verano"),
+  summerSun: t("Playa"),
+  autumn: t("Otoño"),
+  winter: t("Invierno"),
+  christmas: t("Navidad"),
+  halloween: t("Halloween"),
+  easter: t("Semana Santa"),
+  anniversary: t("Aniversario"),
 };
 
 /** What a cover is made of: one of Notion's colours, a season's colours, or an uploaded image (Rust's `valid_cover`). */
@@ -139,17 +140,17 @@ export function IconPicker({
   );
 
   return (
-    <Popover label="Elegir un icono" onClose={onClose}>
+    <Popover label={t("Elegir un icono")} onClose={onClose}>
       <div className="page-popover-tabs" role="tablist">
-        {(["emoji", "icons"] as const).map((t) => (
+        {(["emoji", "icons"] as const).map((name) => (
           <button
-            key={t}
+            key={name}
             type="button"
             role="tab"
-            aria-selected={tab === t}
-            onClick={() => setTab(t)}
+            aria-selected={tab === name}
+            onClick={() => setTab(name)}
           >
-            {t === "emoji" ? "Emoji" : "Iconos"}
+            {name === "emoji" ? t("Emoji") : t("Iconos")}
           </button>
         ))}
       </div>
@@ -160,15 +161,15 @@ export function IconPicker({
           <input
             autoFocus
             type="search"
-            placeholder="Busca un emoji…"
-            aria-label="Buscar un emoji"
+            placeholder={t("Busca un emoji…")}
+            aria-label={t("Buscar un emoji")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          {!emoji && <p className="page-popover-note">Cargando…</p>}
+          {!emoji && <p className="page-popover-note">{t("Cargando…")}</p>}
           {!needle && recent.length > 0 && (
             <div className="page-popover-section">
-              <span>Recientes</span>
+              <span>{t("Recientes")}</span>
               <div className="page-emoji-grid">
                 {recent.slice(0, 16).map((char) => (
                   <button key={char} type="button" onClick={() => choose(char)} aria-label={char}>
@@ -179,9 +180,9 @@ export function IconPicker({
             </div>
           )}
           {needle ? (
-            <div className="page-emoji-grid" role="listbox" aria-label="Emojis">
+            <div className="page-emoji-grid" role="listbox" aria-label={t("Emojis")}>
               {emoji && found.length === 0 && (
-                <p className="page-popover-note">Ningún emoji coincide.</p>
+                <p className="page-popover-note">{t("Ningún emoji coincide.")}</p>
               )}
               {found.map(button)}
             </div>
@@ -199,7 +200,7 @@ export function IconPicker({
       )}
       {current && (
         <button type="button" className="page-popover-remove" onClick={() => onPick(null)}>
-          Quitar el icono
+          {t("Quitar el icono")}
         </button>
       )}
     </Popover>
@@ -219,7 +220,7 @@ function CoverPicker({
   const [busy, setBusy] = useState(false);
   const upload = async (file: File | undefined) => {
     if (!file) return;
-    if (!file.type.startsWith("image/")) return setError("Elige un archivo de imagen");
+    if (!file.type.startsWith("image/")) return setError(t("Elige un archivo de imagen"));
     setBusy(true);
     try {
       const info = await storeAttachment(file);
@@ -230,23 +231,23 @@ function CoverPicker({
     }
   };
   return (
-    <Popover label="Elegir una portada" onClose={onClose}>
+    <Popover label={t("Elegir una portada")} onClose={onClose}>
       <div className="page-popover-section">
-        <span>Colores</span>
+        <span>{t("Colores")}</span>
         <div className="page-cover-swatches">
           {MARK_COLORS.map((color) => (
             <button
               key={color}
               type="button"
               style={{ background: `var(--tag-${color})` }}
-              aria-label={`Portada de color ${color}`}
+              aria-label={t("Portada de color {color}", { color })}
               onClick={() => onPick(`color:${color}`)}
             />
           ))}
         </div>
       </div>
       <div className="page-popover-section">
-        <span>Estaciones</span>
+        <span>{t("Estaciones")}</span>
         <div className="page-cover-swatches page-cover-seasons">
           {SEASONS.map((season) => (
             <button
@@ -254,14 +255,14 @@ function CoverPicker({
               type="button"
               style={{ background: seasonGradient(season) }}
               title={SEASON_LABELS[season]}
-              aria-label={`Portada de ${SEASON_LABELS[season]}`}
+              aria-label={t("Portada de {n1}", { n1: SEASON_LABELS[season] })}
               onClick={() => onPick(`season:${season}`)}
             />
           ))}
         </div>
       </div>
       <label className="page-popover-upload">
-        <ImagePlus size={14} aria-hidden="true" /> {busy ? "Subiendo…" : "Subir una imagen"}
+        <ImagePlus size={14} aria-hidden="true" /> {busy ? t("Subiendo…") : t("Subir una imagen")}
         <input
           type="file"
           accept="image/*"
@@ -277,7 +278,7 @@ function CoverPicker({
       )}
       {hasCover && (
         <button type="button" className="page-popover-remove" onClick={() => onPick(null)}>
-          Quitar la portada
+          {t("Quitar la portada")}
         </button>
       )}
     </Popover>
@@ -310,11 +311,11 @@ export function PageHeader({ page, onChanged }: { page: PageSummary; onChanged: 
           <PageCover cover={page.cover} />
           <div className="page-cover-actions">
             <button type="button" onClick={() => setOpen(open === "cover" ? null : "cover")}>
-              Cambiar portada
+              {t("Cambiar portada")}
             </button>
             <button
               type="button"
-              aria-label="Quitar la portada"
+              aria-label={t("Quitar la portada")}
               onClick={() => save(setPageCover(page.id, null))}
             >
               <X size={14} aria-hidden="true" />
@@ -327,7 +328,7 @@ export function PageHeader({ page, onChanged }: { page: PageSummary; onChanged: 
           <button
             type="button"
             className="page-icon"
-            aria-label="Cambiar el icono"
+            aria-label={t("Cambiar el icono")}
             onClick={() => setOpen(open === "icon" ? null : "icon")}
           >
             <PageIcon icon={page.icon} size={60} />
@@ -336,12 +337,12 @@ export function PageHeader({ page, onChanged }: { page: PageSummary; onChanged: 
         <div className="page-header-add">
           {!page.icon && (
             <button type="button" onClick={() => setOpen(open === "icon" ? null : "icon")}>
-              <Smile size={14} aria-hidden="true" /> Añadir icono
+              <Smile size={14} aria-hidden="true" /> {t("Añadir icono")}
             </button>
           )}
           {!page.cover && (
             <button type="button" onClick={() => setOpen(open === "cover" ? null : "cover")}>
-              <ImagePlus size={14} aria-hidden="true" /> Añadir portada
+              <ImagePlus size={14} aria-hidden="true" /> {t("Añadir portada")}
             </button>
           )}
         </div>

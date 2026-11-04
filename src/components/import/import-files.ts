@@ -9,6 +9,7 @@ import { asHttpUrl, errorMessage, storeAttachment } from "../../lib/attachments"
 import { imageLines, markdownToPageDoc, titleFromFileName } from "../../lib/import-markdown";
 import { createPage, deletePage, savePageContent } from "../../lib/db-client";
 import type { PageSummary } from "../../types";
+import { t } from "../../lib/i18n.ts";
 
 const MAX_FILES = 300;
 const MAX_TEXT_BYTES = 5 * 1024 * 1024;
@@ -249,7 +250,7 @@ function swapImages(html: string, sizes: Map<string, number>): string {
     const block = dom.createElement("div");
     block.dataset.type = "image";
     block.dataset.file = file;
-    block.dataset.name = img.getAttribute("alt") || "Imagen";
+    block.dataset.name = img.getAttribute("alt") || t("Imagen");
     block.dataset.size = String(sizes.get(file) ?? 0);
     img.replaceWith(block);
   });
@@ -296,7 +297,7 @@ async function convert(
   const ext = extOf(file.name);
   const fallback = titleFromFileName(file.name);
   if (ext === "docx") {
-    if (file.size > MAX_DOCX_BYTES) throw new Error("El documento pasa de 25 MB");
+    if (file.size > MAX_DOCX_BYTES) throw new Error(t("El documento pasa de 25 MB"));
     const sizes = new Map<string, number>();
     const html = await docxToHtml(file, async (blob, mime) => {
       const info = await storeAttachment(
@@ -310,7 +311,7 @@ async function convert(
     const { blocks } = htmlToBlocks(swapImages(html, sizes));
     return pageDoc(blocks, fallback);
   }
-  if (file.size > MAX_TEXT_BYTES) throw new Error("El archivo pasa de 5 MB");
+  if (file.size > MAX_TEXT_BYTES) throw new Error(t("El archivo pasa de 5 MB"));
   const text = await file.text();
   if (HTML.has(ext)) {
     const { blocks, title } = htmlToBlocks(text);
@@ -377,7 +378,7 @@ export async function importNodes(
     name: string,
   ): Promise<PageSummary | null> {
     if (JSON.stringify(doc).length > MAX_DOC_CHARS) {
-      report.skipped.push({ name, reason: "es demasiado grande" });
+      report.skipped.push({ name, reason: t("es demasiado grande") });
       return null;
     }
     const page = await createPage(parentId);
@@ -398,7 +399,7 @@ export async function importNodes(
       if (report.created.length + report.skipped.length >= MAX_FILES) {
         report.skipped.push({
           name: "…",
-          reason: `solo se importan ${MAX_FILES} archivos de una vez`,
+          reason: t("solo se importan {MAX_FILES} archivos de una vez", { MAX_FILES }),
         });
         return;
       }

@@ -9,6 +9,7 @@ import { Crosshair, MapPin, Minus, Plus } from "lucide-react";
 import { attachmentUrl } from "../../lib/attachments";
 import { fetchMapTile } from "../../lib/db-client";
 import "./views.css";
+import { t } from "../../lib/i18n.ts";
 
 const TILE = 256;
 const MIN_ZOOM = 1;
@@ -122,7 +123,7 @@ export function MapCanvas({
   pins,
   unlocated = [],
   selectedId,
-  openLabel = "Abrir",
+  openLabel = t("Abrir"),
   onOpen,
   onAddAt,
   toolbar,
@@ -212,7 +213,7 @@ export function MapCanvas({
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         role="application"
-        aria-label="Mapa"
+        aria-label={t("Mapa")}
       >
         {tiles.map((t) => (
           <MapTile key={t.key} z={t.z} x={t.x} y={t.y} left={t.left} top={t.top} />
@@ -232,16 +233,16 @@ export function MapCanvas({
           </button>
         ))}
         <div className="map-controls">
-          <button type="button" aria-label="Acercar" onClick={() => zoomBy(1)}>
+          <button type="button" aria-label={t("Acercar")} onClick={() => zoomBy(1)}>
             <Plus size={16} aria-hidden="true" />
           </button>
-          <button type="button" aria-label="Alejar" onClick={() => zoomBy(-1)}>
+          <button type="button" aria-label={t("Alejar")} onClick={() => zoomBy(-1)}>
             <Minus size={16} aria-hidden="true" />
           </button>
           <button
             type="button"
-            aria-label="Ajustar a los pins"
-            title="Ajustar a los pins"
+            aria-label={t("Ajustar a los pins")}
+            title={t("Ajustar a los pins")}
             onClick={() => setView(null)}
           >
             <Crosshair size={16} aria-hidden="true" />
@@ -250,17 +251,17 @@ export function MapCanvas({
             type="button"
             className="map-add"
             aria-pressed={addMode}
-            title="Pulsa y luego haz clic en el mapa para añadir un pin en ese punto"
+            title={t("Pulsa y luego haz clic en el mapa para añadir un pin en ese punto")}
             onClick={() => setAddMode((on) => !on)}
           >
-            {addMode ? "Haz clic en el mapa…" : "+ Añadir pin"}
+            {addMode ? t("Haz clic en el mapa…") : t("+ Añadir pin")}
           </button>
         </div>
-        <span className="map-attribution">© OpenStreetMap</span>
+        <span className="map-attribution">{t("© OpenStreetMap")}</span>
       </div>
 
       {pins.length > 0 && (
-        <ul className="map-places" aria-label="Lugares">
+        <ul className="map-places" aria-label={t("Lugares")}>
           {pins.map((pin) => (
             <li key={pin.id}>
               <button
@@ -286,7 +287,7 @@ export function MapCanvas({
 
       {unlocated.length > 0 && (
         <div className="calendar-undated">
-          <span className="db-panel-meta">Sin ubicación</span>
+          <span className="db-panel-meta">{t("Sin ubicación")}</span>
           {unlocated.map((item) => (
             <button
               key={item.id}

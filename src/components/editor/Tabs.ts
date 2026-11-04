@@ -1,6 +1,7 @@
 import { Node, mergeAttributes, ReactNodeViewRenderer } from "@tiptap/react";
 import { Plugin } from "@tiptap/pm/state";
 import { TabsView } from "./TabsView";
+import { t } from "../../lib/i18n.ts";
 
 export const MAX_TABS = 8;
 export const MAX_TAB_TITLE = 60;
@@ -75,7 +76,7 @@ export const Tab = Node.create({
   content: "block+",
   isolating: true,
   addAttributes() {
-    return { title: { default: "Pestaña" } };
+    return { title: { default: t("Pestaña") } };
   },
   parseHTML() {
     return [
@@ -83,7 +84,7 @@ export const Tab = Node.create({
         tag: 'div[data-type="tab"]',
         getAttrs: (el) => {
           if (!(el instanceof HTMLElement)) return false;
-          return { title: (el.getAttribute("data-title") || "Pestaña").slice(0, MAX_TAB_TITLE) };
+          return { title: (el.getAttribute("data-title") || t("Pestaña")).slice(0, MAX_TAB_TITLE) };
         },
       },
     ];

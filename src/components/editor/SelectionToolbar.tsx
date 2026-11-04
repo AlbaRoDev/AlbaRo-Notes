@@ -16,40 +16,41 @@ import { MARK_COLORS, lastColors } from "./ColorMarks";
 import { OPEN_LINK_EVENT } from "./NotionShortcuts";
 import { getAiAssist, openAiAssist } from "./AiAssist";
 import "./SelectionToolbar.css";
+import { t } from "../../lib/i18n.ts";
 
 const MARKS = [
   {
     mark: "bold",
-    label: "Negrita",
-    hint: "Ctrl+B",
+    label: t("Negrita"),
+    hint: t("Ctrl+B"),
     Icon: Bold,
     run: (e: Editor) => e.chain().focus().toggleBold().run(),
   },
   {
     mark: "italic",
-    label: "Cursiva",
-    hint: "Ctrl+I",
+    label: t("Cursiva"),
+    hint: t("Ctrl+I"),
     Icon: Italic,
     run: (e: Editor) => e.chain().focus().toggleItalic().run(),
   },
   {
     mark: "underline",
-    label: "Subrayado",
-    hint: "Ctrl+U",
+    label: t("Subrayado"),
+    hint: t("Ctrl+U"),
     Icon: Underline,
     run: (e: Editor) => e.chain().focus().toggleUnderline().run(),
   },
   {
     mark: "strike",
-    label: "Tachado",
-    hint: "Ctrl+Shift+S",
+    label: t("Tachado"),
+    hint: t("Ctrl+Shift+S"),
     Icon: Strikethrough,
     run: (e: Editor) => e.chain().focus().toggleStrike().run(),
   },
   {
     mark: "code",
-    label: "Código",
-    hint: "Ctrl+E",
+    label: t("Código"),
+    hint: t("Ctrl+E"),
     Icon: Code,
     run: (e: Editor) => e.chain().focus().toggleCode().run(),
   },
@@ -87,13 +88,13 @@ function LinkPanel({ editor, onDone }: { editor: Editor; onDone: () => void }) {
     onDone();
   };
   return (
-    <div className="selection-popover" role="group" aria-label="Enlace">
+    <div className="selection-popover" role="group" aria-label={t("Enlace")}>
       <input
         autoFocus
         type="text"
         defaultValue={current}
-        placeholder="Pega o escribe un enlace…"
-        aria-label="Dirección del enlace"
+        placeholder={t("Pega o escribe un enlace…")}
+        aria-label={t("Dirección del enlace")}
         aria-invalid={error || undefined}
         onChange={() => setError(false)}
         onKeyDown={(e) => {
@@ -108,10 +109,10 @@ function LinkPanel({ editor, onDone }: { editor: Editor; onDone: () => void }) {
           }
         }}
       />
-      {error && <p role="alert">Solo enlaces http, https o de correo.</p>}
+      {error && <p role="alert">{t("Solo enlaces http, https o de correo.")}</p>}
       {current && (
         <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => apply("")}>
-          Quitar el enlace
+          {t("Quitar el enlace")}
         </button>
       )}
     </div>
@@ -119,15 +120,15 @@ function LinkPanel({ editor, onDone }: { editor: Editor; onDone: () => void }) {
 }
 
 const COLOR_LABELS: Record<string, string> = {
-  gray: "Gris",
-  brown: "Marrón",
-  orange: "Naranja",
-  yellow: "Amarillo",
-  green: "Verde",
-  blue: "Azul",
-  purple: "Morado",
-  pink: "Rosa",
-  red: "Rojo",
+  gray: t("Gris"),
+  brown: t("Marrón"),
+  orange: t("Naranja"),
+  yellow: t("Amarillo"),
+  green: t("Verde"),
+  blue: t("Azul"),
+  purple: t("Morado"),
+  pink: t("Rosa"),
+  red: t("Rojo"),
 };
 
 /** Text colour and background, as Notion's «Color» menu: the names, never a value (App.css has the figures). */
@@ -158,8 +159,8 @@ function ColorPanel({ editor }: { editor: Editor }) {
         <button
           type="button"
           className="selection-swatch selection-swatch-none"
-          aria-label={`${title}: ninguno`}
-          title="Quitar"
+          aria-label={t("{title}: ninguno", { title })}
+          title={t("Quitar")}
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => editor.chain().focus().unsetMark(mark).run()}
         >
@@ -169,9 +170,9 @@ function ColorPanel({ editor }: { editor: Editor }) {
     </div>
   );
   return (
-    <div className="selection-popover" role="group" aria-label="Color">
-      {row("textColor", "Color del texto")}
-      {row("backgroundColor", "Fondo")}
+    <div className="selection-popover" role="group" aria-label={t("Color")}>
+      {row("textColor", t("Color del texto"))}
+      {row("backgroundColor", t("Fondo"))}
     </div>
   );
 }
@@ -241,15 +242,20 @@ export function SelectionToolbar({ editor }: { editor: Editor }) {
   };
 
   return createPortal(
-    <div className="selection-toolbar" style={style} role="toolbar" aria-label="Formato del texto">
+    <div
+      className="selection-toolbar"
+      style={style}
+      role="toolbar"
+      aria-label={t("Formato del texto")}
+    >
       <button
         type="button"
         className="selection-toolbar-ai"
-        title="Preguntar a la IA (Ctrl+J)"
+        title={t("Preguntar a la IA (Ctrl+J)")}
         onMouseDown={(e) => e.preventDefault()} // keep the selection
         onClick={() => openAiAssist(editor)}
       >
-        <Sparkles size={15} /> Preguntar a la IA
+        <Sparkles size={15} /> {t("Preguntar a la IA")}
       </button>
       <span className="selection-toolbar-sep" aria-hidden="true" />
       {MARKS.map(({ mark, label, hint, Icon, run }) => (
@@ -268,9 +274,9 @@ export function SelectionToolbar({ editor }: { editor: Editor }) {
       <span className="selection-toolbar-sep" aria-hidden="true" />
       <button
         type="button"
-        aria-label="Enlace"
+        aria-label={t("Enlace")}
         aria-pressed={editor.isActive("link") || panel === "link"}
-        title="Enlace"
+        title={t("Enlace")}
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => setPanel(panel === "link" ? null : "link")}
       >
@@ -278,11 +284,11 @@ export function SelectionToolbar({ editor }: { editor: Editor }) {
       </button>
       <button
         type="button"
-        aria-label="Color"
+        aria-label={t("Color")}
         aria-pressed={
           editor.isActive("textColor") || editor.isActive("backgroundColor") || panel === "color"
         }
-        title="Color del texto y fondo"
+        title={t("Color del texto y fondo")}
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => setPanel(panel === "color" ? null : "color")}
       >

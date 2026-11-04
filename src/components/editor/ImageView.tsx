@@ -33,11 +33,12 @@ import { focusLineAfterNode } from "./media-commands";
 import { cropMime, imageBlob, type CropRect } from "../../lib/image-edit";
 import { ImageCrop } from "./ImageCrop";
 import { MediaPicker } from "./MediaView";
+import { t } from "../../lib/i18n.ts";
 
 const ALIGNS: { value: ImageAlign; label: string; Icon: LucideIcon }[] = [
-  { value: "left", label: "Alinear a la izquierda", Icon: AlignLeft },
-  { value: "center", label: "Centrar", Icon: AlignCenter },
-  { value: "right", label: "Alinear a la derecha", Icon: AlignRight },
+  { value: "left", label: t("Alinear a la izquierda"), Icon: AlignLeft },
+  { value: "center", label: t("Centrar"), Icon: AlignCenter },
+  { value: "right", label: t("Alinear a la derecha"), Icon: AlignRight },
 ];
 
 const KEY_STEP = 16;
@@ -63,7 +64,7 @@ type Resize = { startX: number; start: number; sign: 1 | -1; factor: 1 | 2; max:
 export function ImageView(props: NodeViewProps) {
   const { node, updateAttributes, deleteNode, editor, getPos, selected } = props;
   const file = node.attrs.file as string;
-  const name = (node.attrs.name as string | null) ?? "Imagen";
+  const name = (node.attrs.name as string | null) ?? t("Imagen");
   const width = node.attrs.width as number | null;
   const align = (node.attrs.align as ImageAlign | null) ?? "left";
   const caption = (node.attrs.caption as string | null) ?? "";
@@ -150,7 +151,7 @@ export function ImageView(props: NodeViewProps) {
       data-side={side}
       role="slider"
       tabIndex={0}
-      aria-label="Ancho de la imagen (flechas para cambiarlo, doble clic para restablecerlo)"
+      aria-label={t("Ancho de la imagen (flechas para cambiarlo, doble clic para restablecerlo)")}
       aria-valuemin={MIN_IMAGE_WIDTH}
       aria-valuemax={MAX_IMAGE_WIDTH}
       aria-valuenow={shown ? Math.round(shown) : undefined}
@@ -225,9 +226,9 @@ export function ImageView(props: NodeViewProps) {
     try {
       const blob = await imageBlob(src, "image/png");
       await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-      notify("Imagen copiada");
+      notify(t("Imagen copiada"));
     } catch (e) {
-      notify(`No se pudo copiar la imagen: ${errorMessage(e)}`);
+      notify(t("No se pudo copiar la imagen: {n1}", { n1: errorMessage(e) }));
     }
   };
 
@@ -246,9 +247,9 @@ export function ImageView(props: NodeViewProps) {
       {broken ? (
         <p className="media-broken" role="alert">
           <FileText size={16} strokeWidth={1.75} aria-hidden="true" />
-          No se pudo cargar «{name}» (¿se movió o se borró el archivo?)
+          {t("No se pudo cargar «{name}» (¿se movió o se borró el archivo?)", { name })}
           <button type="button" className="image-broken-actions" onClick={() => setReplacing(true)}>
-            Reemplazar
+            {t("Reemplazar")}
           </button>
         </p>
       ) : (
@@ -272,15 +273,15 @@ export function ImageView(props: NodeViewProps) {
               />
               {handle(-1, "left")}
               {handle(1, "right")}
-              <div className="image-toolbar" role="toolbar" aria-label="Opciones de la imagen">
+              <div className="image-toolbar" role="toolbar" aria-label={t("Opciones de la imagen")}>
                 {editing === "alt" ? (
                   <input
                     autoFocus
                     type="text"
                     className="image-toolbar-input"
                     maxLength={MAX_IMAGE_TEXT}
-                    placeholder="Texto alternativo…"
-                    aria-label="Texto alternativo"
+                    placeholder={t("Texto alternativo…")}
+                    aria-label={t("Texto alternativo")}
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
                     onKeyDown={onEditKey}
@@ -299,47 +300,51 @@ export function ImageView(props: NodeViewProps) {
                     ))}
                     <span className="image-toolbar-sep" />
                     <ToolButton
-                      label="Pie de foto"
+                      label={t("Pie de foto")}
                       Icon={Captions}
                       pressed={!!caption}
                       onClick={() => open("caption")}
                     />
                     <ToolButton
-                      label="Texto alternativo"
+                      label={t("Texto alternativo")}
                       Icon={Type}
                       pressed={!!alt}
                       onClick={() => open("alt")}
                     />
                     <span className="image-toolbar-sep" />
                     <ToolButton
-                      label="Reemplazar"
+                      label={t("Reemplazar")}
                       Icon={RefreshCw}
                       onClick={() => setReplacing(true)}
                     />
                     <ToolButton
-                      label="Ver en grande"
+                      label={t("Ver en grande")}
                       Icon={Maximize2}
                       onClick={() => setViewing(true)}
                     />
                     {cropMime(file) && (
-                      <ToolButton label="Recortar" Icon={Crop} onClick={() => setCropping(true)} />
+                      <ToolButton
+                        label={t("Recortar")}
+                        Icon={Crop}
+                        onClick={() => setCropping(true)}
+                      />
                     )}
                     <ToolButton
-                      label="Copiar imagen"
+                      label={t("Copiar imagen")}
                       Icon={ClipboardCopy}
                       onClick={() => void copyImage()}
                     />
-                    <ToolButton label="Descargar" Icon={Download} onClick={download} />
-                    <ToolButton label="Duplicar" Icon={Copy} onClick={duplicate} />
+                    <ToolButton label={t("Descargar")} Icon={Download} onClick={download} />
+                    <ToolButton label={t("Duplicar")} Icon={Copy} onClick={duplicate} />
                     {width != null && (
                       <ToolButton
-                        label="Tamaño original"
+                        label={t("Tamaño original")}
                         Icon={RotateCcw}
                         onClick={() => updateAttributes({ width: null })}
                       />
                     )}
                     <ToolButton
-                      label="Borrar"
+                      label={t("Borrar")}
                       Icon={Trash2}
                       onClick={() => {
                         deleteNode();
@@ -359,8 +364,8 @@ export function ImageView(props: NodeViewProps) {
                 type="text"
                 className="image-caption image-caption-input"
                 maxLength={MAX_IMAGE_TEXT}
-                placeholder="Escribe un pie de foto…"
-                aria-label="Pie de foto"
+                placeholder={t("Escribe un pie de foto…")}
+                aria-label={t("Pie de foto")}
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={onEditKey}
@@ -371,7 +376,7 @@ export function ImageView(props: NodeViewProps) {
                 <p
                   className="image-caption"
                   onClick={() => open("caption")}
-                  title="Clic para editar"
+                  title={t("Clic para editar")}
                 >
                   {caption}
                 </p>
@@ -435,7 +440,7 @@ function Lightbox({ src, alt, onClose }: { src: string; alt: string; onClose: ()
       <button
         type="button"
         className="image-lightbox-close"
-        aria-label="Cerrar"
+        aria-label={t("Cerrar")}
         autoFocus
         onClick={onClose}
       >

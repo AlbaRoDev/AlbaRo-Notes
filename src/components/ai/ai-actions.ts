@@ -22,6 +22,7 @@ import {
   Wand2,
   type LucideIcon,
 } from "lucide-react";
+import { t } from "../../lib/i18n.ts";
 
 /** What the AI works on: the selection (as Markdown) or, with nothing selected, the page around the cursor. */
 export interface AiContext {
@@ -57,285 +58,305 @@ const quoted = (s: string) => `"""\n${clip(s)}\n"""`;
 const tone = (id: string, label: string, how: string): AiAction => ({
   id: `tone-${id}`,
   label,
-  group: "Cambiar el tono",
+  group: t("Cambiar el tono"),
   icon: MessageCircle,
-  keywords: "tono",
+  keywords: t("tono"),
   scope: "selection",
   primary: "replace",
-  instruction: `Reescribe el texto con un tono ${how}, conservando el significado y el formato.`,
+  instruction: t("Reescribe el texto con un tono {how}, conservando el significado y el formato.", {
+    how,
+  }),
 });
 
 const translate = (scope: "selection" | "page", lang: string, name: string): AiAction => ({
   id: `translate-${scope}-${lang}`,
-  label: scope === "selection" ? `Traducir al ${name}` : `Traducir la página al ${name}`,
-  group: scope === "selection" ? "Traducir" : "Traducir la página",
+  label:
+    scope === "selection"
+      ? t("Traducir al {name}", { name })
+      : t("Traducir la página al {name}", { name }),
+  group: scope === "selection" ? t("Traducir") : t("Traducir la página"),
   icon: Languages,
-  keywords: "traducir idioma",
+  keywords: t("traducir idioma"),
   scope,
   primary: scope === "selection" ? "replace" : "insert",
-  instruction: `Traduce el texto al ${name}. Conserva el formato.`,
+  instruction: t("Traduce el texto al {name}. Conserva el formato.", { name }),
 });
 
 const LANGS: [string, string][] = [
-  ["en", "inglés"],
-  ["es", "español"],
-  ["fr", "francés"],
-  ["de", "alemán"],
-  ["it", "italiano"],
-  ["pt", "portugués"],
-  ["ca", "catalán"],
+  ["en", t("inglés")],
+  ["es", t("español")],
+  ["fr", t("francés")],
+  ["de", t("alemán")],
+  ["it", t("italiano")],
+  ["pt", t("portugués")],
+  ["ca", t("catalán")],
 ];
 
 const AI_ACTIONS: AiAction[] = [
   // with text selected
   {
     id: "improve",
-    label: "Mejorar la redacción",
-    group: "Editar o revisar",
+    label: t("Mejorar la redacción"),
+    group: t("Editar o revisar"),
     icon: Wand2,
     scope: "selection",
     primary: "replace",
-    instruction:
+    instruction: t(
       "Mejora la redacción del texto: más claro, preciso y fluido, con el mismo significado y formato.",
+    ),
   },
   {
     id: "fix",
-    label: "Corregir ortografía y gramática",
-    group: "Editar o revisar",
+    label: t("Corregir ortografía y gramática"),
+    group: t("Editar o revisar"),
     icon: SpellCheck,
-    keywords: "faltas errores",
+    keywords: t("faltas errores"),
     scope: "selection",
     primary: "replace",
-    instruction:
+    instruction: t(
       "Corrige la ortografía, la gramática y la puntuación del texto. No cambies nada más.",
+    ),
   },
   {
     id: "shorter",
-    label: "Acortar",
-    group: "Editar o revisar",
+    label: t("Acortar"),
+    group: t("Editar o revisar"),
     icon: Minimize2,
-    keywords: "resumir breve",
+    keywords: t("resumir breve"),
     scope: "selection",
     primary: "replace",
-    instruction: "Acorta el texto a más o menos la mitad, conservando lo esencial y el formato.",
+    instruction: t("Acorta el texto a más o menos la mitad, conservando lo esencial y el formato."),
   },
   {
     id: "longer",
-    label: "Alargar",
-    group: "Editar o revisar",
+    label: t("Alargar"),
+    group: t("Editar o revisar"),
     icon: Maximize2,
-    keywords: "ampliar extender",
+    keywords: t("ampliar extender"),
     scope: "selection",
     primary: "replace",
-    instruction:
+    instruction: t(
       "Amplía el texto con más detalle y explicación, manteniendo el tono y sin inventar datos.",
+    ),
   },
   {
     id: "simplify",
-    label: "Simplificar el lenguaje",
-    group: "Editar o revisar",
+    label: t("Simplificar el lenguaje"),
+    group: t("Editar o revisar"),
     icon: Feather,
-    keywords: "sencillo claro",
+    keywords: t("sencillo claro"),
     scope: "selection",
     primary: "replace",
-    instruction:
+    instruction: t(
       "Reescribe el texto con un lenguaje sencillo y frases cortas, sin perder información.",
+    ),
   },
-  tone("professional", "Profesional", "profesional"),
-  tone("casual", "Informal", "informal y cercano"),
-  tone("direct", "Directo", "directo y conciso"),
-  tone("confident", "Seguro", "seguro y convincente"),
-  tone("friendly", "Amable", "amable y cálido"),
+  tone("professional", t("Profesional"), t("profesional")),
+  tone("casual", t("Informal"), t("informal y cercano")),
+  tone("direct", t("Directo"), t("directo y conciso")),
+  tone("confident", t("Seguro"), t("seguro y convincente")),
+  tone("friendly", t("Amable"), t("amable y cálido")),
   ...LANGS.map(([code, name]) => translate("selection", code, name)),
   {
     id: "summarize",
-    label: "Resumir",
-    group: "Generar a partir de la selección",
+    label: t("Resumir"),
+    group: t("Generar a partir de la selección"),
     icon: AlignLeft,
     scope: "selection",
     primary: "insert",
-    instruction: "Resume el texto en pocas frases o en una lista breve de puntos clave.",
+    instruction: t("Resume el texto en pocas frases o en una lista breve de puntos clave."),
   },
   {
     id: "explain",
-    label: "Explicar",
-    group: "Generar a partir de la selección",
+    label: t("Explicar"),
+    group: t("Generar a partir de la selección"),
     icon: BookOpen,
-    keywords: "qué significa",
+    keywords: t("qué significa"),
     scope: "selection",
     primary: "insert",
-    instruction: "Explica de forma sencilla qué quiere decir el texto.",
+    instruction: t("Explica de forma sencilla qué quiere decir el texto."),
   },
   {
     id: "action-items",
-    label: "Buscar tareas pendientes",
-    group: "Generar a partir de la selección",
+    label: t("Buscar tareas pendientes"),
+    group: t("Generar a partir de la selección"),
     icon: ListChecks,
-    keywords: "acciones to do",
+    keywords: t("acciones to do"),
     scope: "selection",
     primary: "insert",
-    instruction:
+    instruction: t(
       "Extrae las tareas o acciones pendientes del texto como lista de tareas Markdown (- [ ] …). Si no hay ninguna, dilo en una sola línea.",
+    ),
   },
   {
     id: "to-checklist",
-    label: "Convertir en checklist",
-    group: "Convertir",
+    label: t("Convertir en checklist"),
+    group: t("Convertir"),
     icon: CheckSquare,
-    keywords: "lista de tareas casillas",
+    keywords: t("lista de tareas casillas"),
     scope: "selection",
     primary: "replace",
-    instruction:
+    instruction: t(
       "Convierte el texto en una lista de tareas Markdown (- [ ] …): un elemento por idea, con las mismas palabras y sin añadir nada.",
+    ),
   },
   {
     id: "to-bullets",
-    label: "Convertir en lista con viñetas",
-    group: "Convertir",
+    label: t("Convertir en lista con viñetas"),
+    group: t("Convertir"),
     icon: List,
     scope: "selection",
     primary: "replace",
-    instruction:
+    instruction: t(
       "Convierte el texto en una lista con viñetas Markdown (- …): un elemento por idea, sin añadir nada.",
+    ),
   },
   {
     id: "to-numbered",
-    label: "Convertir en lista numerada",
-    group: "Convertir",
+    label: t("Convertir en lista numerada"),
+    group: t("Convertir"),
     icon: ListOrdered,
     scope: "selection",
     primary: "replace",
-    instruction:
+    instruction: t(
       "Convierte el texto en una lista numerada Markdown (1. …): un elemento por idea, en orden, sin añadir nada.",
+    ),
   },
   {
     id: "to-table",
-    label: "Convertir en tabla",
-    group: "Convertir",
+    label: t("Convertir en tabla"),
+    group: t("Convertir"),
     icon: Table,
     scope: "selection",
     primary: "replace",
-    instruction:
+    instruction: t(
       "Convierte el texto en una tabla Markdown con encabezados que tengan sentido. No añadas datos que no estén en el texto.",
+    ),
   },
   {
     id: "to-paragraph",
-    label: "Convertir en texto corrido",
-    group: "Convertir",
+    label: t("Convertir en texto corrido"),
+    group: t("Convertir"),
     icon: ArrowRightLeft,
-    keywords: "párrafo prosa",
+    keywords: t("párrafo prosa"),
     scope: "selection",
     primary: "replace",
-    instruction:
+    instruction: t(
       "Convierte el texto (listas, tablas…) en uno o varios párrafos de texto corrido, sin perder información.",
+    ),
   },
 
   // with nothing selected: the page and the cursor
   {
     id: "continue",
-    label: "Continuar escribiendo",
-    group: "Escribir",
+    label: t("Continuar escribiendo"),
+    group: t("Escribir"),
     icon: PenLine,
-    keywords: "seguir",
+    keywords: t("seguir"),
     scope: "page",
     primary: "insert",
-    instruction:
+    instruction: t(
       "Continúa el texto de forma natural, con uno o dos párrafos que sigan su estilo y su tema. Escribe solo la continuación.",
+    ),
   },
   {
     id: "page-summary",
-    label: "Resumir la página",
-    group: "Generar a partir de la página",
+    label: t("Resumir la página"),
+    group: t("Generar a partir de la página"),
     icon: AlignLeft,
     scope: "page",
     primary: "insert",
-    instruction:
+    instruction: t(
       "Escribe un resumen de la página: un párrafo breve y, si ayuda, una lista de puntos clave.",
+    ),
   },
   {
     id: "page-actions",
-    label: "Buscar tareas pendientes en la página",
-    group: "Generar a partir de la página",
+    label: t("Buscar tareas pendientes en la página"),
+    group: t("Generar a partir de la página"),
     icon: ListChecks,
-    keywords: "acciones to do",
+    keywords: t("acciones to do"),
     scope: "page",
     primary: "insert",
-    instruction:
+    instruction: t(
       "Extrae las tareas o acciones pendientes de la página como lista de tareas Markdown (- [ ] …). Si no hay ninguna, dilo en una sola línea.",
+    ),
   },
   {
     id: "page-outline",
-    label: "Índice de la página",
-    group: "Generar a partir de la página",
+    label: t("Índice de la página"),
+    group: t("Generar a partir de la página"),
     icon: ListTree,
-    keywords: "esquema estructura",
+    keywords: t("esquema estructura"),
     scope: "page",
     primary: "insert",
-    instruction: "Escribe un esquema de la página como lista anidada con sus ideas principales.",
+    instruction: t("Escribe un esquema de la página como lista anidada con sus ideas principales."),
   },
   ...LANGS.map(([code, name]) => translate("page", code, name)),
   {
     id: "brainstorm",
-    label: "Lluvia de ideas…",
-    group: "Borrador",
+    label: t("Lluvia de ideas…"),
+    group: t("Borrador"),
     icon: Lightbulb,
-    keywords: "ideas",
+    keywords: t("ideas"),
     scope: "page",
     primary: "insert",
-    fill: "Lluvia de ideas sobre ",
+    fill: t("Lluvia de ideas sobre "),
   },
   {
     id: "outline",
-    label: "Esquema…",
-    group: "Borrador",
+    label: t("Esquema…"),
+    group: t("Borrador"),
     icon: ListTree,
-    keywords: "índice estructura",
+    keywords: t("índice estructura"),
     scope: "page",
     primary: "insert",
-    fill: "Esquema para ",
+    fill: t("Esquema para "),
   },
   {
     id: "email",
-    label: "Email…",
-    group: "Borrador",
+    label: t("Email…"),
+    group: t("Borrador"),
     icon: Mail,
-    keywords: "correo",
+    keywords: t("correo"),
     scope: "page",
     primary: "insert",
-    fill: "Email para ",
+    fill: t("Email para "),
   },
   {
     id: "pros-cons",
-    label: "Pros y contras…",
-    group: "Borrador",
+    label: t("Pros y contras…"),
+    group: t("Borrador"),
     icon: Scale,
-    keywords: "ventajas inconvenientes",
+    keywords: t("ventajas inconvenientes"),
     scope: "page",
     primary: "insert",
-    fill: "Pros y contras de ",
+    fill: t("Pros y contras de "),
   },
   {
     id: "write-about",
-    label: "Escribir sobre…",
-    group: "Borrador",
+    label: t("Escribir sobre…"),
+    group: t("Borrador"),
     icon: PenLine,
-    keywords: "redactar",
+    keywords: t("redactar"),
     scope: "page",
     primary: "insert",
-    fill: "Escribe sobre ",
+    fill: t("Escribe sobre "),
   },
 ];
 
 /** The user message for an action or a free instruction, with the text it works on. */
 export function buildPrompt(instruction: string, ctx: AiContext, actionId?: string): string {
-  if (ctx.selection !== null) return `${instruction}\n\nTexto:\n${quoted(ctx.selection)}`;
+  if (ctx.selection !== null) return `${instruction}\n\n${t("Texto:")}\n${quoted(ctx.selection)}`;
   if (actionId === "continue")
-    return `${instruction}\n\nTexto hasta ahora:\n${quoted(ctx.before || ctx.title)}`;
-  const page = ctx.page.trim() ? `\n\nPágina «${ctx.title}»:\n${quoted(ctx.page)}` : "";
+    return `${instruction}\n\n${t("Texto hasta ahora:")}\n${quoted(ctx.before || ctx.title)}`;
+  const page = ctx.page.trim()
+    ? t("\n\nPágina «{title}»:\n{n2}", { title: ctx.title, n2: quoted(ctx.page) })
+    : "";
   if (actionId?.startsWith("translate-page") || actionId?.startsWith("page-"))
     return `${instruction}${page}`;
   // a free instruction or a draft: the page is context, not the thing to transform
-  return `${instruction}${page ? `\n\nContexto (la página donde se escribirá):${page}` : ""}`;
+  return `${instruction}${page ? t("\n\nContexto (la página donde se escribirá):{page}", { page }) : ""}`;
 }
 
 const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();

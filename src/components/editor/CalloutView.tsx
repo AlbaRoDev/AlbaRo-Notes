@@ -3,6 +3,7 @@ import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/re
 import { Smile } from "lucide-react";
 import { PageIcon } from "../PageIcon";
 import { IconPicker } from "./PageHeader";
+import { t } from "../../lib/i18n.ts";
 
 /** A callout: a box with an icon (an emoji or one of the library, changed by clicking it) and blocks inside. */
 export function CalloutView({ node, updateAttributes }: NodeViewProps) {
@@ -15,8 +16,8 @@ export function CalloutView({ node, updateAttributes }: NodeViewProps) {
         className="callout-icon"
         data-empty={icon ? undefined : ""}
         contentEditable={false}
-        aria-label="Cambiar el icono"
-        title="Cambiar el icono"
+        aria-label={t("Cambiar el icono")}
+        title={t("Cambiar el icono")}
         onClick={() => setPicking((p) => !p)}
       >
         {icon ? <PageIcon icon={icon} size={20} /> : <Smile size={18} aria-hidden="true" />}

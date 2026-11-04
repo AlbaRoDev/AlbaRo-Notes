@@ -1,3 +1,4 @@
+import { t } from "./i18n.ts";
 /** A region of an image as fractions (0–1) of its width and height. */
 export interface CropRect {
   x: number;
@@ -25,7 +26,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
     // Without this the canvas is tainted and toBlob throws; the asset protocol allows it.
     img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("No se pudo leer la imagen"));
+    img.onerror = () => reject(new Error(t("No se pudo leer la imagen")));
     img.src = src;
   });
 }
@@ -43,7 +44,7 @@ export async function imageBlob(src: string, mime: string, crop?: CropRect): Pro
   canvas.getContext("2d")?.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
   return new Promise((resolve, reject) =>
     canvas.toBlob(
-      (b) => (b ? resolve(b) : reject(new Error("No se pudo codificar la imagen"))),
+      (b) => (b ? resolve(b) : reject(new Error(t("No se pudo codificar la imagen")))),
       mime,
       0.92,
     ),

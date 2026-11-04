@@ -1,6 +1,7 @@
 import { Database, FileText } from "lucide-react";
 import { PageIcon } from "../PageIcon";
 import type { PageSummary } from "../../types";
+import { t } from "../../lib/i18n.ts";
 
 /** A page as a link shows it, Notion's way: its icon (its own, or the document or table one) and its title. */
 export function PageRef({ page, size = 16 }: { page: PageSummary | undefined; size?: number }) {
@@ -15,7 +16,7 @@ export function PageRef({ page, size = 16 }: { page: PageSummary | undefined; si
         )}
       </span>
       <span className="page-ref-title">
-        {page ? page.title || "Sin título" : "Página eliminada"}
+        {page ? page.title || t("Sin título") : t("Página eliminada")}
       </span>
     </>
   );

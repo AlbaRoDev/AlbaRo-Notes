@@ -7,6 +7,7 @@ import type { CellValue, Property } from "../../types";
 import type { Commit } from "./cell-commit";
 import { useDragReorder } from "./drag-reorder";
 import { STATUS_GROUPS, TAG_COLORS, optionColor } from "./property-types";
+import { t } from "../../lib/i18n.ts";
 
 const POPOVER_WIDTH = 260;
 const MAX_NAME = 60;
@@ -38,10 +39,10 @@ function OptionEditor({
   return (
     <div className="option-edit">
       <div className="option-edit-head">
-        <button type="button" aria-label="Volver a la lista" onClick={onBack}>
+        <button type="button" aria-label={t("Volver a la lista")} onClick={onBack}>
           <ChevronLeft size={16} />
         </button>
-        <span>Editar opción</span>
+        <span>{t("Editar opción")}</span>
       </div>
       {/* Rust rewrites the cells that used the old name (and moves its colour). */}
       <input
@@ -50,7 +51,7 @@ function OptionEditor({
         className="option-pop-search"
         defaultValue={option}
         maxLength={MAX_NAME}
-        aria-label="Nombre de la opción"
+        aria-label={t("Nombre de la opción")}
         onFocus={(e) => e.currentTarget.select()}
         onKeyDown={(e) => {
           if (e.key === "Enter") e.currentTarget.blur();
@@ -72,7 +73,11 @@ function OptionEditor({
           else input.value = option;
         }}
       />
-      <div className="option-edit-colors" role="radiogroup" aria-label={`Color de ${option}`}>
+      <div
+        className="option-edit-colors"
+        role="radiogroup"
+        aria-label={t("Color de {option}", { option })}
+      >
         {TAG_COLORS.map(({ color, label }) => (
           <button
             key={color}
@@ -90,7 +95,7 @@ function OptionEditor({
       <button
         type="button"
         className="option-edit-delete"
-        title="Quitar la opción (vacía las celdas que la usan)"
+        title={t("Quitar la opción (vacía las celdas que la usan)")}
         onClick={() =>
           void write(() =>
             setSelectOptions(
@@ -100,7 +105,7 @@ function OptionEditor({
           ).then((ok) => ok && onBack())
         }
       >
-        Eliminar opción
+        {t("Eliminar opción")}
       </button>
     </div>
   );
@@ -238,8 +243,10 @@ export function OptionPopover({
             className="option-pop-search"
             value={query}
             maxLength={MAX_NAME}
-            placeholder={multi ? "Busca o crea una opción…" : "Selecciona una opción o crea una…"}
-            aria-label="Buscar o crear una opción"
+            placeholder={
+              multi ? t("Busca o crea una opción…") : t("Selecciona una opción o crea una…")
+            }
+            aria-label={t("Buscar o crear una opción")}
             onChange={(e) => {
               setQuery(e.target.value);
               setError(null);
@@ -305,7 +312,7 @@ export function OptionPopover({
                     onMouseEnter={() => setActive(i)}
                     onClick={() => void choose(entry)}
                   >
-                    <X size={14} aria-hidden="true" /> Quitar la selección
+                    <X size={14} aria-hidden="true" /> {t("Quitar la selección")}
                   </button>
                 );
               }
@@ -320,8 +327,8 @@ export function OptionPopover({
                 >
                   <span
                     className="option-pop-grip"
-                    title="Arrastrar para reordenar"
-                    aria-label={`Mover ${entry.option}`}
+                    title={t("Arrastrar para reordenar")}
+                    aria-label={t("Mover {option}", { option: entry.option })}
                     {...reorder.handle(entry.option)}
                   >
                     <GripVertical size={14} aria-hidden="true" />
@@ -341,8 +348,8 @@ export function OptionPopover({
                   <button
                     type="button"
                     className="option-pop-more"
-                    aria-label={`Editar ${entry.option}`}
-                    title="Editar el nombre y el color"
+                    aria-label={t("Editar {option}", { option: entry.option })}
+                    title={t("Editar el nombre y el color")}
                     onClick={() => setEditing(entry.option)}
                   >
                     <MoreHorizontal size={14} aria-hidden="true" />
@@ -351,7 +358,7 @@ export function OptionPopover({
               );
             })}
             {entries.length === 0 && (
-              <p className="option-pop-empty">Escribe para crear una opción.</p>
+              <p className="option-pop-empty">{t("Escribe para crear una opción.")}</p>
             )}
           </div>
         </>
@@ -436,7 +443,7 @@ export function OptionCell({
               {tag}
               <button
                 type="button"
-                aria-label={`Quitar ${tag}`}
+                aria-label={t("Quitar {tag}", { tag })}
                 onClick={(e) => {
                   e.stopPropagation();
                   void commit(tags.filter((t) => t !== tag));

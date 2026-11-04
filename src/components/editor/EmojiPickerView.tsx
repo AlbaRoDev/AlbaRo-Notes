@@ -21,6 +21,7 @@ import {
   matchesEmoji,
   type EmojiEntry,
 } from "./emoji-data";
+import { t } from "../../lib/i18n.ts";
 
 const RECENT_GROUP = -1;
 const MAX_RESULTS = 200;
@@ -108,7 +109,7 @@ export function EmojiPickerView({ node, getPos, editor }: NodeViewProps) {
 
   const categories =
     recent.length > 0
-      ? [{ group: RECENT_GROUP, label: "Recientes" }, ...EMOJI_CATEGORIES]
+      ? [{ group: RECENT_GROUP, label: t("Recientes") }, ...EMOJI_CATEGORIES]
       : EMOJI_CATEGORIES;
 
   return (
@@ -116,7 +117,7 @@ export function EmojiPickerView({ node, getPos, editor }: NodeViewProps) {
       <input
         autoFocus
         type="text"
-        placeholder="Buscar emoji…"
+        placeholder={t("Buscar emoji…")}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={onKeyDown}
@@ -142,7 +143,7 @@ export function EmojiPickerView({ node, getPos, editor }: NodeViewProps) {
           </div>
         )}
         <div className="emoji-picker-list">
-          {!entries && <span className="emoji-picker-empty">Cargando…</span>}
+          {!entries && <span className="emoji-picker-empty">{t("Cargando…")}</span>}
           {entries &&
             results.map((e) => (
               <button key={e.hexcode} type="button" onClick={() => pick(e.char)} title={e.label}>
@@ -150,7 +151,7 @@ export function EmojiPickerView({ node, getPos, editor }: NodeViewProps) {
               </button>
             ))}
           {entries && results.length === 0 && (
-            <span className="emoji-picker-empty">Sin resultados</span>
+            <span className="emoji-picker-empty">{t("Sin resultados")}</span>
           )}
         </div>
       </div>

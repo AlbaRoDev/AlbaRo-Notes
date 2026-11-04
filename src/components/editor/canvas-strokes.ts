@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n.ts";
 // the canvas block's drawing data. A stroke is a flat list of x,y numbers on an
 // (almost) infinite sheet: the block is a window onto it, 1000 units wide at 100 % zoom, so a
 // drawing is plain JSON that stays editable and scales to the column.
@@ -6,11 +7,11 @@ export type CanvasColor = "ink" | "red" | "blue" | "green" | "orange";
 
 /** `css` is what the screen draws with («ink» follows the theme's text colour); `raster` is for the image sent to the AI. */
 export const CANVAS_COLORS: Record<CanvasColor, { label: string; css: string; raster: string }> = {
-  ink: { label: "Tinta", css: "currentColor", raster: "#000000" },
-  red: { label: "Rojo", css: "#e03e3e", raster: "#e03e3e" },
-  blue: { label: "Azul", css: "#337ea9", raster: "#337ea9" },
-  green: { label: "Verde", css: "#0f7b6c", raster: "#0f7b6c" },
-  orange: { label: "Naranja", css: "#d9730d", raster: "#d9730d" },
+  ink: { label: t("Tinta"), css: "currentColor", raster: "#000000" },
+  red: { label: t("Rojo"), css: "#e03e3e", raster: "#e03e3e" },
+  blue: { label: t("Azul"), css: "#337ea9", raster: "#337ea9" },
+  green: { label: t("Verde"), css: "#0f7b6c", raster: "#0f7b6c" },
+  orange: { label: t("Naranja"), css: "#d9730d", raster: "#d9730d" },
 };
 
 export interface Stroke {
@@ -29,9 +30,9 @@ export const MAX_STROKES = 2000;
 export const MAX_STROKE_COORDS = 10_000;
 export const MAX_CANVAS_COORDS = 200_000;
 export const PEN_WIDTHS = [
-  { width: 2.5, label: "Fino" },
-  { width: 5, label: "Medio" },
-  { width: 10, label: "Grueso" },
+  { width: 2.5, label: t("Fino") },
+  { width: 5, label: t("Medio") },
+  { width: 10, label: t("Grueso") },
 ];
 
 /** The block grows by this much when the pen gets within `GROW_MARGIN` of its bottom edge. */
@@ -208,7 +209,7 @@ function drawStrokes(strokes: Stroke[]): HTMLCanvasElement {
   canvas.width = Math.round(w * scale);
   canvas.height = Math.round(h * scale);
   const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("No se puede preparar la imagen");
+  if (!ctx) throw new Error(t("No se puede preparar la imagen"));
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.scale(scale, scale);
@@ -230,7 +231,7 @@ export const rasterize = (strokes: Stroke[]): string => drawStrokes(strokes).toD
 export function rasterizeBlob(strokes: Stroke[]): Promise<Blob> {
   return new Promise((resolve, reject) =>
     drawStrokes(strokes).toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error("No se puede crear la imagen"))),
+      (blob) => (blob ? resolve(blob) : reject(new Error(t("No se puede crear la imagen")))),
       "image/png",
     ),
   );

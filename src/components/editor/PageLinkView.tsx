@@ -5,6 +5,7 @@ import { PageRef } from "./PageRef";
 import { useHoverPreview } from "./use-hover-preview";
 import { linkablePages } from "../../lib/page-links";
 import type { PageSummary } from "../../types";
+import { t } from "../../lib/i18n.ts";
 
 export function PageLinkView({ node, updateAttributes }: NodeViewProps) {
   const { pages, currentPageId } = useEditorAppContext();
@@ -73,7 +74,7 @@ function PageLinkPicker({
       <input
         autoFocus
         type="text"
-        placeholder="Buscar página…"
+        placeholder={t("Buscar página…")}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
@@ -85,7 +86,7 @@ function PageLinkPicker({
             </button>
           </li>
         ))}
-        {results.length === 0 && <li className="page-link-picker-empty">Sin resultados</li>}
+        {results.length === 0 && <li className="page-link-picker-empty">{t("Sin resultados")}</li>}
       </ul>
     </div>
   );

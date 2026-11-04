@@ -3,6 +3,7 @@ import { PageRef } from "./PageRef";
 import type { SuggestionMenuHandle } from "./slash-commands/suggestion-render";
 import type { PageSummary } from "../../types";
 import "./slash-commands/SlashMenu.css";
+import { t } from "../../lib/i18n.ts";
 
 /** The list under an «@»: the pages that match what has been typed after it, with ↑ ↓ and Enter. */
 export const PageMentionMenu = forwardRef<
@@ -26,9 +27,9 @@ export const PageMentionMenu = forwardRef<
   }));
 
   return (
-    <div className="slash-menu" role="listbox" aria-label="Mencionar una página">
-      <div className="slash-menu-category">Mencionar una página</div>
-      {items.length === 0 && <div className="slash-menu-empty">Sin resultados</div>}
+    <div className="slash-menu" role="listbox" aria-label={t("Mencionar una página")}>
+      <div className="slash-menu-category">{t("Mencionar una página")}</div>
+      {items.length === 0 && <div className="slash-menu-empty">{t("Sin resultados")}</div>}
       {items.map((page, index) => (
         <button
           key={page.id}

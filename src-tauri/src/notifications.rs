@@ -13,6 +13,7 @@
 
 use crate::calendar::{self, CalendarEntry};
 use crate::db::DbState;
+use crate::lang;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -118,12 +119,20 @@ fn due(entries: &[CalendarEntry], now: i64, lead: u32, shown: &mut HashMap<Strin
             continue;
         }
         let left = start - now;
-        let when = if left <= 0 { "Ahora".to_string() } else { format!("En {left} min") };
+        let when = if left <= 0 {
+            lang::pick("Ahora", "Now").to_string()
+        } else {
+            format!("{} {left} min", lang::pick("En", "In"))
+        };
         let mut body = format!("{when} · {}–{}", clock(&e.start), clock(&e.end));
         if let Some(place) = e.location.as_deref().filter(|l| !l.is_empty()) {
             body.push_str(&format!(" · {place}"));
         }
-        let title = if e.title.is_empty() { "Cita sin título".to_string() } else { e.title.clone() };
+        let title = if e.title.is_empty() {
+            lang::pick("Cita sin título", "Untitled event").to_string()
+        } else {
+            e.title.clone()
+        };
         out.push(Notice { title, body });
     }
     out

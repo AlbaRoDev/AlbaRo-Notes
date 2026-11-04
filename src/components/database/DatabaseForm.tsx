@@ -14,8 +14,10 @@ import { Cell } from "./DatabaseCells";
 import { resolveFields, type ResolvedField } from "./form-fields";
 import { TITLE_ID, TITLE_PROPERTY } from "./view-config";
 import "./DatabaseView.css";
+import { t } from "../../lib/i18n.ts";
 
-const labelOf = (f: ResolvedField) => f.label || (f.prop.id === TITLE_ID ? "Título" : f.prop.name);
+const labelOf = (f: ResolvedField) =>
+  f.label || (f.prop.id === TITLE_ID ? t("Título") : f.prop.name);
 
 interface FormViewProps {
   database: DatabaseData;
@@ -65,13 +67,13 @@ export function DatabaseForm({ database, config, rowsOf, onSubmit, onOpenRow }: 
   if (created) {
     return (
       <div className="form-view form-done" role="status">
-        <p>{form?.successMessage || "¡Gracias! Tu respuesta se ha guardado."}</p>
+        <p>{form?.successMessage || t("¡Gracias! Tu respuesta se ha guardado.")}</p>
         <div className="db-panel-actions">
           <button type="button" onClick={again}>
-            Enviar otra respuesta
+            {t("Enviar otra respuesta")}
           </button>
           <button type="button" onClick={() => onOpenRow(created.id)}>
-            Abrir la fila
+            {t("Abrir la fila")}
           </button>
         </div>
       </div>
@@ -85,7 +87,9 @@ export function DatabaseForm({ database, config, rowsOf, onSubmit, onOpenRow }: 
       <h3 className="form-title">{form?.title || database.name}</h3>
       {form?.description && <p className="form-description">{form.description}</p>}
       {fields.length === 0 && (
-        <p className="db-loading">Este formulario no pide nada todavía: usa «Editar formulario».</p>
+        <p className="db-loading">
+          {t("Este formulario no pide nada todavía: usa «Editar formulario».")}
+        </p>
       )}
       {fields.map((f) => (
         <div
@@ -97,7 +101,7 @@ export function DatabaseForm({ database, config, rowsOf, onSubmit, onOpenRow }: 
           <span className="form-label">
             {labelOf(f)}
             {f.required && (
-              <span className="form-required" aria-label="obligatorio">
+              <span className="form-required" aria-label={t("obligatorio")}>
                 {" "}
                 *
               </span>
@@ -132,7 +136,7 @@ export function DatabaseForm({ database, config, rowsOf, onSubmit, onOpenRow }: 
         disabled={busy || fields.length === 0}
         onClick={() => void submit()}
       >
-        {form?.submitLabel || "Enviar"}
+        {form?.submitLabel || t("Enviar")}
       </button>
     </div>
   );
@@ -202,34 +206,34 @@ export function FormBuilder({
   );
 
   return (
-    <div className="db-panel form-builder" role="group" aria-label="Editar formulario">
-      {textInput("Título del formulario", "title", 100, database.name)}
-      {textInput("Descripción", "description", 500)}
-      {textInput("Texto del botón", "submitLabel", 40, "Enviar")}
+    <div className="db-panel form-builder" role="group" aria-label={t("Editar formulario")}>
+      {textInput(t("Título del formulario"), "title", 100, database.name)}
+      {textInput(t("Descripción"), "description", 500)}
+      {textInput(t("Texto del botón"), "submitLabel", 40, t("Enviar"))}
       {textInput(
-        "Mensaje al enviar",
+        t("Mensaje al enviar"),
         "successMessage",
         300,
-        "¡Gracias! Tu respuesta se ha guardado.",
+        t("¡Gracias! Tu respuesta se ha guardado."),
       )}
 
-      <p className="db-panel-meta">Preguntas del formulario</p>
+      <p className="db-panel-meta">{t("Preguntas del formulario")}</p>
       {current.map((f, i) => (
         <div key={f.property} className="form-builder-field">
           <div className="db-rule">
-            <strong>{f.prop.id === TITLE_ID ? "Título" : f.prop.name}</strong>
+            <strong>{f.prop.id === TITLE_ID ? t("Título") : f.prop.name}</strong>
             <label className="db-check">
               <input
                 type="checkbox"
                 checked={!!f.required}
                 onChange={(e) => patch(f.property, { required: e.target.checked })}
               />
-              Obligatorio
+              {t("Obligatorio")}
             </label>
             <button
               type="button"
               className="db-icon-btn"
-              aria-label={`Subir ${f.prop.name}`}
+              aria-label={t("Subir {name}", { name: f.prop.name })}
               disabled={i === 0}
               onClick={() => move(f.property, -1)}
             >
@@ -238,7 +242,7 @@ export function FormBuilder({
             <button
               type="button"
               className="db-icon-btn"
-              aria-label={`Bajar ${f.prop.name}`}
+              aria-label={t("Bajar {name}", { name: f.prop.name })}
               disabled={i === current.length - 1}
               onClick={() => move(f.property, 1)}
             >
@@ -248,15 +252,15 @@ export function FormBuilder({
               type="button"
               onClick={() => setFields(current.filter((x) => x.property !== f.property))}
             >
-              Quitar
+              {t("Quitar")}
             </button>
           </div>
           <div className="db-rule">
             <input
               type="text"
               maxLength={100}
-              aria-label={`Pregunta de ${f.prop.name}`}
-              placeholder={f.prop.id === TITLE_ID ? "Título" : f.prop.name}
+              aria-label={t("Pregunta de {name}", { name: f.prop.name })}
+              placeholder={f.prop.id === TITLE_ID ? t("Título") : f.prop.name}
               defaultValue={f.label ?? ""}
               onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
               onBlur={(e) =>
@@ -267,8 +271,8 @@ export function FormBuilder({
             <input
               type="text"
               maxLength={200}
-              aria-label={`Ayuda de ${f.prop.name}`}
-              placeholder="Ayuda (opcional)"
+              aria-label={t("Ayuda de {name}", { name: f.prop.name })}
+              placeholder={t("Ayuda (opcional)")}
               defaultValue={f.help ?? ""}
               onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
               onBlur={(e) =>
@@ -281,7 +285,7 @@ export function FormBuilder({
       ))}
       {all.some((p) => !current.some((f) => f.property === p.id)) && (
         <div className="db-options">
-          <span>Añadir:</span>
+          <span>{t("Añadir:")}</span>
           {all
             .filter((p) => !current.some((f) => f.property === p.id))
             .map((p) => (
@@ -290,7 +294,7 @@ export function FormBuilder({
                 type="button"
                 onClick={() => setFields([...current, { property: p.id, required: false }])}
               >
-                + {p.id === TITLE_ID ? "Título" : p.name}
+                + {p.id === TITLE_ID ? t("Título") : p.name}
               </button>
             ))}
         </div>

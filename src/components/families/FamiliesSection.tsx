@@ -14,6 +14,7 @@ import { PageEditor } from "../editor/PageEditor";
 import { TaskPeek } from "../workspace/TaskPeek";
 import type { TaskHost } from "../workspace/Tasks";
 import "./families.css";
+import { t } from "../../lib/i18n.ts";
 
 type Mode = "bubbles" | "list";
 const MODE_KEY = "families.mode";
@@ -109,8 +110,16 @@ export function FamiliesSection({ host }: { host: TaskHost }) {
       .then(({ added, skipped }) => {
         setError(null);
         setNotice(
-          `${added} tarjeta${added === 1 ? "" : "s"} añadida${added === 1 ? "" : "s"} a «${boards.find((b) => b.id === boardId)?.name}»` +
-            (skipped ? ` (${skipped} ya estaba${skipped === 1 ? "" : "n"})` : ""),
+          t(
+            added === 1 ? "1 tarjeta añadida a «{board}»" : "{added} tarjetas añadidas a «{board}»",
+            {
+              added,
+              board: boards.find((b) => b.id === boardId)?.name ?? "",
+            },
+          ) +
+            (skipped
+              ? " " + t(skipped === 1 ? "(1 ya estaba)" : "({skipped} ya estaban)", { skipped })
+              : ""),
         );
       })
       .catch((e) => {
@@ -126,7 +135,7 @@ export function FamiliesSection({ host }: { host: TaskHost }) {
       </p>
     );
   }
-  if (!base || !data) return <p className="tasks-loading">Preparando las familias…</p>;
+  if (!base || !data) return <p className="tasks-loading">{t("Preparando las familias…")}</p>;
   const open = openTask && pages.some((p) => p.id === openTask) ? openTask : null;
   const { box } = packed;
   const pad = 8;
@@ -139,7 +148,7 @@ export function FamiliesSection({ host }: { host: TaskHost }) {
     <div className="families">
       <div className="families-bar">
         <label>
-          Agrupar por
+          {t("Agrupar por")}
           <select
             value={data.property ?? ""}
             onChange={(e) => {
@@ -155,9 +164,9 @@ export function FamiliesSection({ host }: { host: TaskHost }) {
           </select>
         </label>
         <label>
-          Tamaño
+          {t("Tamaño")}
           <select value={measure ?? ""} onChange={(e) => setMeasure(e.target.value || undefined)}>
-            <option value="">Nº de tareas</option>
+            <option value="">{t("Nº de tareas")}</option>
             {data.measurable.map((p) => (
               <option key={p.id} value={p.id}>
                 Suma de {p.name}
@@ -165,16 +174,16 @@ export function FamiliesSection({ host }: { host: TaskHost }) {
             ))}
           </select>
         </label>
-        <div className="families-modes" role="group" aria-label="Cómo verlas">
+        <div className="families-modes" role="group" aria-label={t("Cómo verlas")}>
           <button
             type="button"
             aria-pressed={mode === "bubbles"}
             onClick={() => setMode("bubbles")}
           >
-            <Circle size={14} aria-hidden /> Burbujas
+            <Circle size={14} aria-hidden /> {t("Burbujas")}
           </button>
           <button type="button" aria-pressed={mode === "list"} onClick={() => setMode("list")}>
-            <ListOrdered size={14} aria-hidden /> Ordenado
+            <ListOrdered size={14} aria-hidden /> {t("Ordenado")}
           </button>
         </div>
       </div>
@@ -185,17 +194,18 @@ export function FamiliesSection({ host }: { host: TaskHost }) {
       )}
       {data.groupable.length === 0 ? (
         <p className="families-empty">
-          Las familias necesitan una columna de selección, etiquetas o relación en la base de
-          tareas.
+          {t(
+            "Las familias necesitan una columna de selección, etiquetas o relación en la base de tareas.",
+          )}
         </p>
       ) : families.length === 0 ? (
-        <p className="families-empty">Aún no hay tareas que agrupar: añádelas en Tareas.</p>
+        <p className="families-empty">{t("Aún no hay tareas que agrupar: añádelas en Tareas.")}</p>
       ) : mode === "bubbles" ? (
         <svg
           className="families-bubbles"
           viewBox={`${box.minX - pad} ${box.minY - pad} ${box.width + pad * 2} ${box.height + pad * 2}`}
           role="group"
-          aria-label="Familias"
+          aria-label={t("Familias")}
         >
           {families.map((family, i) => {
             const { x, y, r } = packed.circles[i];
@@ -210,7 +220,13 @@ export function FamiliesSection({ host }: { host: TaskHost }) {
                 data-selected={family.key === selected || undefined}
                 role="button"
                 tabIndex={0}
-                aria-label={`${family.label}: ${family.tasks.length} tarea${family.tasks.length === 1 ? "" : "s"}`}
+                aria-label={t(
+                  family.tasks.length === 1 ? "{label}: 1 tarea" : "{label}: {n} tareas",
+                  {
+                    label: family.label,
+                    n: family.tasks.length,
+                  },
+                )}
                 onClick={() => toggle(family.key)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
@@ -219,7 +235,12 @@ export function FamiliesSection({ host }: { host: TaskHost }) {
                   }
                 }}
               >
-                <title>{`${family.label} — ${family.tasks.length} tarea${family.tasks.length === 1 ? "" : "s"}`}</title>
+                <title>
+                  {t(family.tasks.length === 1 ? "{label} — 1 tarea" : "{label} — {n} tareas", {
+                    label: family.label,
+                    n: family.tasks.length,
+                  })}
+                </title>
                 <circle cx={x} cy={y} r={r} fill={fill(family)} />
                 {r >= 34 ? (
                   <text x={x} y={y} fontSize={font} textAnchor="middle">
@@ -269,7 +290,10 @@ export function FamiliesSection({ host }: { host: TaskHost }) {
         </p>
       )}
       {current && (
-        <section className="family-panel" aria-label={`Tareas de ${current.label}`}>
+        <section
+          className="family-panel"
+          aria-label={t("Tareas de {label}", { label: current.label })}
+        >
           <header>
             <h3>
               <span className="family-dot" style={{ background: fill(current) }} /> {current.label}
@@ -279,11 +303,11 @@ export function FamiliesSection({ host }: { host: TaskHost }) {
             </span>
             {boards.length > 0 && (
               <select
-                aria-label="Llevar la familia a un tablero"
+                aria-label={t("Llevar la familia a un tablero")}
                 value=""
                 onChange={(e) => e.target.value && toBoard(e.target.value, current)}
               >
-                <option value="">Llevar a un tablero…</option>
+                <option value="">{t("Llevar a un tablero…")}</option>
                 {boards.map((b) => (
                   <option key={b.id} value={b.id}>
                     {b.name}
@@ -300,8 +324,12 @@ export function FamiliesSection({ host }: { host: TaskHost }) {
           <ul>
             {current.tasks.map((task) => (
               <li key={task.id}>
-                <button type="button" onClick={() => setOpenTask(task.id)} title="Abrir la tarea">
-                  {task.title || "Sin título"}
+                <button
+                  type="button"
+                  onClick={() => setOpenTask(task.id)}
+                  title={t("Abrir la tarea")}
+                >
+                  {task.title || t("Sin título")}
                 </button>
               </li>
             ))}

@@ -52,6 +52,7 @@ import {
   type View,
 } from "./canvas-strokes";
 import "./canvas.css";
+import { t } from "../../lib/i18n.ts";
 
 type Tool = "pen" | "eraser" | "hand";
 type Phase = "canvas" | "reading" | "review" | "imaging";
@@ -222,7 +223,7 @@ export function CanvasBlockView({
       return;
     }
     if (strokes.length >= MAX_STROKES || totalCoords(strokes) + 2 > MAX_CANVAS_COORDS) {
-      setNote("El lienzo está lleno: borra algo para seguir.");
+      setNote(t("El lienzo está lleno: borra algo para seguir."));
       return;
     }
     setNote(null);
@@ -343,7 +344,7 @@ export function CanvasBlockView({
   // ---- converting the ink
   const toText = () => {
     if (strokes.length === 0) {
-      setNote("Escribe algo primero.");
+      setNote(t("Escribe algo primero."));
       return;
     }
     setError(null);
@@ -405,7 +406,7 @@ export function CanvasBlockView({
   /** The ink as an image block below the canvas (the drawing stays). */
   const toImage = async () => {
     if (strokes.length === 0) {
-      setNote("Dibuja algo primero.");
+      setNote(t("Dibuja algo primero."));
       return;
     }
     const pos = getPos();
@@ -428,7 +429,7 @@ export function CanvasBlockView({
           ...closing,
         ])
         .run();
-      setNote("Imagen insertada debajo.");
+      setNote(t("Imagen insertada debajo."));
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -443,13 +444,13 @@ export function CanvasBlockView({
 
   return (
     <NodeViewWrapper className="canvas-block" contentEditable={false}>
-      <div className="canvas-bar" role="toolbar" aria-label="Lienzo">
-        <span className="canvas-title">Lienzo</span>
+      <div className="canvas-bar" role="toolbar" aria-label={t("Lienzo")}>
+        <span className="canvas-title">{t("Lienzo")}</span>
         <button
           type="button"
           aria-pressed={tool === "pen" && !spaceDown}
-          title="Lápiz"
-          aria-label="Lápiz"
+          title={t("Lápiz")}
+          aria-label={t("Lápiz")}
           disabled={!canvasReady}
           onClick={() => setTool("pen")}
         >
@@ -458,8 +459,8 @@ export function CanvasBlockView({
         <button
           type="button"
           aria-pressed={tool === "eraser"}
-          title="Goma (quita el trazo entero)"
-          aria-label="Goma"
+          title={t("Goma (quita el trazo entero)")}
+          aria-label={t("Goma")}
           disabled={!canvasReady}
           onClick={() => setTool("eraser")}
         >
@@ -468,8 +469,8 @@ export function CanvasBlockView({
         <button
           type="button"
           aria-pressed={tool === "hand"}
-          title="Mano: mover el lienzo (o mantén Espacio)"
-          aria-label="Mano"
+          title={t("Mano: mover el lienzo (o mantén Espacio)")}
+          aria-label={t("Mano")}
           disabled={!canvasReady}
           onClick={() => setTool("hand")}
         >
@@ -483,7 +484,7 @@ export function CanvasBlockView({
             style={{ color: CANVAS_COLORS[c].css }}
             aria-pressed={tool === "pen" && color === c}
             title={CANVAS_COLORS[c].label}
-            aria-label={`Color: ${CANVAS_COLORS[c].label}`}
+            aria-label={t("Color: {label}", { label: CANVAS_COLORS[c].label })}
             disabled={!canvasReady}
             onClick={() => {
               setColor(c);
@@ -497,8 +498,8 @@ export function CanvasBlockView({
             type="button"
             className="canvas-width"
             aria-pressed={tool === "pen" && penWidth === width}
-            title={`Trazo ${label.toLowerCase()}`}
-            aria-label={`Trazo ${label.toLowerCase()}`}
+            title={t("Trazo {n1}", { n1: label.toLowerCase() })}
+            aria-label={t("Trazo {n1}", { n1: label.toLowerCase() })}
             disabled={!canvasReady}
             onClick={() => {
               setPenWidth(width);
@@ -510,8 +511,8 @@ export function CanvasBlockView({
         ))}
         <button
           type="button"
-          title="Deshacer (Ctrl+Z)"
-          aria-label="Deshacer"
+          title={t("Deshacer (Ctrl+Z)")}
+          aria-label={t("Deshacer")}
           disabled={!canvasReady || history.undo.length === 0}
           onClick={undo}
         >
@@ -519,8 +520,8 @@ export function CanvasBlockView({
         </button>
         <button
           type="button"
-          title="Rehacer (Ctrl+Mayús+Z)"
-          aria-label="Rehacer"
+          title={t("Rehacer (Ctrl+Mayús+Z)")}
+          aria-label={t("Rehacer")}
           disabled={!canvasReady || history.redo.length === 0}
           onClick={redo}
         >
@@ -528,8 +529,8 @@ export function CanvasBlockView({
         </button>
         <button
           type="button"
-          title="Borrar todo"
-          aria-label="Borrar todo"
+          title={t("Borrar todo")}
+          aria-label={t("Borrar todo")}
           disabled={!canvasReady || strokes.length === 0}
           onClick={() => commit([])}
         >
@@ -537,8 +538,8 @@ export function CanvasBlockView({
         </button>
         <button
           type="button"
-          title="Alejar (Ctrl+−)"
-          aria-label="Alejar"
+          title={t("Alejar (Ctrl+−)")}
+          aria-label={t("Alejar")}
           disabled={!canvasReady || view.zoom <= MIN_ZOOM}
           onClick={() => zoomBy(1 / ZOOM_STEP)}
         >
@@ -547,8 +548,8 @@ export function CanvasBlockView({
         <button
           type="button"
           className="canvas-zoom"
-          title="Volver al 100 % (Ctrl+0)"
-          aria-label={`Zoom ${zoomLabel}: volver al 100 %`}
+          title={t("Volver al 100 % (Ctrl+0)")}
+          aria-label={t("Zoom {zoomLabel}: volver al 100 %", { zoomLabel })}
           disabled={!canvasReady || view.zoom === 1}
           onClick={() => zoomBy(1 / view.zoom)}
         >
@@ -556,8 +557,8 @@ export function CanvasBlockView({
         </button>
         <button
           type="button"
-          title="Acercar (Ctrl++, o Ctrl+rueda)"
-          aria-label="Acercar"
+          title={t("Acercar (Ctrl++, o Ctrl+rueda)")}
+          aria-label={t("Acercar")}
           disabled={!canvasReady}
           onClick={() => zoomBy(ZOOM_STEP)}
         >
@@ -565,8 +566,8 @@ export function CanvasBlockView({
         </button>
         <button
           type="button"
-          title="Ver todo lo dibujado"
-          aria-label="Ver todo"
+          title={t("Ver todo lo dibujado")}
+          aria-label={t("Ver todo")}
           disabled={!canvasReady || strokes.length === 0}
           onClick={() => setView(fitView(strokes, height))}
         >
@@ -576,29 +577,31 @@ export function CanvasBlockView({
           <button
             type="button"
             className="canvas-convert"
-            title="Leer la escritura con la IA y pasarla a texto"
+            title={t("Leer la escritura con la IA y pasarla a texto")}
             disabled={!canvasReady}
             onClick={toText}
           >
-            <Type size={15} strokeWidth={1.75} aria-hidden="true" /> A texto
+            <Type size={15} strokeWidth={1.75} aria-hidden="true" /> {t("A texto")}
           </button>
           <button
             type="button"
             className="canvas-convert"
-            title="Insertar el dibujo como imagen debajo"
+            title={t("Insertar el dibujo como imagen debajo")}
             disabled={!canvasReady}
             onClick={() => void toImage()}
           >
-            <ImagePlus size={15} strokeWidth={1.75} aria-hidden="true" /> A imagen
+            <ImagePlus size={15} strokeWidth={1.75} aria-hidden="true" /> {t("A imagen")}
           </button>
           {confirmRemove ? (
             <>
-              <span>¿Quitar{strokes.length > 0 ? " (se pierde lo dibujado)" : ""}?</span>
+              <span>
+                {strokes.length > 0 ? t("¿Quitar (se pierde lo dibujado)?") : t("¿Quitar?")}
+              </span>
               <button type="button" onClick={remove}>
-                Sí, quitar
+                {t("Sí, quitar")}
               </button>
               <button type="button" onClick={() => setConfirmRemove(false)}>
-                No
+                {t("No")}
               </button>
             </>
           ) : (
@@ -607,7 +610,7 @@ export function CanvasBlockView({
               disabled={busy}
               onClick={() => (strokes.length > 0 ? setConfirmRemove(true) : remove())}
             >
-              Quitar
+              {t("Quitar")}
             </button>
           )}
         </span>
@@ -615,13 +618,13 @@ export function CanvasBlockView({
 
       {phase === "review" ? (
         <div className="canvas-review">
-          <p>Esto es lo que he leído. Corrígelo si hace falta antes de usarlo.</p>
+          <p>{t("Esto es lo que he leído. Corrígelo si hace falta antes de usarlo.")}</p>
           <textarea
             autoFocus
             rows={Math.min(12, Math.max(4, text.split("\n").length + 1))}
             maxLength={20_000}
             value={text}
-            aria-label="Texto reconocido"
+            aria-label={t("Texto reconocido")}
             onChange={(e) => setText(e.target.value)}
           />
           <div className="canvas-review-actions">
@@ -631,13 +634,13 @@ export function CanvasBlockView({
               disabled={!text.trim()}
               onClick={() => insertText(false)}
             >
-              Insertar debajo (conservar el dibujo)
+              {t("Insertar debajo (conservar el dibujo)")}
             </button>
             <button type="button" disabled={!text.trim()} onClick={() => insertText(true)}>
-              Reemplazar el dibujo por el texto
+              {t("Reemplazar el dibujo por el texto")}
             </button>
             <button type="button" onClick={backToCanvas}>
-              Volver al lienzo
+              {t("Volver al lienzo")}
             </button>
           </div>
         </div>
@@ -651,7 +654,7 @@ export function CanvasBlockView({
             style={{ aspectRatio: `${CANVAS_WIDTH} / ${shownHeight}` }}
             tabIndex={0}
             role="img"
-            aria-label="Lienzo"
+            aria-label={t("Lienzo")}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
@@ -693,17 +696,18 @@ export function CanvasBlockView({
           </svg>
           {focused && !busy && (
             <p className="canvas-hint">
-              Rueda: moverse · Ctrl+rueda: zoom · Botón central o Espacio: arrastrar · Esc: soltar
-              el foco
+              {t(
+                "Rueda: moverse · Ctrl+rueda: zoom · Botón central o Espacio: arrastrar · Esc: soltar el foco",
+              )}
             </p>
           )}
           {busy && (
             <div className="canvas-reading" role="status">
               <Loader2 size={16} className="canvas-spin" aria-hidden="true" />
-              {phase === "reading" ? " Leyendo tu letra…" : " Preparando la imagen…"}
+              {phase === "reading" ? t(" Leyendo tu letra…") : t(" Preparando la imagen…")}
               {phase === "reading" && (
                 <button type="button" onClick={backToCanvas}>
-                  Cancelar
+                  {t("Cancelar")}
                 </button>
               )}
             </div>
@@ -712,12 +716,12 @@ export function CanvasBlockView({
             className="canvas-resize"
             role="separator"
             aria-orientation="horizontal"
-            aria-label="Altura del lienzo"
+            aria-label={t("Altura del lienzo")}
             aria-valuemin={MIN_HEIGHT}
             aria-valuemax={MAX_HEIGHT}
             aria-valuenow={shownHeight}
             tabIndex={0}
-            title="Arrastra para cambiar la altura (o usa ↑ ↓)"
+            title={t("Arrastra para cambiar la altura (o usa ↑ ↓)")}
             onPointerDown={onHandleDown}
             onKeyDown={onHandleKey}
           />

@@ -10,6 +10,7 @@ import {
   isButtonBlockKind,
   type ButtonAction,
 } from "./button-actions";
+import { t } from "../../lib/i18n.ts";
 
 export function ButtonBlockView({ node, editor, getPos, updateAttributes }: NodeViewProps) {
   const { pages, currentPageId, onNavigate } = useEditorAppContext();
@@ -29,7 +30,8 @@ export function ButtonBlockView({ node, editor, getPos, updateAttributes }: Node
   const run = () => {
     if (action === "openPage" && pageId) {
       if (targetExists) onNavigate(pageId);
-      else editor.storage.editorBridge.notify("La página a la que apunta este botón ya no existe");
+      else
+        editor.storage.editorBridge.notify(t("La página a la que apunta este botón ya no existe"));
     } else if (action === "insertBlock" && isButtonBlockKind(block)) {
       const pos = getPos();
       if (pos == null) return;
@@ -94,13 +96,13 @@ export function ButtonBlockView({ node, editor, getPos, updateAttributes }: Node
           onClick={run}
           data-missing={!targetExists}
         >
-          {label || "Botón"}
-          {!targetExists && <small> (página eliminada)</small>}
+          {label || t("Botón")}
+          {!targetExists && <small> {t("(página eliminada)")}</small>}
         </button>
         <button
           type="button"
           className="button-block-gear"
-          aria-label="Configurar botón"
+          aria-label={t("Configurar botón")}
           onClick={() => (editing ? done() : setEditing(true))}
         >
           <Settings size={14} strokeWidth={1.75} aria-hidden="true" />
@@ -109,34 +111,34 @@ export function ButtonBlockView({ node, editor, getPos, updateAttributes }: Node
       {editing && (
         <div className="button-block-settings">
           <label>
-            Texto
+            {t("Texto")}
             <input
               autoFocus
               type="text"
               maxLength={MAX_BUTTON_LABEL}
               value={draft}
-              placeholder="Texto del botón"
+              placeholder={t("Texto del botón")}
               onChange={(e) => setDraft(e.target.value)}
               onBlur={commitLabel}
               onKeyDown={onLabelKey}
             />
           </label>
           <label>
-            Acción
+            {t("Acción")}
             <select value={action ?? ""} onChange={(e) => setAction(e.target.value)}>
-              <option value="">Ninguna</option>
-              <option value="openPage">Abrir una página</option>
-              <option value="insertBlock">Insertar un bloque debajo</option>
+              <option value="">{t("Ninguna")}</option>
+              <option value="openPage">{t("Abrir una página")}</option>
+              <option value="insertBlock">{t("Insertar un bloque debajo")}</option>
             </select>
           </label>
           {action === "openPage" && (
             <label>
-              Página
+              {t("Página")}
               <select
                 value={pageId ?? ""}
                 onChange={(e) => updateAttributes({ pageId: e.target.value })}
               >
-                {!targetExists && <option value={pageId ?? ""}>Página eliminada</option>}
+                {!targetExists && <option value={pageId ?? ""}>{t("Página eliminada")}</option>}
                 {pages.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.title}
@@ -147,7 +149,7 @@ export function ButtonBlockView({ node, editor, getPos, updateAttributes }: Node
           )}
           {action === "insertBlock" && (
             <label>
-              Bloque
+              {t("Bloque")}
               <select
                 value={block ?? "paragraph"}
                 onChange={(e) => updateAttributes({ block: e.target.value })}
@@ -161,7 +163,7 @@ export function ButtonBlockView({ node, editor, getPos, updateAttributes }: Node
             </label>
           )}
           <button type="button" className="button-block-done" onClick={done}>
-            Listo
+            {t("Listo")}
           </button>
         </div>
       )}

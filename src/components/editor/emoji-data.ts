@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n.ts";
 export interface EmojiEntry {
   char: string;
   hexcode: string;
@@ -15,15 +16,15 @@ export interface EmojiCategory {
 
 /** emojibase's own group numbering — 2 ("component": skin tones, hair styles) is deliberately absent, they're modifiers, not standalone emoji. */
 export const EMOJI_CATEGORIES: EmojiCategory[] = [
-  { group: 0, label: "Caras" },
-  { group: 1, label: "Personas" },
-  { group: 3, label: "Animales" },
-  { group: 4, label: "Comida" },
-  { group: 5, label: "Viajes" },
-  { group: 6, label: "Actividades" },
-  { group: 7, label: "Objetos" },
-  { group: 8, label: "Símbolos" },
-  { group: 9, label: "Banderas" },
+  { group: 0, label: t("Caras") },
+  { group: 1, label: t("Personas") },
+  { group: 3, label: t("Animales") },
+  { group: 4, label: t("Comida") },
+  { group: 5, label: t("Viajes") },
+  { group: 6, label: t("Actividades") },
+  { group: 7, label: t("Objetos") },
+  { group: 8, label: t("Símbolos") },
+  { group: 9, label: t("Banderas") },
 ];
 
 const fold = (text: string) =>

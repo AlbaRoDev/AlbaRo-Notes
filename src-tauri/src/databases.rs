@@ -221,7 +221,14 @@ fn colors_of(config: &str) -> Map<String, Value> {
 /// The three groups of a status property's options, as Notion's «Estado» has: to do, in progress, complete.
 const STATUS_GROUPS: [&str; 3] = ["todo", "doing", "done"];
 /// What a new «Estado» column starts with: option, colour, group.
-const STATUS_DEFAULTS: [(&str, &str, &str); 3] = [("Sin empezar", "gray", "todo"), ("En curso", "blue", "doing"), ("Listo", "green", "done")];
+fn status_defaults() -> [(&'static str, &'static str, &'static str); 3] {
+    use crate::lang::pick;
+    [
+        (pick("Sin empezar", "Not started"), "gray", "todo"),
+        (pick("En curso", "In progress"), "blue", "doing"),
+        (pick("Listo", "Done"), "green", "done"),
+    ]
+}
 
 /// A status property is a select whose options belong to groups (`config.status`, `config.groups`).
 fn is_status(config: &str) -> bool {
@@ -242,9 +249,10 @@ fn groups_of(config: &str) -> Map<String, Value> {
 /// means a brand-new column, which starts with the three default states.
 fn status_config(options: Vec<String>, colors: &Map<String, Value>, groups: &Map<String, Value>, seed: bool) -> Value {
     let (options, colors, groups) = if options.is_empty() && seed {
-        let options = STATUS_DEFAULTS.iter().map(|(o, _, _)| o.to_string()).collect();
-        let colors = STATUS_DEFAULTS.iter().map(|(o, c, _)| (o.to_string(), json!(c))).collect();
-        let groups = STATUS_DEFAULTS.iter().map(|(o, _, g)| (o.to_string(), json!(g))).collect();
+        let defaults = status_defaults();
+        let options = defaults.iter().map(|(o, _, _)| o.to_string()).collect();
+        let colors = defaults.iter().map(|(o, c, _)| (o.to_string(), json!(c))).collect();
+        let groups = defaults.iter().map(|(o, _, g)| (o.to_string(), json!(g))).collect();
         (options, colors, groups)
     } else {
         (options, colors.clone(), groups.clone())

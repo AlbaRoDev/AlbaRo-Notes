@@ -6,6 +6,7 @@ import { ChartPanel } from "./DatabaseChart";
 import { FilterPanel, GroupPanel } from "./DatabaseViewConfig";
 import { measureLabel, normalizeChart } from "./view-config";
 import "./DatabaseView.css";
+import { t } from "../../lib/i18n.ts";
 
 const MAX_WIDGETS = 12; // mirrors views.rs
 
@@ -14,7 +15,7 @@ function autoTitle(widget: DashboardWidget, properties: Property[]): string {
   const chart = normalizeChart(widget.chart);
   const measure = measureLabel(chart, properties);
   const axis = properties.find((p) => p.id === widget.group?.property)?.name;
-  return chart.type === "number" || !axis ? measure : `${measure} por ${axis}`;
+  return chart.type === "number" || !axis ? measure : t("{measure} por {axis}", { measure, axis });
 }
 
 /** Edits one widget by lending it to the same panels a chart view uses (type, X axis, filter). */
@@ -44,12 +45,12 @@ function WidgetEditor({
     <div
       className="dash-editor"
       role="group"
-      aria-label="Editar widget"
+      aria-label={t("Editar widget")}
       onKeyDown={(e) => e.key === "Escape" && onClose()}
     >
       <div className="db-panel">
         <label>
-          Título
+          {t("Título")}
           <input
             type="text"
             maxLength={100}
@@ -68,7 +69,7 @@ function WidgetEditor({
             checked={widget.wide}
             onChange={(e) => onChange({ wide: e.target.checked })}
           />
-          Ocupar todo el ancho
+          {t("Ocupar todo el ancho")}
         </label>
       </div>
       <ChartPanel config={asConfig} properties={properties} onChange={fromConfig} />
@@ -83,7 +84,7 @@ function WidgetEditor({
       />
       <div className="db-panel-actions">
         <button type="button" onClick={onClose}>
-          Cerrar
+          {t("Cerrar")}
         </button>
       </div>
     </div>
@@ -135,7 +136,7 @@ export function DatabaseDashboard({
     <div className="dash">
       {widgets.length === 0 && (
         <p className="db-loading">
-          Este panel está vacío: añade un widget para ver un número o un gráfico.
+          {t("Este panel está vacío: añade un widget para ver un número o un gráfico.")}
         </p>
       )}
       <div className="dash-grid">
@@ -156,7 +157,7 @@ export function DatabaseDashboard({
                   <button
                     type="button"
                     className="db-icon-btn"
-                    aria-label="Subir widget"
+                    aria-label={t("Subir widget")}
                     disabled={i === 0}
                     onClick={() => move(w.id, -1)}
                   >
@@ -165,7 +166,7 @@ export function DatabaseDashboard({
                   <button
                     type="button"
                     className="db-icon-btn"
-                    aria-label="Bajar widget"
+                    aria-label={t("Bajar widget")}
                     disabled={i === widgets.length - 1}
                     onClick={() => move(w.id, 1)}
                   >
@@ -176,7 +177,7 @@ export function DatabaseDashboard({
                     aria-expanded={editing}
                     onClick={() => setEditingId(editing ? null : w.id)}
                   >
-                    Editar
+                    {t("Editar")}
                   </button>
                   {confirmId === w.id ? (
                     <>
@@ -188,15 +189,15 @@ export function DatabaseDashboard({
                           if (editing) setEditingId(null);
                         }}
                       >
-                        Borrar
+                        {t("Borrar")}
                       </button>
                       <button type="button" onClick={() => setConfirmId(null)}>
-                        No
+                        {t("No")}
                       </button>
                     </>
                   ) : (
                     <button type="button" onClick={() => setConfirmId(w.id)}>
-                      Quitar
+                      {t("Quitar")}
                     </button>
                   )}
                 </span>
@@ -211,9 +212,9 @@ export function DatabaseDashboard({
                 />
               )}
               {chart.type !== "number" && !w.group ? (
-                <p className="db-loading">Elige el eje X en «Editar».</p>
+                <p className="db-loading">{t("Elige el eje X en «Editar».")}</p>
               ) : chart.type !== "number" && points.length === 0 ? (
-                <p className="db-loading">No hay datos que mostrar.</p>
+                <p className="db-loading">{t("No hay datos que mostrar.")}</p>
               ) : (
                 <ChartCanvas
                   type={chart.type}
@@ -232,7 +233,7 @@ export function DatabaseDashboard({
         disabled={widgets.length >= MAX_WIDGETS}
         onClick={add}
       >
-        <Plus size={14} strokeWidth={1.75} aria-hidden="true" /> Añadir widget
+        <Plus size={14} strokeWidth={1.75} aria-hidden="true" /> {t("Añadir widget")}
       </button>
     </div>
   );

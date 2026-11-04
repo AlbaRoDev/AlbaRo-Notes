@@ -14,7 +14,13 @@ const MAX_LISTS: i64 = 50;
 const MAX_CARDS: i64 = 500;
 const MAX_NAME: usize = 100;
 /// The lists a new board starts with (the user renames, adds or removes them).
-const STARTING_LISTS: [&str; 3] = ["Por hacer", "En curso", "Hecho"];
+fn starting_lists() -> [&'static str; 3] {
+    [
+        crate::lang::pick("Por hacer", "To do"),
+        crate::lang::pick("En curso", "In progress"),
+        crate::lang::pick("Hecho", "Done"),
+    ]
+}
 
 fn sql<E: ToString>(e: E) -> String {
     e.to_string()
@@ -130,7 +136,7 @@ pub fn create_board(conn: &Connection, name: &str) -> Result<BoardData, String> 
     let id = new_id();
     let tx = conn.unchecked_transaction().map_err(sql)?;
     tx.execute("INSERT INTO boards (id, name) VALUES (?1, ?2)", [&id, &name]).map_err(sql)?;
-    for (position, list) in STARTING_LISTS.iter().enumerate() {
+    for (position, list) in starting_lists().iter().enumerate() {
         tx.execute(
             "INSERT INTO board_lists (id, board_id, name, position) VALUES (?1, ?2, ?3, ?4)",
             params![new_id(), id, list, position as i64],

@@ -1,3 +1,4 @@
+import { locale } from "../../lib/i18n.ts";
 import type { ChartPoint, ChartType } from "../../types";
 import "./views.css";
 
@@ -14,7 +15,7 @@ const PALETTE = [
 ];
 const color = (i: number) => PALETTE[i % PALETTE.length];
 
-const fmt = (n: number) => new Intl.NumberFormat("es", { maximumFractionDigits: 2 }).format(n);
+const fmt = (n: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(n);
 const short = (label: string, max: number) =>
   label.length > max ? `${label.slice(0, max - 1)}…` : label;
 

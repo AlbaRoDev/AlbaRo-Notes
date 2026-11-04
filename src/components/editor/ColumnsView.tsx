@@ -1,4 +1,5 @@
 import { NodeViewWrapper, NodeViewContent, type NodeViewProps } from "@tiptap/react";
+import { t } from "../../lib/i18n.ts";
 
 const MIN_COLUMNS = 2;
 const MAX_COLUMNS = 5;
@@ -41,7 +42,7 @@ export function ColumnsView({ node, editor, getPos }: NodeViewProps) {
           type="button"
           onClick={removeColumn}
           disabled={columnCount <= MIN_COLUMNS}
-          aria-label="Quitar columna"
+          aria-label={t("Quitar columna")}
         >
           −
         </button>
@@ -50,7 +51,7 @@ export function ColumnsView({ node, editor, getPos }: NodeViewProps) {
           type="button"
           onClick={addColumn}
           disabled={columnCount >= MAX_COLUMNS}
-          aria-label="Añadir columna"
+          aria-label={t("Añadir columna")}
         >
           +
         </button>

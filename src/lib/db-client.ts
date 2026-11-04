@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from "./invoke.ts";
 import type { JSONContent } from "@tiptap/react";
 import type {
   BoardCard,

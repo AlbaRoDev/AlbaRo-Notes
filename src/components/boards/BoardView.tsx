@@ -23,6 +23,7 @@ import {
 import type { BoardData, BoardList, CellValue, Property } from "../../types";
 import { CardFields } from "./CardFields";
 import { TaskChecklist } from "./TaskChecklist";
+import { t } from "../../lib/i18n.ts";
 
 /** A name that reads as text and saves when it loses the focus (Enter too; Esc or a refusal put the old one back). */
 export function EditableName({
@@ -184,7 +185,7 @@ export function BoardView({
     }
     const item = readDragItem(e);
     if (!item) return;
-    if (item.kind !== "task") return onNotice("Solo las tareas pueden estar en un tablero");
+    if (item.kind !== "task") return onNotice(t("Solo las tareas pueden estar en un tablero"));
     void write(() => addBoardCard(list.id, item.id, index));
   };
 
@@ -248,8 +249,8 @@ export function BoardView({
               type="button"
               className="board-grip"
               draggable
-              aria-label={`Mover la lista ${list.name}`}
-              title="Arrastra para reordenar las listas"
+              aria-label={t("Mover la lista {name}", { name: list.name })}
+              title={t("Arrastra para reordenar las listas")}
               onDragStart={(e) => {
                 startListDrag(e, list.id);
                 const el = e.currentTarget.closest<HTMLElement>("[data-list]");
@@ -262,13 +263,15 @@ export function BoardView({
             <EditableName
               className="board-list-name"
               value={list.name}
-              label={`Nombre de la lista ${list.name}`}
+              label={t("Nombre de la lista {name}", { name: list.name })}
               onCommit={(name) => void write(() => renameBoardList(list.id, name))}
             />
             <span className="board-count">{list.cards.length}</span>
             {confirmList === list.id ? (
               <span className="board-confirm">
-                {list.cards.length > 0 ? `¿Con sus ${list.cards.length} tarjetas? ` : ""}
+                {list.cards.length > 0
+                  ? t("¿Con sus {length} tarjetas? ", { length: list.cards.length })
+                  : ""}
                 <button
                   type="button"
                   onClick={() => {
@@ -276,18 +279,18 @@ export function BoardView({
                     void write(() => deleteBoardList(list.id));
                   }}
                 >
-                  Borrar
+                  {t("Borrar")}
                 </button>
                 <button type="button" onClick={() => setConfirmList(null)}>
-                  No
+                  {t("No")}
                 </button>
               </span>
             ) : (
               <button
                 type="button"
                 className="board-icon-btn"
-                aria-label={`Borrar la lista ${list.name}`}
-                title="Borrar la lista (las tareas no se borran)"
+                aria-label={t("Borrar la lista {name}", { name: list.name })}
+                title={t("Borrar la lista (las tareas no se borran)")}
                 onClick={() => setConfirmList(list.id)}
               >
                 <Trash2 size={13} aria-hidden />
@@ -312,15 +315,15 @@ export function BoardView({
                     type="button"
                     className="board-card-title"
                     onClick={() => onOpenTask(card.taskId)}
-                    title="Abrir la tarea"
+                    title={t("Abrir la tarea")}
                   >
-                    {card.title || "Sin título"}
+                    {card.title || t("Sin título")}
                   </button>
                   <button
                     type="button"
                     className="board-icon-btn board-card-remove"
-                    aria-label={`Quitar ${card.title} del tablero`}
-                    title="Quitar del tablero (la tarea se conserva)"
+                    aria-label={t("Quitar {title} del tablero", { title: card.title })}
+                    title={t("Quitar del tablero (la tarea se conserva)")}
                     onClick={() => void write(() => removeBoardCard(card.id))}
                   >
                     <X size={13} aria-hidden />
@@ -338,8 +341,8 @@ export function BoardView({
                       className="board-checkbtn"
                       data-empty={card.checklist.total === 0 || undefined}
                       aria-expanded={checklistOpen.has(card.id)}
-                      aria-label={`Lista de comprobación de ${card.title}`}
-                      title="Lista de comprobación"
+                      aria-label={t("Lista de comprobación de {title}", { title: card.title })}
+                      title={t("Lista de comprobación")}
                       onClick={() => toggleChecklist(card.id)}
                     >
                       <ListChecks size={13} aria-hidden />
@@ -406,8 +409,8 @@ function AddCard({
         value={draft}
         maxLength={200}
         readOnly={busy} // not disabled: a disabled input drops the focus
-        placeholder="Añadir una tarjeta…"
-        aria-label="Añadir una tarjeta"
+        placeholder={t("Añadir una tarjeta…")}
+        aria-label={t("Añadir una tarjeta")}
         data-list-id={listId}
         onChange={(e) => setDraft(e.target.value)}
       />
@@ -438,8 +441,8 @@ function AddList({ onAdd }: { onAdd: (name: string) => Promise<boolean> }) {
         value={draft}
         maxLength={100}
         readOnly={busy}
-        placeholder="Añadir otra lista…"
-        aria-label="Añadir una lista"
+        placeholder={t("Añadir otra lista…")}
+        aria-label={t("Añadir una lista")}
         onChange={(e) => setDraft(e.target.value)}
       />
     </form>

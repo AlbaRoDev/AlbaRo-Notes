@@ -18,9 +18,10 @@ import { CODE_LANGUAGES, PLAIN_TEXT } from "../editor/code-languages";
 import { closeAiAssist, getAiAssist, type AiAssistState } from "../editor/AiAssist";
 import { buildPrompt, matchingActions, type AiAction, type AiContext } from "./ai-actions";
 import "./AiInline.css";
+import { t } from "../../lib/i18n.ts";
 
 // Groups shown as one row with a submenu while nothing is typed, as in Notion's menu.
-const SUBMENUS = ["Cambiar el tono", "Traducir", "Traducir la página"];
+const SUBMENUS = [t("Cambiar el tono"), t("Traducir"), t("Traducir la página")];
 const KNOWN_LANGUAGES = new Set(CODE_LANGUAGES.map((l) => l.value));
 
 /** Models sometimes wrap the whole answer in ```markdown … ```: unwrap it. */
@@ -160,7 +161,7 @@ function readContext(editor: Editor, ai: AiAssistState): AiContext & { nodes: JS
     if (offset <= ai.from) index = i;
   });
   return {
-    title: title || "Sin título",
+    title: title || t("Sin título"),
     selection: ai.mode === "selection" ? blocksToMarkdown(nodes) : null,
     page: blocksToMarkdown(body),
     before: blocksToMarkdown(all.slice(1, Math.max(index, 1))),
@@ -206,7 +207,7 @@ function AiInlineBox({ editor, ai }: { editor: Editor; ai: AiAssistState }) {
         !submenu &&
         !rows.some((g) => g.rows.some((r) => r.kind === "submenu" && r.group === action.group))
       ) {
-        push("Más", { kind: "submenu", group: action.group });
+        push(t("Más"), { kind: "submenu", group: action.group });
       }
       continue;
     }
@@ -245,7 +246,7 @@ function AiInlineBox({ editor, ai }: { editor: Editor; ai: AiAssistState }) {
         setText(full);
         if (full.trim()) setPhase("done");
         else {
-          setError("La IA no ha escrito nada. Prueba a pedirlo de otra forma.");
+          setError(t("La IA no ha escrito nada. Prueba a pedirlo de otra forma."));
           setPhase("error");
         }
       })
@@ -416,7 +417,7 @@ function AiInlineBox({ editor, ai }: { editor: Editor; ai: AiAssistState }) {
       className="ai-inline"
       style={style}
       role="dialog"
-      aria-label="Escribir con IA"
+      aria-label={t("Escribir con IA")}
     >
       {(phase === "writing" || phase === "done") && (
         <div className="ai-inline-result" aria-live="polite">
@@ -438,7 +439,7 @@ function AiInlineBox({ editor, ai }: { editor: Editor; ai: AiAssistState }) {
               type="button"
               className="ai-inline-chip"
               onClick={() => setSubmenu(null)}
-              title="Volver"
+              title={t("Volver")}
             >
               <ChevronLeft size={14} />
               {submenu}
@@ -449,9 +450,9 @@ function AiInlineBox({ editor, ai }: { editor: Editor; ai: AiAssistState }) {
             value={query}
             maxLength={2000}
             placeholder={
-              hasSelection ? "Pide a la IA que edite o genere…" : "Pide a la IA que escriba…"
+              hasSelection ? t("Pide a la IA que edite o genere…") : t("Pide a la IA que escriba…")
             }
-            aria-label="Instrucción para la IA"
+            aria-label={t("Instrucción para la IA")}
             onChange={(e) => {
               setQuery(e.target.value);
               setActive(0);
@@ -461,7 +462,7 @@ function AiInlineBox({ editor, ai }: { editor: Editor; ai: AiAssistState }) {
           <button
             type="button"
             className="ai-inline-send"
-            aria-label="Enviar"
+            aria-label={t("Enviar")}
             disabled={!query.trim()}
             onClick={runCustom}
           >
@@ -473,9 +474,9 @@ function AiInlineBox({ editor, ai }: { editor: Editor; ai: AiAssistState }) {
       {phase === "writing" && (
         <div className="ai-inline-status">
           <Loader2 size={15} className="ai-spin" aria-hidden="true" />
-          <span>La IA está escribiendo…</span>
+          <span>{t("La IA está escribiendo…")}</span>
           <button type="button" onClick={() => cancelRef.current?.()}>
-            <Square size={12} /> Detener <kbd>Esc</kbd>
+            <Square size={12} /> {t("Detener")} <kbd>{t("Esc")}</kbd>
           </button>
         </div>
       )}
@@ -489,8 +490,8 @@ function AiInlineBox({ editor, ai }: { editor: Editor; ai: AiAssistState }) {
                 ref={followRef}
                 value={followUp}
                 maxLength={2000}
-                placeholder="Pide un cambio… (o Intro para aceptar)"
-                aria-label="Pedir un cambio a la IA"
+                placeholder={t("Pide un cambio… (o Intro para aceptar)")}
+                aria-label={t("Pedir un cambio a la IA")}
                 onChange={(e) => setFollowUp(e.target.value)}
                 onKeyDown={onDoneKey}
               />
@@ -506,7 +507,7 @@ function AiInlineBox({ editor, ai }: { editor: Editor; ai: AiAssistState }) {
                     data-primary={primary === "replace"}
                     onClick={() => apply("replace")}
                   >
-                    <PenLine size={15} /> Reemplazar la selección
+                    <PenLine size={15} /> {t("Reemplazar la selección")}
                   </button>
                 )}
                 <button
@@ -515,28 +516,29 @@ function AiInlineBox({ editor, ai }: { editor: Editor; ai: AiAssistState }) {
                   data-primary={primary === "insert"}
                   onClick={() => apply("insert")}
                 >
-                  <CornerDownLeft size={15} /> {hasSelection ? "Insertar debajo" : "Insertar"}
+                  <CornerDownLeft size={15} /> {hasSelection ? t("Insertar debajo") : t("Insertar")}
                 </button>
               </>
             )}
             <button type="button" role="menuitem" onClick={() => generate(sent.current)}>
-              <RotateCcw size={15} /> Intentar de nuevo
+              <RotateCcw size={15} /> {t("Intentar de nuevo")}
             </button>
             <button type="button" role="menuitem" onClick={() => close()}>
-              <X size={15} /> Descartar
+              <X size={15} /> {t("Descartar")}
             </button>
           </div>
           {hasSelection && !canReplace && phase === "done" && (
             <p className="ai-inline-note">
-              La selección tiene algo más que texto (una imagen, una mención, el título…), así que
-              el resultado va debajo para no perderlo.
+              {t(
+                "La selección tiene algo más que texto (una imagen, una mención, el título…), así que el resultado va debajo para no perderlo.",
+              )}
             </p>
           )}
         </>
       )}
 
       {phase === "menu" && flat.length > 0 && (
-        <div className="ai-inline-menu" role="listbox" aria-label="Acciones de IA">
+        <div className="ai-inline-menu" role="listbox" aria-label={t("Acciones de IA")}>
           {rows.map((group) => (
             <div key={group.group || "custom"} role="group" aria-label={group.group}>
               {group.group && <div className="ai-inline-group">{group.group}</div>}

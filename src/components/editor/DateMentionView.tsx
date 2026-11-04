@@ -1,3 +1,4 @@
+import { locale } from "../../lib/i18n.ts";
 import { useState, type KeyboardEvent } from "react";
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import { CalendarClock } from "lucide-react";
@@ -96,5 +97,5 @@ export function DateMentionView({ node, updateAttributes, getPos, editor }: Node
 /** Builds the Date from local y/m/d parts — `new Date(isoString)` parses as UTC midnight and can display the previous day in negative-UTC-offset zones. */
 function formatDate(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);
-  return new Intl.DateTimeFormat("es", { dateStyle: "medium" }).format(new Date(y, m - 1, d));
+  return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(y, m - 1, d));
 }

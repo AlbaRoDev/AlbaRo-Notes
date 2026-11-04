@@ -1,4 +1,5 @@
 import { dayNumber, fromDayNumber } from "../../lib/date-utils";
+import { t } from "../../lib/i18n.ts";
 
 /** An entry laid out on a calendar or timeline. A single day has `end === start`. */
 export interface DatedItem {
@@ -132,7 +133,7 @@ export function sanitizePins(raw: unknown): StoredPin[] {
 export function toDatedItems(events: StoredEvent[]): DatedItem[] {
   return events.map((e) => ({
     id: e.id,
-    title: e.title || "Sin título",
+    title: e.title || t("Sin título"),
     start: e.start,
     end: e.end ?? e.start,
   }));

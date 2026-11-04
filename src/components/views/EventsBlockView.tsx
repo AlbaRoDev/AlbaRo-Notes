@@ -7,6 +7,7 @@ import { EventPanel } from "./EventPanel";
 import { TimelineChart } from "./TimelineChart";
 import { MAX_ITEMS, toDatedItems, type StoredEvent } from "./view-items";
 import "../database/DatabaseView.css"; // shared form controls
+import { t } from "../../lib/i18n.ts";
 
 interface Config {
   kind: "calendar" | "timeline";
@@ -54,17 +55,21 @@ function EventsBlock({
         <span className="db-header-actions">
           {config.kind === "timeline" && (
             <button type="button" onClick={() => add(todayIso(), addDays(todayIso(), 6))}>
-              <Plus size={12} aria-hidden="true" /> Añadir {config.noun}
+              <Plus size={12} aria-hidden="true" /> {t("Añadir {noun}", { noun: config.noun })}
             </button>
           )}
           {confirmRemove ? (
             <>
-              <span>¿Quitar{events.length > 0 ? ` (se pierden ${events.length})` : ""}?</span>
+              <span>
+                {events.length > 0
+                  ? t("¿Quitar (se pierden {count})?", { count: events.length })
+                  : t("¿Quitar?")}
+              </span>
               <button type="button" onClick={remove}>
-                Sí, quitar
+                {t("Sí, quitar")}
               </button>
               <button type="button" onClick={() => setConfirmRemove(false)}>
-                No
+                {t("No")}
               </button>
             </>
           ) : (
@@ -72,7 +77,7 @@ function EventsBlock({
               type="button"
               onClick={() => (events.length > 0 ? setConfirmRemove(true) : remove())}
             >
-              Quitar
+              {t("Quitar")}
             </button>
           )}
         </span>
@@ -93,7 +98,9 @@ function EventsBlock({
             onOpen={setSelectedId}
           />
           {events.length === 0 && (
-            <p className="db-loading">Aún no hay nada: pulsa «Añadir {config.noun}».</p>
+            <p className="db-loading">
+              {t("Aún no hay nada: pulsa «Añadir {noun}».", { noun: config.noun })}
+            </p>
           )}
         </>
       )}
@@ -117,12 +124,18 @@ function EventsBlock({
 
 export function CalendarBlockView(props: NodeViewProps) {
   return (
-    <EventsBlock {...props} config={{ kind: "calendar", title: "Calendario", noun: "evento" }} />
+    <EventsBlock
+      {...props}
+      config={{ kind: "calendar", title: t("Calendario"), noun: t("evento") }}
+    />
   );
 }
 
 export function TimelineBlockView(props: NodeViewProps) {
   return (
-    <EventsBlock {...props} config={{ kind: "timeline", title: "Cronograma", noun: "elemento" }} />
+    <EventsBlock
+      {...props}
+      config={{ kind: "timeline", title: t("Cronograma"), noun: t("elemento") }}
+    />
   );
 }

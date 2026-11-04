@@ -1,6 +1,7 @@
 import { Node } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Placeholder } from "@tiptap/extensions";
+import { t } from "../../lib/i18n.ts";
 
 /**
  * The editor of a database page only edits its title: the table
@@ -18,5 +19,5 @@ export const databasePageExtensions = [
     codeBlock: false,
   }),
   TitleOnlyDoc,
-  Placeholder.configure({ placeholder: "Base de datos sin título" }),
+  Placeholder.configure({ placeholder: t("Base de datos sin título") }),
 ];

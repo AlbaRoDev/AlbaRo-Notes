@@ -14,6 +14,7 @@ import { blocksToMarkdown } from "../../lib/markdown-blocks";
 import type { PageInfo, PageSummary } from "../../types";
 import { CrumbStep } from "./PageCrumbs";
 import "./PageTopBar.css";
+import { locale, t } from "../../lib/i18n.ts";
 
 interface Action {
   id: string;
@@ -28,7 +29,7 @@ function formatEdited(updatedAt: string): string {
   const date = new Date(`${updatedAt.replace(" ", "T")}Z`);
   return Number.isNaN(date.getTime())
     ? updatedAt
-    : date.toLocaleString("es", { dateStyle: "medium", timeStyle: "short" });
+    : date.toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
 }
 
 /** The pages above this one, root first (a row's database, a sub-page's parents). */
@@ -90,17 +91,17 @@ export function PageTopBar({
   const actions: Action[] = [
     {
       id: "copy",
-      label: "Copiar el contenido como Markdown",
+      label: t("Copiar el contenido como Markdown"),
       Icon: Copy,
       run: async () => {
         const doc = await getPageContent(page.id);
         await navigator.clipboard.writeText(blocksToMarkdown(doc?.content ?? []));
-        setNote("Copiado al portapapeles");
+        setNote(t("Copiado al portapapeles"));
       },
     },
     {
       id: "ai",
-      label: "Usar con la IA",
+      label: t("Usar con la IA"),
       Icon: Sparkles,
       run: () => {
         setMenuOpen(false);
@@ -111,7 +112,7 @@ export function PageTopBar({
       ? [
           {
             id: "delete",
-            label: "Borrar la página",
+            label: t("Borrar la página"),
             Icon: Trash2,
             danger: true,
             run: () => {
@@ -125,7 +126,7 @@ export function PageTopBar({
 
   return (
     <div className="page-topbar">
-      <nav className="page-crumbs" aria-label="Ruta de la página">
+      <nav className="page-crumbs" aria-label={t("Ruta de la página")}>
         {/* The pages above this one (each opens on click) and, last, this one. */}
         {trail.map((p, i) => (
           <span key={p.id} className="page-crumb">
@@ -141,19 +142,19 @@ export function PageTopBar({
       <div className="page-topbar-actions" ref={menuRef}>
         <button
           type="button"
-          aria-label={page.favorite ? "Quitar de favoritos" : "Añadir a favoritos"}
+          aria-label={page.favorite ? t("Quitar de favoritos") : t("Añadir a favoritos")}
           aria-pressed={page.favorite}
-          title={page.favorite ? "Quitar de favoritos" : "Añadir a favoritos"}
+          title={page.favorite ? t("Quitar de favoritos") : t("Añadir a favoritos")}
           onClick={() => void setPageFavorite(page.id, !page.favorite).then(onChanged)}
         >
           <Star size={16} fill={page.favorite ? "currentColor" : "none"} aria-hidden="true" />
         </button>
         <button
           type="button"
-          aria-label="Más acciones"
+          aria-label={t("Más acciones")}
           aria-haspopup="menu"
           aria-expanded={menuOpen}
-          title="Más acciones"
+          title={t("Más acciones")}
           onClick={() => {
             setNote(null);
             setMenuOpen((o) => !o);
@@ -162,7 +163,7 @@ export function PageTopBar({
           <MoreHorizontal size={16} aria-hidden="true" />
         </button>
         {menuOpen && (
-          <div className="page-menu" role="menu" aria-label="Acciones de la página">
+          <div className="page-menu" role="menu" aria-label={t("Acciones de la página")}>
             {actions.map(({ id, label, Icon, danger, run }) => (
               <button
                 key={id}
@@ -181,9 +182,11 @@ export function PageTopBar({
             )}
             {info && (
               <p className="page-menu-foot">
-                <Clock size={12} aria-hidden="true" /> Última edición:{" "}
-                {formatEdited(info.updatedAt)} · {info.words}{" "}
-                {info.words === 1 ? "palabra" : "palabras"}
+                <Clock size={12} aria-hidden="true" />{" "}
+                {t("Última edición: {when} · {words}", {
+                  when: formatEdited(info.updatedAt),
+                  words: t(info.words === 1 ? "{n} palabra" : "{n} palabras", { n: info.words }),
+                })}
               </p>
             )}
           </div>

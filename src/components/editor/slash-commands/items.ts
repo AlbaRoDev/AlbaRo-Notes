@@ -42,9 +42,9 @@ import {
   Video,
   type LucideIcon,
 } from "lucide-react";
+import { t } from "../../../lib/i18n.ts";
 
-type SlashCommandCategory =
-  "Básicos" | "Listas" | "Bloques de contenido" | "Multimedia" | "En línea" | "Avanzado";
+type SlashCommandCategory = string;
 
 export interface SlashCommandItem {
   title: string;
@@ -118,39 +118,39 @@ function tabNode(title: string): JSONContent {
 const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
   // Básicos
   {
-    title: "Texto",
-    category: "Básicos",
+    title: t("Texto"),
+    category: t("Básicos"),
     keywords: ["paragraph", "text", "p", "parrafo", "párrafo"],
     icon: Pilcrow,
     run: (editor, range) => editor.chain().focus().deleteRange(range).setParagraph().run(),
   },
   {
-    title: "Encabezado 1",
-    category: "Básicos",
+    title: t("Encabezado 1"),
+    category: t("Básicos"),
     keywords: ["heading", "head", "h1", "titulo", "título"],
     icon: Heading1,
     run: (editor, range) =>
       editor.chain().focus().deleteRange(range).setNode("heading", { level: 1 }).run(),
   },
   {
-    title: "Encabezado 2",
-    category: "Básicos",
+    title: t("Encabezado 2"),
+    category: t("Básicos"),
     keywords: ["heading", "head", "h2", "titulo", "título"],
     icon: Heading2,
     run: (editor, range) =>
       editor.chain().focus().deleteRange(range).setNode("heading", { level: 2 }).run(),
   },
   {
-    title: "Encabezado 3",
-    category: "Básicos",
+    title: t("Encabezado 3"),
+    category: t("Básicos"),
     keywords: ["heading", "head", "h3", "titulo", "título"],
     icon: Heading3,
     run: (editor, range) =>
       editor.chain().focus().deleteRange(range).setNode("heading", { level: 3 }).run(),
   },
   {
-    title: "Encabezado 4",
-    category: "Básicos",
+    title: t("Encabezado 4"),
+    category: t("Básicos"),
     keywords: ["heading", "head", "h4", "titulo", "título"],
     icon: Heading4,
     run: (editor, range) =>
@@ -158,72 +158,72 @@ const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
   },
   // Listas
   {
-    title: "Lista con viñetas",
-    category: "Listas",
+    title: t("Lista con viñetas"),
+    category: t("Listas"),
     keywords: ["bullet", "list", "ul", "lista", "viñetas"],
     icon: List,
     run: (editor, range) => editor.chain().focus().deleteRange(range).toggleBulletList().run(),
   },
   {
-    title: "Lista numerada",
-    category: "Listas",
+    title: t("Lista numerada"),
+    category: t("Listas"),
     keywords: ["ordered", "number", "ol", "numerada"],
     icon: ListOrdered,
     run: (editor, range) => editor.chain().focus().deleteRange(range).toggleOrderedList().run(),
   },
   {
-    title: "Checklist",
-    category: "Listas",
+    title: t("Checklist"),
+    category: t("Listas"),
     keywords: ["task", "todo", "checkbox", "check", "tarea"],
     icon: CheckSquare,
     run: (editor, range) => editor.chain().focus().deleteRange(range).toggleTaskList().run(),
   },
   {
-    title: "Lista desplegable",
-    category: "Listas",
+    title: t("Lista desplegable"),
+    category: t("Listas"),
     keywords: ["toggle", "desplegable", "collapse", "lista desplegable"],
     icon: ChevronRight,
     run: (editor, range) => insertToggle(editor, range, null),
   },
   {
-    title: "Encabezado desplegable",
-    category: "Listas",
+    title: t("Encabezado desplegable"),
+    category: t("Listas"),
     keywords: ["toggle heading", "encabezado desplegable"],
     icon: ListCollapse,
     run: (editor, range) => insertToggle(editor, range, 1),
   },
   // Bloques de contenido
   {
-    title: "Cita",
-    category: "Bloques de contenido",
+    title: t("Cita"),
+    category: t("Bloques de contenido"),
     keywords: ["blockquote", "quote", "cita"],
     icon: Quote,
     run: (editor, range) => editor.chain().focus().deleteRange(range).toggleBlockquote().run(),
   },
   {
-    title: "Destacado",
-    category: "Bloques de contenido",
+    title: t("Destacado"),
+    category: t("Bloques de contenido"),
     keywords: ["callout", "highlight", "destacado", "nota"],
     icon: Lightbulb,
     run: (editor, range) => editor.chain().focus().deleteRange(range).toggleWrap("callout").run(),
   },
   {
-    title: "Divisor",
-    category: "Bloques de contenido",
+    title: t("Divisor"),
+    category: t("Bloques de contenido"),
     keywords: ["divider", "hr", "horizontal", "rule", "separador"],
     icon: Minus,
     run: (editor, range) => editor.chain().focus().deleteRange(range).setHorizontalRule().run(),
   },
   {
-    title: "Bloque de código",
-    category: "Bloques de contenido",
+    title: t("Bloque de código"),
+    category: t("Bloques de contenido"),
     keywords: ["code", "codeblock", "monospace"],
     icon: Code,
     run: (editor, range) => editor.chain().focus().deleteRange(range).toggleCodeBlock().run(),
   },
   {
-    title: "Tabla",
-    category: "Bloques de contenido",
+    title: t("Tabla"),
+    category: t("Bloques de contenido"),
     keywords: ["table", "tabla", "grid", "cuadricula", "cuadrícula", "filas"],
     icon: TableIcon,
     run: (editor, range) =>
@@ -235,8 +235,8 @@ const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
         .run(),
   },
   {
-    title: "Ecuación de bloque",
-    category: "Bloques de contenido",
+    title: t("Ecuación de bloque"),
+    category: t("Bloques de contenido"),
     keywords: ["equation", "ecuacion", "latex", "math", "formula", "fórmula", "bloque", "display"],
     icon: Sigma,
     run: (editor, range) =>
@@ -244,36 +244,36 @@ const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
   },
   // Multimedia
   {
-    title: "Imagen",
-    category: "Multimedia",
+    title: t("Imagen"),
+    category: t("Multimedia"),
     keywords: ["image", "imagen", "foto", "picture", "photo"],
     icon: ImageIcon,
     run: (editor, range) => insertMedia(editor, range, { type: "image" }),
   },
   {
-    title: "Vídeo",
-    category: "Multimedia",
+    title: t("Vídeo"),
+    category: t("Multimedia"),
     keywords: ["video", "vídeo", "movie", "mp4"],
     icon: Video,
     run: (editor, range) => insertMedia(editor, range, { type: "video" }),
   },
   {
-    title: "Audio",
-    category: "Multimedia",
+    title: t("Audio"),
+    category: t("Multimedia"),
     keywords: ["audio", "sonido", "music", "música", "musica", "mp3"],
     icon: Music,
     run: (editor, range) => insertMedia(editor, range, { type: "audio" }),
   },
   {
-    title: "Archivo",
-    category: "Multimedia",
+    title: t("Archivo"),
+    category: t("Multimedia"),
     keywords: ["file", "archivo", "adjunto", "attachment", "pdf", "documento"],
     icon: Paperclip,
     run: (editor, range) => insertMedia(editor, range, { type: "fileBlock" }),
   },
   {
-    title: "Miniatura web",
-    category: "Multimedia",
+    title: t("Miniatura web"),
+    category: t("Multimedia"),
     keywords: ["bookmark", "marcador", "web", "link", "enlace", "miniatura", "url"],
     icon: Globe,
     run: (editor, range) => insertMedia(editor, range, { type: "webBookmark" }),
@@ -288,16 +288,16 @@ const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
   // starts searching. Dropping .focus() here removes the competing claim;
   // deleteRange/insertContent don't depend on DOM focus to apply.
   {
-    title: "Emoji",
-    category: "En línea",
+    title: t("Emoji"),
+    category: t("En línea"),
     keywords: ["emoji", "emoticon", "icono"],
     icon: Smile,
     run: (editor, range) =>
       editor.chain().deleteRange(range).insertContent({ type: "emojiPicker" }).run(),
   },
   {
-    title: "Fecha o recordatorio",
-    category: "En línea",
+    title: t("Fecha o recordatorio"),
+    category: t("En línea"),
     keywords: ["date", "fecha", "recordatorio", "reminder", "calendario"],
     icon: CalendarClock,
     run: (editor, range) =>
@@ -308,16 +308,16 @@ const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
         .run(),
   },
   {
-    title: "Mención de página",
-    category: "En línea",
+    title: t("Mención de página"),
+    category: t("En línea"),
     keywords: ["mention", "mencion", "mención", "pagina", "página", "@"],
     icon: AtSign,
     // writes the «@», which opens the same list as typing it
     run: (editor, range) => editor.chain().focus().deleteRange(range).insertContent("@").run(),
   },
   {
-    title: "Ecuación integrada",
-    category: "En línea",
+    title: t("Ecuación integrada"),
+    category: t("En línea"),
     keywords: ["equation", "ecuacion", "ecuación", "latex", "math", "formula", "fórmula"],
     icon: Sigma,
     run: (editor, range) =>
@@ -329,8 +329,8 @@ const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
   },
   // Avanzado
   {
-    title: "Columnas",
-    category: "Avanzado",
+    title: t("Columnas"),
+    category: t("Avanzado"),
     keywords: ["columns", "columnas", "layout"],
     icon: Columns2,
     run: (editor, range) =>
@@ -348,8 +348,8 @@ const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
         .run(),
   },
   {
-    title: "Pestañas",
-    category: "Avanzado",
+    title: t("Pestañas"),
+    category: t("Avanzado"),
     keywords: ["tabs", "pestañas", "pestanas", "pestaña"],
     icon: PanelTop,
     run: (editor, range) =>
@@ -362,7 +362,7 @@ const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
             {
               type: "tabs",
               attrs: { active: 0 },
-              content: [tabNode("Pestaña 1"), tabNode("Pestaña 2")],
+              content: [tabNode(t("Pestaña 1")), tabNode(t("Pestaña 2"))],
             },
             "inside",
           ),
@@ -370,15 +370,15 @@ const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
         .run(),
   },
   {
-    title: "Botón",
-    category: "Avanzado",
+    title: t("Botón"),
+    category: t("Avanzado"),
     keywords: ["button", "boton", "botón", "accion", "acción"],
     icon: MousePointerClick,
     run: (editor, range) => insertMedia(editor, range, { type: "buttonBlock" }),
   },
   {
-    title: "Bloque sincronizado",
-    category: "Avanzado",
+    title: t("Bloque sincronizado"),
+    category: t("Avanzado"),
     keywords: ["synced", "sync", "sincronizado", "sincronizar", "compartido"],
     requires: "syncedBlock",
     icon: RefreshCw,
@@ -387,8 +387,8 @@ const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
   },
   {
     // Creates the database as its own root-level page and leaves a view of it here.
-    title: "Base de datos",
-    category: "Avanzado",
+    title: t("Base de datos"),
+    category: t("Avanzado"),
     keywords: [
       "database",
       "base de datos",
@@ -418,8 +418,8 @@ const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
     },
   },
   {
-    title: "Vista de base de datos",
-    category: "Avanzado",
+    title: t("Vista de base de datos"),
+    category: t("Avanzado"),
     keywords: ["database view", "vista", "base de datos existente", "enlazada", "linked"],
     requires: "database",
     icon: DatabaseIcon,
@@ -428,16 +428,16 @@ const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
   },
   // Standalone views: single-purpose blocks with their own entries, unrelated to any database.
   {
-    title: "Vista de calendario",
-    category: "Avanzado",
+    title: t("Vista de calendario"),
+    category: t("Avanzado"),
     keywords: ["calendar view", "calendario", "agenda", "eventos", "meses", "fechas"],
     icon: CalendarDays,
     run: (editor, range) =>
       insertMedia(editor, range, { type: "calendarView", attrs: { events: [] } }),
   },
   {
-    title: "Vista de cronograma",
-    category: "Avanzado",
+    title: t("Vista de cronograma"),
+    category: t("Avanzado"),
     keywords: [
       "timeline view",
       "cronograma",
@@ -451,8 +451,8 @@ const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
       insertMedia(editor, range, { type: "timelineView", attrs: { events: [] } }),
   },
   {
-    title: "Vista de mapa",
-    category: "Avanzado",
+    title: t("Vista de mapa"),
+    category: t("Avanzado"),
     keywords: [
       "map view",
       "mapa",
@@ -467,8 +467,8 @@ const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
     run: (editor, range) => insertMedia(editor, range, { type: "mapView", attrs: { pins: [] } }),
   },
   {
-    title: "Lienzo",
-    category: "Avanzado",
+    title: t("Lienzo"),
+    category: t("Avanzado"),
     keywords: [
       "canvas",
       "dibujo",
@@ -486,8 +486,8 @@ const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
       insertMedia(editor, range, { type: "canvasBlock", attrs: { strokes: [], height: 360 } }),
   },
   {
-    title: "Vista de gráfico",
-    category: "Avanzado",
+    title: t("Vista de gráfico"),
+    category: t("Avanzado"),
     keywords: [
       "chart view",
       "grafico",
@@ -507,8 +507,8 @@ const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
       insertMedia(editor, range, { type: "chartView", attrs: { chartType: "bar", entries: [] } }),
   },
   {
-    title: "Página",
-    category: "Avanzado",
+    title: t("Página"),
+    category: t("Avanzado"),
     keywords: ["page", "subpagina", "subpágina", "pagina", "página"],
     icon: FileText,
     // Deletes the "/página" text immediately for a responsive feel, then
@@ -527,8 +527,8 @@ const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
     },
   },
   {
-    title: "Página enlazada",
-    category: "Avanzado",
+    title: t("Página enlazada"),
+    category: t("Avanzado"),
     keywords: ["linked page", "link", "pagina enlazada", "página enlazada", "enlace"],
     icon: Link2,
     run: (editor, range) =>
@@ -540,16 +540,16 @@ const SLASH_COMMAND_ITEMS: SlashCommandItem[] = [
         .run(),
   },
   {
-    title: "Ruta de navegación",
-    category: "Avanzado",
+    title: t("Ruta de navegación"),
+    category: t("Avanzado"),
     keywords: ["breadcrumb", "ruta", "navegacion", "navegación"],
     icon: Milestone,
     run: (editor, range) =>
       editor.chain().focus().deleteRange(range).insertContent({ type: "breadcrumb" }).run(),
   },
   {
-    title: "Índice",
-    category: "Avanzado",
+    title: t("Índice"),
+    category: t("Avanzado"),
     keywords: ["toc", "table of contents", "indice", "índice"],
     icon: TableOfContentsIcon,
     run: (editor, range) =>

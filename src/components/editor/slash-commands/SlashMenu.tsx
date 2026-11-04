@@ -1,6 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import type { SlashCommandItem } from "./items";
 import "./SlashMenu.css";
+import { t } from "../../../lib/i18n.ts";
 
 interface SlashMenuProps {
   items: SlashCommandItem[];
@@ -42,7 +43,7 @@ export const SlashMenu = forwardRef<SlashMenuHandle, SlashMenuProps>(({ items, c
   if (items.length === 0) {
     return (
       <div className="slash-menu">
-        <div className="slash-menu-empty">Sin resultados</div>
+        <div className="slash-menu-empty">{t("Sin resultados")}</div>
       </div>
     );
   }

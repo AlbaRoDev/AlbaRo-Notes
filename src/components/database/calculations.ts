@@ -1,21 +1,22 @@
 import type { Calc, PropertyKind } from "../../types";
+import { locale, t } from "../../lib/i18n.ts";
 
 /** Menu label and the short label shown before the result in the table footer, like Notion's. */
 const CALC_LABELS: Record<Calc, { menu: string; short: string }> = {
-  count_all: { menu: "Contar todo", short: "Total" },
-  count_values: { menu: "Contar valores", short: "Valores" },
-  count_empty: { menu: "Contar vacíos", short: "Vacíos" },
-  count_unique: { menu: "Contar valores únicos", short: "Únicos" },
-  percent_empty: { menu: "Porcentaje de vacíos", short: "Vacíos" },
-  percent_not_empty: { menu: "Porcentaje de no vacíos", short: "No vacíos" },
-  sum: { menu: "Suma", short: "Suma" },
-  avg: { menu: "Promedio", short: "Promedio" },
-  median: { menu: "Mediana", short: "Mediana" },
-  min: { menu: "Mínimo", short: "Mín." },
-  max: { menu: "Máximo", short: "Máx." },
-  range: { menu: "Rango", short: "Rango" },
-  earliest: { menu: "Fecha más antigua", short: "Más antigua" },
-  latest: { menu: "Fecha más reciente", short: "Más reciente" },
+  count_all: { menu: t("Contar todo"), short: t("Total") },
+  count_values: { menu: t("Contar valores"), short: t("Valores") },
+  count_empty: { menu: t("Contar vacíos"), short: t("Vacíos") },
+  count_unique: { menu: t("Contar valores únicos"), short: t("Únicos") },
+  percent_empty: { menu: t("Porcentaje de vacíos"), short: t("Vacíos") },
+  percent_not_empty: { menu: t("Porcentaje de no vacíos"), short: t("No vacíos") },
+  sum: { menu: t("Suma"), short: t("Suma") },
+  avg: { menu: t("Promedio"), short: t("Promedio") },
+  median: { menu: t("Mediana"), short: t("Mediana") },
+  min: { menu: t("Mínimo"), short: t("Mín.") },
+  max: { menu: t("Máximo"), short: t("Máx.") },
+  range: { menu: t("Rango"), short: t("Rango") },
+  earliest: { menu: t("Fecha más antigua"), short: t("Más antigua") },
+  latest: { menu: t("Fecha más reciente"), short: t("Más reciente") },
 };
 
 const COUNTS: Calc[] = [
@@ -29,9 +30,9 @@ const COUNTS: Calc[] = [
 
 /** A checkbox column says «marcadas» where the others say «valores»: an unchecked box holds no value. */
 const CHECKBOX_LABELS: Partial<Record<Calc, { menu: string; short: string }>> = {
-  count_values: { menu: "Contar marcadas", short: "Marcadas" },
-  count_empty: { menu: "Contar sin marcar", short: "Sin marcar" },
-  percent_not_empty: { menu: "Porcentaje de marcadas", short: "Marcadas" },
+  count_values: { menu: t("Contar marcadas"), short: t("Marcadas") },
+  count_empty: { menu: t("Contar sin marcar"), short: t("Sin marcar") },
+  percent_not_empty: { menu: t("Porcentaje de marcadas"), short: t("Marcadas") },
 };
 
 /** The label of a calculation for a column of this type. */
@@ -47,8 +48,8 @@ export function calcsFor(kind: PropertyKind): Calc[] {
   return COUNTS;
 }
 
-const numberFormat = new Intl.NumberFormat("es-ES", { maximumFractionDigits: 2 });
-const dateFormat = new Intl.DateTimeFormat("es-ES", {
+const numberFormat = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
+const dateFormat = new Intl.DateTimeFormat(locale, {
   day: "numeric",
   month: "short",
   year: "numeric",

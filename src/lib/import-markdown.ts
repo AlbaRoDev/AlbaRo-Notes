@@ -1,3 +1,4 @@
+import { t } from "./i18n.ts";
 // Importing documents. A Markdown file becomes the document of a new page: the same conversion the AI uses
 // (`markdownToBlocks`), after the things a file has and a model's reply does not — a front-matter header, lines
 // wrapped at 80 columns (here a line is a paragraph, so soft wraps are joined first) and images that sit on a line
@@ -110,7 +111,7 @@ export function markdownToPageDoc(
   const first = blocks[0];
   const hasTitle =
     first?.type === "heading" && first.attrs?.level === 1 && (first.content?.length ?? 0) > 0;
-  const title = (frontTitle ?? fallbackTitle).trim() || "Sin título";
+  const title = (frontTitle ?? fallbackTitle).trim() || t("Sin título");
   const content = hasTitle ? blocks : [heading(title), ...blocks];
   return {
     type: "doc",
@@ -124,5 +125,5 @@ export function titleFromFileName(name: string): string {
     .replace(/\.[^./\\]+$/, "")
     .replace(/_+/g, " ")
     .trim();
-  return base || "Sin título";
+  return base || t("Sin título");
 }

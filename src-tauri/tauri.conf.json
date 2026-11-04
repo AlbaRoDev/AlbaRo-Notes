@@ -47,6 +47,12 @@
     "resources": {
       "../LICENSE": "LICENSE",
       "../THIRD_PARTY_NOTICES.txt": "THIRD_PARTY_NOTICES.txt"
+    },
+    "windows": {
+      "nsis": {
+        "languages": ["English", "Spanish"],
+        "displayLanguageSelector": true
+      }
     }
   },
   "plugins": {

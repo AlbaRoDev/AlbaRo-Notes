@@ -39,35 +39,41 @@ import {
 } from "../../lib/theme";
 import appIcon from "../../../src-tauri/icons/128x128.png";
 import "./Sidebar.css";
+import { t } from "../../lib/i18n.ts";
 
 const MIN_WIDTH = 200;
 const MAX_WIDTH = 480;
 const DEFAULT_WIDTH = 240;
 
 const STYLES: { pref: StylePref; label: string; title: string; Icon: typeof Sun }[] = [
-  { pref: "themed", label: "Estaciones", title: "Los colores de la estación del año", Icon: Leaf },
-  { pref: "sober", label: "Sobrio", title: "La paleta sobria de siempre", Icon: Circle },
+  {
+    pref: "themed",
+    label: t("Estaciones"),
+    title: t("Los colores de la estación del año"),
+    Icon: Leaf,
+  },
+  { pref: "sober", label: t("Sobrio"), title: t("La paleta sobria de siempre"), Icon: Circle },
 ];
 
 const CURSORS: { pref: CursorPref; label: string; title: string; Icon: typeof Sun }[] = [
   {
     pref: "system",
-    label: "Puntero del sistema",
-    title: "El puntero de siempre",
+    label: t("Puntero del sistema"),
+    title: t("El puntero de siempre"),
     Icon: MousePointer,
   },
   {
     pref: "minimal",
-    label: "Puntero minimalista",
-    title: "La flecha fina del botón, sin color",
+    label: t("Puntero minimalista"),
+    title: t("La flecha fina del botón, sin color"),
     Icon: MousePointer2,
   },
 ];
 
 const THEMES: { pref: ThemePref; label: string; Icon: typeof Sun }[] = [
-  { pref: "system", label: "Sistema", Icon: Monitor },
-  { pref: "light", label: "Claro", Icon: Sun },
-  { pref: "dark", label: "Oscuro", Icon: Moon },
+  { pref: "system", label: t("Sistema"), Icon: Monitor },
+  { pref: "light", label: t("Claro"), Icon: Sun },
+  { pref: "dark", label: t("Oscuro"), Icon: Moon },
 ];
 
 // Size of the «+» menu, to keep it inside the window.
@@ -255,7 +261,7 @@ export function Sidebar({
             data-visible={hasChildren}
             data-expanded={expanded}
             onClick={(e) => toggleExpanded(page.id, e)}
-            aria-label={expanded ? "Contraer" : "Expandir"}
+            aria-label={expanded ? t("Contraer") : t("Expandir")}
             tabIndex={hasChildren ? 0 : -1}
           >
             <ChevronRight size={14} />
@@ -269,7 +275,7 @@ export function Sidebar({
               size={16}
               strokeWidth={1.75}
               className="sidebar-item-icon"
-              aria-label="Base de datos"
+              aria-label={t("Base de datos")}
             />
           ) : (
             <FileText size={16} strokeWidth={1.75} className="sidebar-item-icon" aria-hidden />
@@ -279,7 +285,7 @@ export function Sidebar({
               className="sidebar-item-rename"
               defaultValue={page.title}
               maxLength={200}
-              aria-label="Nombre de la página"
+              aria-label={t("Nombre de la página")}
               autoFocus
               onFocus={(e) => e.currentTarget.select()}
               onClick={(e) => e.stopPropagation()}
@@ -304,8 +310,8 @@ export function Sidebar({
               type="button"
               className="sidebar-item-delete"
               onClick={(e) => handleDelete(page, e)}
-              title="Borrar página"
-              aria-label="Borrar página"
+              title={t("Borrar página")}
+              aria-label={t("Borrar página")}
             >
               <Trash2 size={14} />
             </button>
@@ -328,8 +334,8 @@ export function Sidebar({
       type="button"
       className="sidebar-open"
       onClick={() => setCollapsed(false)}
-      title="Abrir barra lateral (Ctrl+\)"
-      aria-label="Abrir barra lateral"
+      title={t("Abrir barra lateral (Ctrl+\\)")}
+      aria-label={t("Abrir barra lateral")}
     >
       <ChevronsRight size={18} />
     </button>
@@ -349,13 +355,13 @@ export function Sidebar({
         <div className="sidebar-inner" style={{ width }}>
           <div className="sidebar-workspace">
             <img src={appIcon} alt="" className="sidebar-workspace-icon" />
-            <span className="sidebar-workspace-name">AlbaRo Notes</span>
+            <span className="sidebar-workspace-name">{t("AlbaRo Notes")}</span>
             <button
               type="button"
               className="sidebar-close"
               onClick={() => setCollapsed(true)}
-              title="Cerrar barra lateral (Ctrl+\)"
-              aria-label="Cerrar barra lateral"
+              title={t("Cerrar barra lateral (Ctrl+\\)")}
+              aria-label={t("Cerrar barra lateral")}
             >
               <ChevronsLeft size={18} />
             </button>
@@ -368,8 +374,8 @@ export function Sidebar({
                 className="sidebar-item-icon"
                 aria-hidden="true"
               />
-              <span className="sidebar-item-title">Buscar</span>
-              <kbd className="sidebar-hint">Ctrl+K</kbd>
+              <span className="sidebar-item-title">{t("Buscar")}</span>
+              <kbd className="sidebar-hint">{t("Ctrl+K")}</kbd>
             </button>
             <button type="button" className="sidebar-item sidebar-search" onClick={onAskAi}>
               <Sparkles
@@ -378,8 +384,8 @@ export function Sidebar({
                 className="sidebar-item-icon"
                 aria-hidden="true"
               />
-              <span className="sidebar-item-title">Asistente IA</span>
-              <kbd className="sidebar-hint">Ctrl+J</kbd>
+              <span className="sidebar-item-title">{t("Asistente IA")}</span>
+              <kbd className="sidebar-hint">{t("Ctrl+J")}</kbd>
             </button>
             {favorites.length > 0 && (
               <>
@@ -391,7 +397,7 @@ export function Sidebar({
                     onClick={() => setFavoritesOpen((o) => !o)}
                   >
                     <ChevronRight size={13} aria-hidden="true" />
-                    Favoritos
+                    {t("Favoritos")}
                   </button>
                 </div>
                 <Fold open={favoritesOpen}>
@@ -407,7 +413,7 @@ export function Sidebar({
                 onClick={() => setPagesOpen((o) => !o)}
               >
                 <ChevronRight size={13} aria-hidden="true" />
-                Páginas
+                {t("Páginas")}
               </button>
               <button
                 type="button"
@@ -427,8 +433,8 @@ export function Sidebar({
                         },
                   );
                 }}
-                title="Nueva página"
-                aria-label="Nueva página"
+                title={t("Nueva página")}
+                aria-label={t("Nueva página")}
                 aria-expanded={menuOpen}
               >
                 <Plus size={16} />
@@ -452,7 +458,7 @@ export function Sidebar({
                         }}
                       >
                         {kind === "page" ? <FileText size={16} /> : <Database size={16} />}
-                        {kind === "page" ? "Página" : "Base de datos"}
+                        {kind === "page" ? t("Página") : t("Base de datos")}
                       </button>
                     ))}
                   </div>,
@@ -472,7 +478,7 @@ export function Sidebar({
                     onClick={() => setDatabasesOpen((o) => !o)}
                   >
                     <ChevronRight size={13} aria-hidden="true" />
-                    Bases de datos
+                    {t("Bases de datos")}
                   </button>
                 </div>
                 <Fold open={databasesOpen}>
@@ -487,10 +493,10 @@ export function Sidebar({
                 className="sidebar-item-icon"
                 aria-hidden="true"
               />
-              <span className="sidebar-item-title">Papelera</span>
+              <span className="sidebar-item-title">{t("Papelera")}</span>
             </button>
           </div>
-          <div className="sidebar-footer" role="radiogroup" aria-label="Estilo">
+          <div className="sidebar-footer" role="radiogroup" aria-label={t("Estilo")}>
             {STYLES.map(({ pref, label, title, Icon }) => (
               <button
                 key={pref}
@@ -508,7 +514,7 @@ export function Sidebar({
           <div
             className="sidebar-footer sidebar-footer--icons"
             role="radiogroup"
-            aria-label="Puntero"
+            aria-label={t("Puntero")}
           >
             {CURSORS.map(({ pref, label, title, Icon }) => (
               <button
@@ -524,7 +530,7 @@ export function Sidebar({
               </button>
             ))}
           </div>
-          <div className="sidebar-footer" role="radiogroup" aria-label="Tema">
+          <div className="sidebar-footer" role="radiogroup" aria-label={t("Tema")}>
             {THEMES.map(({ pref, label, Icon }) => (
               <button
                 key={pref}
@@ -533,7 +539,7 @@ export function Sidebar({
                 aria-checked={theme === pref}
                 onClick={() => setThemePref(pref)}
                 aria-label={label}
-                title={pref === "system" ? "Tema del sistema" : `${label} (Ctrl+Shift+L)`}
+                title={pref === "system" ? t("Tema del sistema") : `${label} (Ctrl+Shift+L)`}
               >
                 <Icon size={15} />
               </button>
@@ -544,7 +550,7 @@ export function Sidebar({
           className="sidebar-resize"
           role="separator"
           aria-orientation="vertical"
-          aria-label="Redimensionar barra lateral"
+          aria-label={t("Redimensionar barra lateral")}
           aria-valuemin={MIN_WIDTH}
           aria-valuemax={MAX_WIDTH}
           aria-valuenow={width}

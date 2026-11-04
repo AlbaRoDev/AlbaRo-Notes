@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import { t } from "../lib/i18n.ts";
 
 interface Props {
   /** What failed, for the message: "la página", "la aplicación". */
@@ -27,12 +28,16 @@ export class ErrorBoundary extends Component<Props, { failed: boolean }> {
     if (!this.state.failed) return this.props.children;
     return (
       <div className="error-boundary" role="alert">
-        <p>Algo ha fallado al mostrar {this.props.what}. Tus notas están guardadas.</p>
+        <p>
+          {t("Algo ha fallado al mostrar {what}. Tus notas están guardadas.", {
+            what: this.props.what,
+          })}
+        </p>
         <button type="button" onClick={() => this.setState({ failed: false })}>
-          Reintentar
+          {t("Reintentar")}
         </button>{" "}
         <button type="button" onClick={() => window.location.reload()}>
-          Recargar la ventana
+          {t("Recargar la ventana")}
         </button>
       </div>
     );

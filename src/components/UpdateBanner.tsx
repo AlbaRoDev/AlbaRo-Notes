@@ -8,6 +8,7 @@ import {
   onUpdateCheckRequested,
 } from "../lib/app-update";
 import "./update-banner.css";
+import { t } from "../lib/i18n.ts";
 
 /** Longer than the autosave waits (800 ms the page, 600 ms a synced block): whatever was being typed is written first. */
 const SETTLE_MS = 1000;
@@ -35,7 +36,7 @@ export function UpdateBanner() {
     const unlisten = onAppUpdateAvailable((update) => alive && setVersion(update.version));
     const offCheck = onUpdateCheckRequested(() => {
       setHidden(false);
-      setCheck({ text: "Buscando actualizaciones…", busy: true });
+      setCheck({ text: t("Buscando actualizaciones…"), busy: true });
       checkAppUpdate().then(
         (update) => {
           if (!alive) return;
@@ -43,11 +44,12 @@ export function UpdateBanner() {
             setVersion(update.version);
             setCheck(null);
           } else {
-            setCheck({ text: "Ya tienes la última versión.", busy: false });
+            setCheck({ text: t("Ya tienes la última versión."), busy: false });
           }
         },
         (err) =>
-          alive && setCheck({ text: `No se pudo comprobar: ${err}`, busy: false, error: true }),
+          alive &&
+          setCheck({ text: t("No se pudo comprobar: {err}", { err }), busy: false, error: true }),
       );
     });
     return () => {
@@ -75,7 +77,7 @@ export function UpdateBanner() {
           <button
             type="button"
             className="update-close"
-            aria-label="Cerrar el aviso"
+            aria-label={t("Cerrar el aviso")}
             onClick={() => setCheck(null)}
           >
             <X size={14} />
@@ -108,8 +110,8 @@ export function UpdateBanner() {
       <Download size={16} aria-hidden className="update-icon" />
       <div className="update-text">
         <p>
-          Hay una versión nueva: <strong>{version}</strong>. Se descarga, se comprueba su firma y se
-          reinicia la app.
+          {t("Hay una versión nueva:")} <strong>{version}</strong>
+          {t(". Se descarga, se comprueba su firma y se reinicia la app.")}
         </p>
         {failure !== null && <p className="update-error">{failure}</p>}
         <div className="update-actions">
@@ -119,7 +121,7 @@ export function UpdateBanner() {
             disabled={installing}
             onClick={() => void install()}
           >
-            {installing ? "Instalando…" : "Instalar y reiniciar"}
+            {installing ? t("Instalando…") : t("Instalar y reiniciar")}
           </button>
           <button
             type="button"
@@ -127,14 +129,14 @@ export function UpdateBanner() {
             disabled={installing}
             onClick={() => setHidden(true)}
           >
-            Más tarde
+            {t("Más tarde")}
           </button>
         </div>
       </div>
       <button
         type="button"
         className="update-close"
-        aria-label="Cerrar el aviso"
+        aria-label={t("Cerrar el aviso")}
         disabled={installing}
         onClick={() => setHidden(true)}
       >

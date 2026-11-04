@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from "./invoke.ts";
 
 export const RENAME_EVENT = "albaro-rename-page";
 

@@ -2,6 +2,7 @@ import { useEffect, useState, type KeyboardEvent } from "react";
 import { listDatabases } from "../../lib/db-client";
 import type { DatabaseSummary, Property, PropertyKind } from "../../types";
 import { TYPE_CHOICES, typeChoiceOf } from "./property-types";
+import { t } from "../../lib/i18n.ts";
 
 const blurOnEnter = (e: KeyboardEvent<HTMLInputElement>) => {
   if (e.key === "Enter") e.currentTarget.blur();
@@ -36,11 +37,11 @@ export function PropertyPanel({
     <div
       className="db-panel"
       role="group"
-      aria-label={`Propiedad ${prop.name}`}
+      aria-label={t("Propiedad {name}", { name: prop.name })}
       onKeyDown={(e) => e.key === "Escape" && onClose()}
     >
       <label>
-        Nombre
+        {t("Nombre")}
         <input
           autoFocus
           type="text"
@@ -57,7 +58,7 @@ export function PropertyPanel({
       <p className="db-panel-meta">Tipo: {typeChoiceOf(prop).label}</p>
       {(prop.type === "select" || prop.type === "tags") && (
         <div className="db-options">
-          <span>Opciones</span>
+          <span>{t("Opciones")}</span>
           {options.map((o) => (
             <span key={o} className="db-chip">
               {/* Editable in place; Rust rewrites the values that used the old name. */}
@@ -67,7 +68,7 @@ export function PropertyPanel({
                 maxLength={60}
                 size={Math.max(o.length, 3)}
                 defaultValue={o}
-                aria-label={`Opción ${o}`}
+                aria-label={t("Opción {o}", { o })}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") e.currentTarget.blur();
                   else if (e.key === "Escape") {
@@ -87,7 +88,7 @@ export function PropertyPanel({
               />
               <button
                 type="button"
-                aria-label={`Quitar opción ${o}`}
+                aria-label={t("Quitar opción {o}", { o })}
                 onClick={() => onOptions(options.filter((x) => x !== o))}
               >
                 ×
@@ -97,8 +98,8 @@ export function PropertyPanel({
           <input
             type="text"
             maxLength={60}
-            placeholder="Nueva opción…"
-            aria-label="Nueva opción"
+            placeholder={t("Nueva opción…")}
+            aria-label={t("Nueva opción")}
             onKeyDown={(e) => {
               if (e.key !== "Enter") return;
               const name = e.currentTarget.value.trim();
@@ -114,35 +115,35 @@ export function PropertyPanel({
           type="button"
           disabled={position.index === 0}
           onClick={() => onMove(-1)}
-          title="Mover la columna a la izquierda"
+          title={t("Mover la columna a la izquierda")}
         >
-          ← Mover
+          {t("← Mover")}
         </button>
         <button
           type="button"
           disabled={position.index === position.count - 1}
           onClick={() => onMove(1)}
-          title="Mover la columna a la derecha"
+          title={t("Mover la columna a la derecha")}
         >
-          Mover →
+          {t("Mover →")}
         </button>
         {confirming ? (
           <>
-            <span>¿Borrar la propiedad y todos sus valores?</span>
+            <span>{t("¿Borrar la propiedad y todos sus valores?")}</span>
             <button type="button" onClick={onDelete}>
-              Sí, borrar
+              {t("Sí, borrar")}
             </button>
             <button type="button" onClick={() => setConfirming(false)}>
-              No
+              {t("No")}
             </button>
           </>
         ) : (
           <button type="button" onClick={() => setConfirming(true)}>
-            Borrar propiedad
+            {t("Borrar propiedad")}
           </button>
         )}
         <button type="button" onClick={onClose}>
-          Cerrar
+          {t("Cerrar")}
         </button>
       </div>
     </div>
@@ -190,11 +191,11 @@ export function AddPropertyPanel({
     <div
       className="db-panel"
       role="group"
-      aria-label="Nueva propiedad"
+      aria-label={t("Nueva propiedad")}
       onKeyDown={(e) => e.key === "Escape" && onClose()}
     >
       <label>
-        Nombre
+        {t("Nombre")}
         <input
           autoFocus
           type="text"
@@ -205,7 +206,7 @@ export function AddPropertyPanel({
         />
       </label>
       <label>
-        Tipo
+        {t("Tipo")}
         <select value={choiceId} onChange={(e) => setChoiceId(e.target.value)}>
           {TYPE_CHOICES.map((c) => (
             <option key={c.id} value={c.id}>
@@ -216,11 +217,11 @@ export function AddPropertyPanel({
       </label>
       {kind === "relation" && (
         <label>
-          Base de datos de destino
+          {t("Base de datos de destino")}
           <select value={target} onChange={(e) => setTarget(e.target.value)}>
             {databases.map((d) => (
               <option key={d.id} value={d.id}>
-                {d.name || "Base de datos sin nombre"}
+                {d.name || t("Base de datos sin nombre")}
               </option>
             ))}
           </select>
@@ -228,10 +229,10 @@ export function AddPropertyPanel({
       )}
       <div className="db-panel-actions">
         <button type="button" disabled={!canAdd} onClick={submit}>
-          Añadir
+          {t("Añadir")}
         </button>
         <button type="button" onClick={onClose}>
-          Cancelar
+          {t("Cancelar")}
         </button>
       </div>
     </div>

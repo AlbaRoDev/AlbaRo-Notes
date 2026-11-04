@@ -75,8 +75,9 @@ import { useDatabase } from "./useDatabase";
 import { askConfirm } from "../../lib/confirm";
 import { TITLE_ID, VIEW_KIND_LABELS, normalizeConfig } from "./view-config";
 import "./DatabaseView.css";
+import { t } from "../../lib/i18n.ts";
 
-const UNTITLED = "Sin título";
+const UNTITLED = t("Sin título");
 // Column widths in px, like Notion's defaults; Rust accepts 60–1000 for a resized column.
 const TITLE_WIDTH = 280;
 const COLUMN_WIDTH = 200;
@@ -285,7 +286,7 @@ export function DatabaseTable({
             {error}
           </p>
         ) : (
-          <p className="db-loading">Cargando base de datos…</p>
+          <p className="db-loading">{t("Cargando base de datos…")}</p>
         )}
       </div>
     );
@@ -294,10 +295,10 @@ export function DatabaseTable({
   if (data === null) {
     return (
       <div className="db-root">
-        <p className="db-loading">Base de datos eliminada</p>
+        <p className="db-loading">{t("Base de datos eliminada")}</p>
         {onRemove && (
           <button type="button" className="db-add-row" onClick={onRemove}>
-            Quitar vista
+            {t("Quitar vista")}
           </button>
         )}
       </div>
@@ -490,7 +491,7 @@ export function DatabaseTable({
       maxLength: 200,
       defaultValue: title,
       placeholder: UNTITLED,
-      "aria-label": `Título de la fila ${row.title}`,
+      "aria-label": t("Título de la fila {title}", { title: row.title }),
       ...commitOnBlur(
         title,
         (v) => run(() => setRowTitle(row.pageId, String(v ?? ""))),
@@ -533,8 +534,8 @@ export function DatabaseTable({
               <button
                 type="button"
                 className="db-row-add"
-                title="Añadir una fila debajo"
-                aria-label={`Añadir una fila debajo de ${row.title}`}
+                title={t("Añadir una fila debajo")}
+                aria-label={t("Añadir una fila debajo de {title}", { title: row.title })}
                 onClick={() => void addBelow(row.pageId, reorderRow !== null)}
               >
                 <Plus size={14} aria-hidden="true" />
@@ -545,18 +546,18 @@ export function DatabaseTable({
               className="db-row-check"
               checked={selected.has(row.pageId)}
               readOnly
-              aria-label={`Seleccionar ${row.title}`}
+              aria-label={t("Seleccionar {title}", { title: row.title })}
               onClick={(e) => pick(row.pageId, e.currentTarget.checked, e.shiftKey)}
             />
             <span
               className="db-row-grip"
               title={
                 reorderRow
-                  ? "Arrastra para mover; pulsa para ver las opciones"
-                  : "Opciones de la fila"
+                  ? t("Arrastra para mover; pulsa para ver las opciones")
+                  : t("Opciones de la fila")
               }
               role="button"
-              aria-label={`Opciones de ${row.title}`}
+              aria-label={t("Opciones de {title}", { title: row.title })}
               {...(reorderRow ? rowReorder.handle(row.pageId) : {})}
               onClick={(e) => gripClick(e, row.pageId)}
             >
@@ -570,12 +571,12 @@ export function DatabaseTable({
             <button
               type="button"
               className="db-icon-btn db-open-btn"
-              aria-label={`Abrir ${row.title}`}
-              title="Abrir"
+              aria-label={t("Abrir {title}", { title: row.title })}
+              title={t("Abrir")}
               onClick={() => onNavigate(row.pageId)}
             >
               <PanelRight size={13} strokeWidth={1.75} aria-hidden="true" />
-              Abrir
+              {t("Abrir")}
             </button>
           </div>
         </td>
@@ -659,8 +660,8 @@ export function DatabaseTable({
       className="db-col-resize"
       role="separator"
       aria-orientation="vertical"
-      aria-label={`Ancho de la columna ${name}`}
-      title="Arrastrar para cambiar el ancho; doble clic para ajustarlo al contenido"
+      aria-label={t("Ancho de la columna {name}", { name })}
+      title={t("Arrastrar para cambiar el ancho; doble clic para ajustarlo al contenido")}
       onPointerDown={startColumnResize(id)}
       onDoubleClick={() => fitColumnTo(id)}
     />
@@ -689,7 +690,7 @@ export function DatabaseTable({
     const anchor = el.getBoundingClientRect();
     let id = "";
     void run(async () => {
-      id = (await addProperty(databaseId, "Texto", "text")).id;
+      id = (await addProperty(databaseId, t("Texto"), "text")).id;
     }).then((ok) => ok && setMenu({ column: id, anchor, fresh: true }));
   };
 
@@ -701,7 +702,7 @@ export function DatabaseTable({
           <button
             type="button"
             className="db-title"
-            title="Abrir la base de datos"
+            title={t("Abrir la base de datos")}
             onClick={() => onNavigate(data.pageId)}
           >
             {data.name}
@@ -711,9 +712,9 @@ export function DatabaseTable({
               <button
                 type="button"
                 onClick={onRemove}
-                title="Quitar esta vista de la página (la base de datos no se borra)"
+                title={t("Quitar esta vista de la página (la base de datos no se borra)")}
               >
-                Quitar vista
+                {t("Quitar vista")}
               </button>
             </span>
           )}
@@ -740,9 +741,9 @@ export function DatabaseTable({
             onAdd={(kind) => void addView(kind)}
             onDelete={(v) => {
               void askConfirm({
-                title: `¿Borrar la vista «${v.name}»?`,
-                detail: "Los datos no se borran.",
-                confirmLabel: "Borrar la vista",
+                title: t("¿Borrar la vista «{name}»?", { name: v.name }),
+                detail: t("Los datos no se borran."),
+                confirmLabel: t("Borrar la vista"),
               }).then((ok) => {
                 if (!ok) return;
                 void run(async () => {
@@ -756,33 +757,33 @@ export function DatabaseTable({
             }}
           />
           <div className="db-toolbar-wrap" ref={toolbarWrap}>
-            <div className="db-toolbar" role="toolbar" aria-label="Ordenar, filtrar y agrupar">
+            <div className="db-toolbar" role="toolbar" aria-label={t("Ordenar, filtrar y agrupar")}>
               {(kind === "form"
-                ? ([["form", "Editar formulario", 0]] as const)
+                ? ([["form", t("Editar formulario"), 0]] as const)
                 : kind === "dashboard"
-                  ? ([["filter", "Filtrar", active.filter]] as const)
+                  ? ([["filter", t("Filtrar"), active.filter]] as const)
                   : kind === "chart"
                     ? ([
-                        ["chart", "Gráfico", 0],
+                        ["chart", t("Gráfico"), 0],
                         ...(config.chart?.type === "number"
                           ? []
-                          : ([["group", "Eje X", active.group]] as const)),
-                        ["filter", "Filtrar", active.filter],
+                          : ([["group", t("Eje X"), active.group]] as const)),
+                        ["filter", t("Filtrar"), active.filter],
                       ] as const)
                     : ([
-                        ["props", "Propiedades", active.props],
+                        ["props", t("Propiedades"), active.props],
                         ...(kind === "calendar" || kind === "timeline"
-                          ? ([["date", "Fecha", config.dateProperty ? 1 : 0]] as const)
+                          ? ([["date", t("Fecha"), config.dateProperty ? 1 : 0]] as const)
                           : []),
                         ...(kind === "map"
-                          ? ([["place", "Lugar", config.placeProperty ? 1 : 0]] as const)
+                          ? ([["place", t("Lugar"), config.placeProperty ? 1 : 0]] as const)
                           : []),
-                        ["sort", "Ordenar", active.sort],
-                        ["filter", "Filtrar", active.filter],
+                        ["sort", t("Ordenar"), active.sort],
+                        ["filter", t("Filtrar"), active.filter],
                         // calendar, timeline and map lay rows out by date / place, so grouping them makes no sense
                         ...(kind === "calendar" || kind === "timeline" || kind === "map"
                           ? []
-                          : ([["group", "Agrupar", active.group]] as const)),
+                          : ([["group", t("Agrupar"), active.group]] as const)),
                       ] as const)
               ).map(([toolKind, label, count]) => (
                 <button
@@ -870,14 +871,14 @@ export function DatabaseTable({
       )}
 
       {kind === "form" && (
-        <div className="db-toolbar" role="toolbar" aria-label="Formulario y respuestas">
+        <div className="db-toolbar" role="toolbar" aria-label={t("Formulario y respuestas")}>
           <button
             type="button"
             className="db-tool"
             aria-pressed={!responses}
             onClick={() => setFormTab("form")}
           >
-            Formulario
+            {t("Formulario")}
           </button>
           <button
             type="button"
@@ -885,7 +886,7 @@ export function DatabaseTable({
             aria-pressed={responses}
             onClick={() => setFormTab("responses")}
           >
-            Respuestas
+            {t("Respuestas")}
             <span className="db-tool-count">{data.rows.length}</span>
           </button>
         </div>
@@ -959,27 +960,30 @@ export function DatabaseTable({
           />
         )}
       {(kind === "table" || responses) && picked.length > 0 && (
-        <div className="db-bulk" role="toolbar" aria-label="Filas seleccionadas">
+        <div className="db-bulk" role="toolbar" aria-label={t("Filas seleccionadas")}>
           <span>
-            {picked.length} {picked.length === 1 ? "fila seleccionada" : "filas seleccionadas"}
+            {picked.length}{" "}
+            {picked.length === 1 ? t("fila seleccionada") : t("filas seleccionadas")}
           </span>
           {confirmBulk ? (
             <span className="db-confirm">
-              ¿Borrar {picked.length === 1 ? "la fila" : `las ${picked.length} filas`}?
+              {picked.length === 1
+                ? t("¿Borrar la fila?")
+                : t("¿Borrar las {n} filas?", { n: picked.length })}
               <button type="button" autoFocus onClick={() => void removePicked()}>
-                Borrar
+                {t("Borrar")}
               </button>
               <button type="button" onClick={() => setConfirmBulk(false)}>
-                No
+                {t("No")}
               </button>
             </span>
           ) : (
             <>
               <button type="button" onClick={() => setConfirmBulk(true)}>
-                <Trash2 size={13} strokeWidth={1.75} aria-hidden="true" /> Borrar
+                <Trash2 size={13} strokeWidth={1.75} aria-hidden="true" /> {t("Borrar")}
               </button>
               <button type="button" onClick={clearPicked}>
-                Deseleccionar
+                {t("Deseleccionar")}
               </button>
             </>
           )}
@@ -996,7 +1000,7 @@ export function DatabaseTable({
                 onNavigate(rowMenu.id);
               }}
             >
-              <PanelRight size={14} aria-hidden="true" /> Abrir
+              <PanelRight size={14} aria-hidden="true" /> {t("Abrir")}
             </button>
             <button
               type="button"
@@ -1006,7 +1010,7 @@ export function DatabaseTable({
                 void duplicate(rowMenu.id);
               }}
             >
-              <Copy size={14} aria-hidden="true" /> Duplicar
+              <Copy size={14} aria-hidden="true" /> {t("Duplicar")}
             </button>
             <button
               type="button"
@@ -1016,7 +1020,7 @@ export function DatabaseTable({
                 setConfirmBulk(true);
               }}
             >
-              <Trash2 size={14} aria-hidden="true" /> Borrar
+              <Trash2 size={14} aria-hidden="true" /> {t("Borrar")}
             </button>
           </div>,
           document.body,
@@ -1052,9 +1056,9 @@ export function DatabaseTable({
                     onClick={(e) => openMenu(TITLE_ID, e.currentTarget)}
                   >
                     <Type size={14} strokeWidth={1.75} aria-hidden="true" />
-                    <span className="db-prop-label">Nombre</span>
+                    <span className="db-prop-label">{t("Nombre")}</span>
                   </button>
-                  {resizeHandle(TITLE_ID, "Nombre")}
+                  {resizeHandle(TITLE_ID, t("Nombre"))}
                 </th>
                 {tableProps.map((p, i) => {
                   return (
@@ -1107,8 +1111,8 @@ export function DatabaseTable({
                   <button
                     type="button"
                     className="db-icon-btn"
-                    aria-label="Añadir propiedad"
-                    title="Añadir propiedad"
+                    aria-label={t("Añadir propiedad")}
+                    title={t("Añadir propiedad")}
                     onClick={(e) => addColumn(e.currentTarget)}
                   >
                     <Plus size={14} strokeWidth={1.75} aria-hidden="true" />
@@ -1184,7 +1188,7 @@ export function DatabaseTable({
                             {computeCalc(calc, values)}
                           </>
                         ) : (
-                          "Calcular"
+                          t("Calcular")
                         )}
                       </button>
                     </td>
@@ -1197,7 +1201,7 @@ export function DatabaseTable({
         </div>
       )}
       {responses && data.rows.length === 0 && (
-        <p className="db-loading">Todavía no hay respuestas.</p>
+        <p className="db-loading">{t("Todavía no hay respuestas.")}</p>
       )}
       {kind !== "form" &&
         kind !== "chart" &&
@@ -1205,7 +1209,7 @@ export function DatabaseTable({
         !groups &&
         shown.length === 0 &&
         data.rows.length > 0 && (
-          <p className="db-loading">Ninguna fila cumple los filtros de esta vista.</p>
+          <p className="db-loading">{t("Ninguna fila cumple los filtros de esta vista.")}</p>
         )}
 
       {menu && view && (
@@ -1247,7 +1251,7 @@ export function DatabaseTable({
 
       {kind !== "form" && kind !== "chart" && kind !== "dashboard" && (
         <button type="button" className="db-add-row" onClick={() => void addRow()}>
-          <Plus size={14} strokeWidth={1.75} aria-hidden="true" /> Nueva fila
+          <Plus size={14} strokeWidth={1.75} aria-hidden="true" /> {t("Nueva fila")}
         </button>
       )}
     </div>

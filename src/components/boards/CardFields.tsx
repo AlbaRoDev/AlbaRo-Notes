@@ -4,6 +4,7 @@ import { setSelectOptions, setValue } from "../../lib/db-client";
 import type { CellValue, Property } from "../../types";
 import { OptionPopover } from "../database/OptionCell";
 import { optionColor } from "../database/property-types";
+import { t } from "../../lib/i18n.ts";
 
 /** Properties that read as labels on a card: their value is one of the property's coloured options. */
 const isLabelProp = (p: Property) => p.type === "tags" || p.type === "select";
@@ -66,7 +67,7 @@ function Labels({
         ref={addRef}
         type="button"
         className="board-label-add"
-        aria-label={`Cambiar ${prop.name}`}
+        aria-label={t("Cambiar {name}", { name: prop.name })}
         title={prop.name}
         onClick={() => addRef.current && setAnchor(addRef.current.getBoundingClientRect())}
       >

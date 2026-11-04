@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import type { Scope } from "../../types";
+import { t } from "../../lib/i18n.ts";
 
 /** «Editar / borrar un evento que se repite»: asks how far the change reaches, as Notion Calendar does. */
 export function ScopeDialog({
@@ -22,21 +23,21 @@ export function ScopeDialog({
       className="cal-dialog-backdrop"
       onMouseDown={(e) => e.target === e.currentTarget && onCancel()}
     >
-      <div className="cal-dialog" role="dialog" aria-label="Evento recurrente">
+      <div className="cal-dialog" role="dialog" aria-label={t("Evento recurrente")}>
         <h3>
-          {verb === "delete" ? "Borrar un evento recurrente" : "Cambiar un evento recurrente"}
+          {verb === "delete" ? t("Borrar un evento recurrente") : t("Cambiar un evento recurrente")}
         </h3>
         <button type="button" autoFocus onClick={() => onPick("this")}>
-          Solo este evento
+          {t("Solo este evento")}
         </button>
         <button type="button" onClick={() => onPick("following")}>
-          Este y los siguientes
+          {t("Este y los siguientes")}
         </button>
         <button type="button" onClick={() => onPick("all")}>
-          Todos los eventos
+          {t("Todos los eventos")}
         </button>
         <button type="button" className="cal-dialog-cancel" onClick={onCancel}>
-          Cancelar
+          {t("Cancelar")}
         </button>
       </div>
     </div>

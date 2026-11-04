@@ -5,6 +5,7 @@ import { Globe, X } from "lucide-react";
 import { asHttpUrl, fetchLinkPreview } from "../../lib/attachments";
 import { useAttachmentUrl } from "../../hooks/useAttachmentUrl";
 import { focusLineAfterNode } from "./media-commands";
+import { t } from "../../lib/i18n.ts";
 
 export function WebBookmarkView({
   node,
@@ -28,7 +29,7 @@ export function WebBookmarkView({
   const confirm = async () => {
     const valid = asHttpUrl(draft);
     if (!valid) {
-      setError("Introduce una URL http o https válida");
+      setError(t("Introduce una URL http o https válida"));
       return;
     }
     setError(null);
@@ -73,11 +74,11 @@ export function WebBookmarkView({
       <NodeViewWrapper className="media-picker" contentEditable={false} data-kind="bookmark">
         <div className="media-picker-head">
           <Globe size={16} strokeWidth={1.75} aria-hidden="true" />
-          <span>Añadir miniatura web</span>
+          <span>{t("Añadir miniatura web")}</span>
           <button
             type="button"
             className="media-picker-close"
-            aria-label="Cancelar"
+            aria-label={t("Cancelar")}
             onClick={cancel}
           >
             <X size={14} strokeWidth={1.75} aria-hidden="true" />
@@ -88,14 +89,14 @@ export function WebBookmarkView({
             autoFocus
             type="text"
             inputMode="url"
-            placeholder="Pega un enlace y pulsa Intro"
-            aria-label="URL de la página"
+            placeholder={t("Pega un enlace y pulsa Intro")}
+            aria-label={t("URL de la página")}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={onKeyDown}
           />
           <button type="button" disabled={!draft.trim()} onClick={() => void confirm()}>
-            Insertar
+            {t("Insertar")}
           </button>
         </div>
         {error && (
@@ -149,7 +150,7 @@ export function WebBookmarkView({
           <>
             <Globe size={14} strokeWidth={1.75} aria-hidden="true" />
             <span>{url}</span>
-            {loading && <span className="bookmark-loading">Cargando vista previa…</span>}
+            {loading && <span className="bookmark-loading">{t("Cargando vista previa…")}</span>}
           </>
         )}
       </a>

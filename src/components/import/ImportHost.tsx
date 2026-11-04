@@ -11,6 +11,7 @@ import {
   type ImportReport,
 } from "./import-files";
 import "./import.css";
+import { t } from "../../lib/i18n.ts";
 
 /** The palette's «Importar…» commands ask the host to open its pickers. */
 export const IMPORT_FILES_EVENT = "albaro:import-files";
@@ -39,14 +40,14 @@ export function ImportHost({ onDone }: { onDone: (created: PageSummary[]) => voi
         const result = await importNodes(nodes, setBusy);
         if (result.created.length === 0 && result.skipped.length === 0) {
           result.skipped.push({
-            name: "Nada que importar",
-            reason: "solo se leen archivos .md, .docx, .html y .txt",
+            name: t("Nada que importar"),
+            reason: t("solo se leen archivos .md, .docx, .html y .txt"),
           });
         }
         setReport(result);
         if (result.created.length > 0) onDone(result.created);
       } catch (e) {
-        setReport({ created: [], skipped: [{ name: "La importación", reason: String(e) }] });
+        setReport({ created: [], skipped: [{ name: t("La importación"), reason: String(e) }] });
       } finally {
         running.current = false;
         setBusy(null);
@@ -104,7 +105,7 @@ export function ImportHost({ onDone }: { onDone: (created: PageSummary[]) => voi
         multiple
         accept=".md,.markdown,.docx,.html,.htm,.txt"
         onChange={picked}
-        aria-label="Importar documentos"
+        aria-label={t("Importar documentos")}
       />
       <input
         ref={folderInput}
@@ -113,19 +114,19 @@ export function ImportHost({ onDone }: { onDone: (created: PageSummary[]) => voi
         // a folder: the browser hands over every file under it with its path
         {...({ webkitdirectory: "" } as Record<string, string>)}
         onChange={picked}
-        aria-label="Importar una carpeta"
+        aria-label={t("Importar una carpeta")}
       />
       {(busy !== null || report) && (
         <div className="import-note" role="status">
           {busy !== null ? (
-            <p>Importando… {busy > 0 ? `${busy} páginas` : ""}</p>
+            <p>{busy > 0 ? t("Importando… {busy} páginas", { busy }) : t("Importando…")}</p>
           ) : (
             report && (
               <>
                 <button
                   type="button"
                   className="import-close"
-                  aria-label="Cerrar"
+                  aria-label={t("Cerrar")}
                   onClick={() => setReport(null)}
                 >
                   <X size={14} aria-hidden="true" />
@@ -133,20 +134,22 @@ export function ImportHost({ onDone }: { onDone: (created: PageSummary[]) => voi
                 {report.created.length > 0 && (
                   <p>
                     {report.created.length === 1
-                      ? "Importada 1 página."
-                      : `Importadas ${report.created.length} páginas.`}
+                      ? t("Importada 1 página.")
+                      : t("Importadas {length} páginas.", { length: report.created.length })}
                   </p>
                 )}
                 {report.skipped.length > 0 && (
                   <>
-                    <p>No se importó:</p>
+                    <p>{t("No se importó:")}</p>
                     <ul>
                       {report.skipped.slice(0, 6).map((s, i) => (
                         <li key={i}>
                           <strong>{s.name}</strong> — {s.reason}
                         </li>
                       ))}
-                      {report.skipped.length > 6 && <li>…y {report.skipped.length - 6} más</li>}
+                      {report.skipped.length > 6 && (
+                        <li>{t("…y {count} más", { count: report.skipped.length - 6 })}</li>
+                      )}
                     </ul>
                   </>
                 )}
