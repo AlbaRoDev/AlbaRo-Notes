@@ -314,6 +314,25 @@ pub fn delete_calendar_entry(state: State<DbState>, id: String, scope: Option<ca
     calendar::delete_series(&conn, &id, scope.unwrap_or(calendar::Scope::All), occurrence.as_deref())
 }
 
+/// a multi-selection of entries moved or deleted at once: one lock, so one step of the history.
+#[tauri::command]
+pub fn update_calendar_entries(state: State<DbState>, changes: Vec<calendar::EntryChange>) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    calendar::update_many(&conn, &changes)
+}
+
+#[tauri::command]
+pub fn create_calendar_entries(state: State<DbState>, entries: Vec<calendar::EntryInput>) -> Result<Vec<calendar::CalendarEntry>, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    calendar::create_many(&conn, &entries)
+}
+
+#[tauri::command]
+pub fn delete_calendar_entries(state: State<DbState>, removals: Vec<calendar::EntryRemoval>) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    calendar::delete_many(&conn, &removals)
+}
+
 #[tauri::command]
 pub fn calendar_entry_to_task(state: State<DbState>, id: String) -> Result<calendar::CalendarEntry, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
@@ -461,6 +480,19 @@ pub fn move_board_card(state: State<DbState>, card_id: String, list_id: String, 
 pub fn remove_board_card(state: State<DbState>, card_id: String) -> Result<(), String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     boards::remove_card(&conn, &card_id)
+}
+
+/// a multi-selection of cards moved or removed at once.
+#[tauri::command]
+pub fn move_board_cards(state: State<DbState>, card_ids: Vec<String>, list_id: String, index: usize) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    boards::move_cards(&conn, &card_ids, &list_id, index)
+}
+
+#[tauri::command]
+pub fn remove_board_cards(state: State<DbState>, card_ids: Vec<String>) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    boards::remove_cards(&conn, &card_ids)
 }
 
 #[tauri::command]

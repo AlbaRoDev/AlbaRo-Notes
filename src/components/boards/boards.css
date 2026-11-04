@@ -437,3 +437,28 @@
   margin-top: 0;
   padding: 0.4rem;
 }
+
+.board-card[data-selected] {
+  border-color: rgb(var(--accent-rgb));
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.6);
+}
+
+.board-selection {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.board-selection button {
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8rem;
+}

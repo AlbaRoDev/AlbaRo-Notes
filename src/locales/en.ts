@@ -341,6 +341,12 @@ export const en: Record<string, string> = {
   "Abrir la tarea": "Open the task",
   "Quitar {title} del tablero": "Remove {title} from the board",
   "Quitar del tablero (la tarea se conserva)": "Remove from the board (the task is kept)",
+  "{count} tarjetas seleccionadas": "{count} cards selected",
+  "Quitar del tablero": "Remove from the board",
+  "Arrastra una para mover todas; Supr las quita del tablero.":
+    "Drag one to move them all; Del removes them from the board.",
+  "{count} citas seleccionadas": "{count} events selected",
+  "Arrastra una para mover todas; Supr las borra.": "Drag one to move them all; Del deletes them.",
   "Lista de comprobación de {title}": "Checklist of {title}",
   "Lista de comprobación": "Checklist",
   "Añadir una tarjeta…": "Add a card…",

@@ -116,6 +116,54 @@ export function dragSpan(
   return { start: moved, end: moved + (end - start) };
 }
 
+/**
+ * An entry's start and end moved by a drag of `minutes` (a timed entry, across days too) or of `days` (an all-day one,
+ * which only moves by whole days).
+ */
+export function shiftEntry(
+  entry: { start: string; end: string; allDay: boolean },
+  minutes: number,
+  days: number,
+): { start: string; end: string } {
+  if (entry.allDay) return { start: addDays(entry.start, days), end: addDays(entry.end, days) };
+  return {
+    start: timeFromAbs(absOf(entry.start) + minutes),
+    end: endFromAbs(absOf(entry.end) + minutes),
+  };
+}
+
+type Scope = "this" | "following" | "all";
+
+/**
+ * What a change to several selected entries sends to Rust, each with its own scope: a plain entry always acts on itself
+ * (`all`); of the occurrences of one series, «all» acts once, «following» once from the earliest one (it already reaches
+ * the later ones, whose series would no longer exist after the cut) and «this» on each.
+ */
+export function planBatch<
+  T extends { entry: { id: string; occurrence: string | null; repeat: unknown } },
+>(items: T[], scope: Scope): (T & { scope: Scope })[] {
+  const taken = new Map<string, T & { scope: Scope }>();
+  const out: (T & { scope: Scope })[] = [];
+  for (const item of items) {
+    const { id, occurrence, repeat } = item.entry;
+    if (!repeat) {
+      out.push({ ...item, scope: "all" });
+      continue;
+    }
+    const planned = { ...item, scope };
+    const earlier = taken.get(id);
+    if (scope === "this") out.push(planned);
+    else if (!earlier) {
+      taken.set(id, planned);
+      out.push(planned);
+    } else if (scope === "following" && (occurrence ?? "") < (earlier.entry.occurrence ?? "")) {
+      out[out.indexOf(earlier)] = planned;
+      taken.set(id, planned);
+    }
+  }
+  return out;
+}
+
 /** The days a possibly multi-day all-day entry covers inside `from..=to`, for the chips of a week or month. */
 export function daysOf(start: string, end: string, from: string, to: string): string[] {
   const out: string[] = [];
@@ -130,6 +178,24 @@ export interface CopySource {
   end: string;
   allDay: boolean;
   repeat: unknown;
+}
+
+/**
+ * Copies of several entries as one block: the earliest is placed like `placeCopy` and the others keep their distance
+ * from it (in days for an all-day entry, in minutes for a timed one).
+ */
+export function placeGroup<T extends CopySource>(
+  srcs: T[],
+  date: string,
+  minutes: number | null,
+): T[] {
+  const first = srcs.reduce((a, b) => (b.start < a.start ? b : a));
+  const placed = placeCopy(first, date, minutes);
+  const days = dayNumber(placed.start.slice(0, 10)) - dayNumber(first.start.slice(0, 10));
+  const shift = first.allDay ? days * DAY_MINUTES : absOf(placed.start) - absOf(first.start);
+  return srcs.map((s) =>
+    s === first ? placed : { ...s, repeat: null, ...shiftEntry(s, shift, days) },
+  );
 }
 
 /**

@@ -6,8 +6,10 @@ import {
   createBoardCard,
   deleteBoardList,
   moveBoardCard,
+  moveBoardCards,
   moveBoardList,
   removeBoardCard,
+  removeBoardCards,
   renameBoardList,
 } from "../../lib/db-client";
 import {
@@ -15,6 +17,7 @@ import {
   hasDragItem,
   hasListDrag,
   readCardDrag,
+  readCardsDrag,
   readDragItem,
   readListDrag,
   startCardDrag,
@@ -120,6 +123,17 @@ export function BoardView({
   const [listDrop, setListDrop] = useState<number | null>(null);
   const [confirmList, setConfirmList] = useState<string | null>(null);
   const listsRef = useRef<HTMLDivElement>(null);
+  // Ctrl/⌘/Shift + click selects several cards, to move or remove them together (a view state, not saved)
+  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const chosen = board.lists.flatMap((l) =>
+    l.cards.filter((c) => selected.has(c.id)).map((c) => c.id),
+  );
+  const toggleSelected = (id: string) =>
+    setSelected((now) => {
+      const next = new Set(now);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
 
   // after a keyboard move the card keeps the focus: it is found again once the board has reloaded
   const focusAfter = useRef<string | null>(null);
@@ -137,8 +151,21 @@ export function BoardView({
    */
   const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const title = e.target as HTMLElement;
-    if (!title.classList.contains("board-card-title") || e.ctrlKey || e.metaKey || e.shiftKey)
-      return;
+    const onCard = title.classList.contains("board-card-title");
+    if (chosen.length > 0 && !title.closest("input, textarea, select")) {
+      const plain = !(e.ctrlKey || e.metaKey || e.altKey || e.shiftKey);
+      if (e.key === "Escape" && plain) return setSelected(new Set());
+      if ((e.key === "Delete" || e.key === "Backspace") && plain) {
+        e.preventDefault();
+        return removeChosen();
+      }
+    }
+    if (onCard && (e.ctrlKey || e.metaKey) && e.key === " ") {
+      e.preventDefault(); // the keyboard's Ctrl+click
+      const id = title.closest<HTMLElement>("[data-card-id]")?.dataset.cardId;
+      return id ? toggleSelected(id) : undefined;
+    }
+    if (!onCard || e.ctrlKey || e.metaKey || e.shiftKey) return;
     const arrow = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].indexOf(e.key);
     if (arrow < 0) return;
     const cardId = title.closest<HTMLElement>("[data-card-id]")?.dataset.cardId;
@@ -175,7 +202,21 @@ export function BoardView({
 
   const cardsOf = (id: string) => board.lists.find((l) => l.id === id)?.cards ?? [];
 
+  const removeChosen = () => {
+    setSelected(new Set());
+    void write(() => removeBoardCards(chosen));
+  };
+
   const dropOnList = (e: React.DragEvent, list: BoardList, index: number) => {
+    const together = readCardsDrag(e);
+    if (together) {
+      // the index counted the cards being moved too: once they are lifted out, a later slot is that many earlier
+      const lifted = cardsOf(list.id)
+        .slice(0, index)
+        .filter((c) => together.includes(c.id)).length;
+      void write(() => moveBoardCards(together, list.id, index - lifted));
+      return;
+    }
     const cardId = readCardDrag(e);
     if (cardId) {
       // the index counted the card being moved too: once it is lifted out, a later slot is one earlier
@@ -190,192 +231,215 @@ export function BoardView({
   };
 
   return (
-    <div
-      className="board-lists"
-      ref={listsRef}
-      onKeyDown={onKeyDown}
-      onDragOver={(e) => {
-        if (!hasListDrag(e)) return;
-        e.preventDefault();
-        setListDrop(indexAt(e.currentTarget, "[data-list]", e.clientX, "x"));
-      }}
-      onDragLeave={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setListDrop(null);
-      }}
-      onDrop={(e) => {
-        const id = readListDrag(e);
-        const index = listDrop;
-        setListDrop(null);
-        if (!id || index === null) return;
-        e.preventDefault();
-        const at = board.lists.findIndex((l) => l.id === id);
-        void write(() => moveBoardList(id, at >= 0 && at < index ? index - 1 : index));
-      }}
-    >
-      {board.lists.map((list, position) => (
-        <section
-          key={list.id}
-          className="board-list"
-          data-list
-          data-list-id={list.id}
-          data-drop-before={listDrop === position || undefined}
-          data-drop-after={
-            (listDrop === board.lists.length && position === board.lists.length - 1) || undefined
-          }
-          aria-label={list.name}
-          onDragOver={(e) => {
-            if (!hasCardDrag(e) && !hasDragItem(e)) return;
-            e.preventDefault(); // this list accepts a card or a task
-            const cards = e.currentTarget.querySelector<HTMLElement>(".board-cards");
-            if (cards)
-              setCardDrop({
-                listId: list.id,
-                index: indexAt(cards, "[data-card]", e.clientY, "y"),
-              });
-          }}
-          onDragLeave={(e) => {
-            if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setCardDrop(null);
-          }}
-          onDrop={(e) => {
-            if (hasListDrag(e)) return; // the row of lists handles it
-            const index = cardDrop?.listId === list.id ? cardDrop.index : list.cards.length;
-            setCardDrop(null);
-            e.preventDefault();
-            dropOnList(e, list, index);
-          }}
-        >
-          <header className="board-list-head">
-            <button
-              type="button"
-              className="board-grip"
-              draggable
-              aria-label={t("Mover la lista {name}", { name: list.name })}
-              title={t("Arrastra para reordenar las listas")}
-              onDragStart={(e) => {
-                startListDrag(e, list.id);
-                const el = e.currentTarget.closest<HTMLElement>("[data-list]");
-                if (el) e.dataTransfer.setDragImage(el, 12, 12);
-              }}
-              onDragEnd={() => setListDrop(null)}
-            >
-              <GripVertical size={14} aria-hidden />
-            </button>
-            <EditableName
-              className="board-list-name"
-              value={list.name}
-              label={t("Nombre de la lista {name}", { name: list.name })}
-              onCommit={(name) => void write(() => renameBoardList(list.id, name))}
-            />
-            <span className="board-count">{list.cards.length}</span>
-            {confirmList === list.id ? (
-              <span className="board-confirm">
-                {list.cards.length > 0
-                  ? t("¿Con sus {length} tarjetas? ", { length: list.cards.length })
-                  : ""}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setConfirmList(null);
-                    void write(() => deleteBoardList(list.id));
-                  }}
-                >
-                  {t("Borrar")}
-                </button>
-                <button type="button" onClick={() => setConfirmList(null)}>
-                  {t("No")}
-                </button>
-              </span>
-            ) : (
+    <>
+      {chosen.length > 0 && (
+        <div className="board-selection" role="status">
+          <span title={t("Arrastra una para mover todas; Supr las quita del tablero.")}>
+            {t("{count} tarjetas seleccionadas", { count: chosen.length })}
+          </span>
+          <button type="button" onClick={removeChosen}>
+            {t("Quitar del tablero")}
+          </button>
+          <button type="button" onClick={() => setSelected(new Set())}>
+            {t("Deseleccionar")}
+          </button>
+        </div>
+      )}
+      <div
+        className="board-lists"
+        ref={listsRef}
+        onKeyDown={onKeyDown}
+        onDragOver={(e) => {
+          if (!hasListDrag(e)) return;
+          e.preventDefault();
+          setListDrop(indexAt(e.currentTarget, "[data-list]", e.clientX, "x"));
+        }}
+        onDragLeave={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setListDrop(null);
+        }}
+        onDrop={(e) => {
+          const id = readListDrag(e);
+          const index = listDrop;
+          setListDrop(null);
+          if (!id || index === null) return;
+          e.preventDefault();
+          const at = board.lists.findIndex((l) => l.id === id);
+          void write(() => moveBoardList(id, at >= 0 && at < index ? index - 1 : index));
+        }}
+      >
+        {board.lists.map((list, position) => (
+          <section
+            key={list.id}
+            className="board-list"
+            data-list
+            data-list-id={list.id}
+            data-drop-before={listDrop === position || undefined}
+            data-drop-after={
+              (listDrop === board.lists.length && position === board.lists.length - 1) || undefined
+            }
+            aria-label={list.name}
+            onDragOver={(e) => {
+              if (!hasCardDrag(e) && !hasDragItem(e)) return;
+              e.preventDefault(); // this list accepts a card or a task
+              const cards = e.currentTarget.querySelector<HTMLElement>(".board-cards");
+              if (cards)
+                setCardDrop({
+                  listId: list.id,
+                  index: indexAt(cards, "[data-card]", e.clientY, "y"),
+                });
+            }}
+            onDragLeave={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setCardDrop(null);
+            }}
+            onDrop={(e) => {
+              if (hasListDrag(e)) return; // the row of lists handles it
+              const index = cardDrop?.listId === list.id ? cardDrop.index : list.cards.length;
+              setCardDrop(null);
+              e.preventDefault();
+              dropOnList(e, list, index);
+            }}
+          >
+            <header className="board-list-head">
               <button
                 type="button"
-                className="board-icon-btn"
-                aria-label={t("Borrar la lista {name}", { name: list.name })}
-                title={t("Borrar la lista (las tareas no se borran)")}
-                onClick={() => setConfirmList(list.id)}
+                className="board-grip"
+                draggable
+                aria-label={t("Mover la lista {name}", { name: list.name })}
+                title={t("Arrastra para reordenar las listas")}
+                onDragStart={(e) => {
+                  startListDrag(e, list.id);
+                  const el = e.currentTarget.closest<HTMLElement>("[data-list]");
+                  if (el) e.dataTransfer.setDragImage(el, 12, 12);
+                }}
+                onDragEnd={() => setListDrop(null)}
               >
-                <Trash2 size={13} aria-hidden />
+                <GripVertical size={14} aria-hidden />
               </button>
-            )}
-          </header>
-          <div className="board-cards">
-            {list.cards.map((card, i) => (
-              <div key={card.id} className="board-card-slot">
-                {cardDrop?.listId === list.id && cardDrop.index === i && (
-                  <div className="board-drop-line" />
-                )}
-                <div
-                  className="board-card"
-                  data-card
-                  data-card-id={card.id}
-                  draggable
-                  onDragStart={(e) => startCardDrag(e, card)}
-                  onDragEnd={() => setCardDrop(null)}
+              <EditableName
+                className="board-list-name"
+                value={list.name}
+                label={t("Nombre de la lista {name}", { name: list.name })}
+                onCommit={(name) => void write(() => renameBoardList(list.id, name))}
+              />
+              <span className="board-count">{list.cards.length}</span>
+              {confirmList === list.id ? (
+                <span className="board-confirm">
+                  {list.cards.length > 0
+                    ? t("¿Con sus {length} tarjetas? ", { length: list.cards.length })
+                    : ""}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setConfirmList(null);
+                      void write(() => deleteBoardList(list.id));
+                    }}
+                  >
+                    {t("Borrar")}
+                  </button>
+                  <button type="button" onClick={() => setConfirmList(null)}>
+                    {t("No")}
+                  </button>
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  className="board-icon-btn"
+                  aria-label={t("Borrar la lista {name}", { name: list.name })}
+                  title={t("Borrar la lista (las tareas no se borran)")}
+                  onClick={() => setConfirmList(list.id)}
                 >
-                  <button
-                    type="button"
-                    className="board-card-title"
-                    onClick={() => onOpenTask(card.taskId)}
-                    title={t("Abrir la tarea")}
+                  <Trash2 size={13} aria-hidden />
+                </button>
+              )}
+            </header>
+            <div className="board-cards">
+              {list.cards.map((card, i) => (
+                <div key={card.id} className="board-card-slot">
+                  {cardDrop?.listId === list.id && cardDrop.index === i && (
+                    <div className="board-drop-line" />
+                  )}
+                  <div
+                    className="board-card"
+                    data-card
+                    data-card-id={card.id}
+                    data-selected={selected.has(card.id) || undefined}
+                    draggable
+                    onDragStart={(e) =>
+                      startCardDrag(e, card, selected.has(card.id) ? chosen : undefined)
+                    }
+                    onDragEnd={() => setCardDrop(null)}
                   >
-                    {card.title || t("Sin título")}
-                  </button>
-                  <button
-                    type="button"
-                    className="board-icon-btn board-card-remove"
-                    aria-label={t("Quitar {title} del tablero", { title: card.title })}
-                    title={t("Quitar del tablero (la tarea se conserva)")}
-                    onClick={() => void write(() => removeBoardCard(card.id))}
-                  >
-                    <X size={13} aria-hidden />
-                  </button>
-                  <div className="board-card-extra">
-                    <CardFields
-                      props={fields}
-                      values={valuesOf(card.taskId)}
-                      taskId={card.taskId}
-                      onWritten={onFieldWritten}
-                      onError={onNotice}
-                    />
                     <button
                       type="button"
-                      className="board-checkbtn"
-                      data-empty={card.checklist.total === 0 || undefined}
-                      aria-expanded={checklistOpen.has(card.id)}
-                      aria-label={t("Lista de comprobación de {title}", { title: card.title })}
-                      title={t("Lista de comprobación")}
-                      onClick={() => toggleChecklist(card.id)}
+                      className="board-card-title"
+                      onClick={(e) => {
+                        if (e.ctrlKey || e.metaKey || e.shiftKey) return toggleSelected(card.id);
+                        setSelected(new Set()); // a plain click leaves the selection and opens the task
+                        onOpenTask(card.taskId);
+                      }}
+                      title={t("Abrir la tarea")}
                     >
-                      <ListChecks size={13} aria-hidden />
-                      {card.checklist.total > 0 && `${card.checklist.done}/${card.checklist.total}`}
+                      {card.title || t("Sin título")}
                     </button>
-                    {checklistOpen.has(card.id) && (
-                      <TaskChecklist
+                    <button
+                      type="button"
+                      className="board-icon-btn board-card-remove"
+                      aria-label={t("Quitar {title} del tablero", { title: card.title })}
+                      title={t("Quitar del tablero (la tarea se conserva)")}
+                      onClick={() => void write(() => removeBoardCard(card.id))}
+                    >
+                      <X size={13} aria-hidden />
+                    </button>
+                    <div className="board-card-extra">
+                      <CardFields
+                        props={fields}
+                        values={valuesOf(card.taskId)}
                         taskId={card.taskId}
-                        onChanged={() => void write(async () => null)}
+                        onWritten={onFieldWritten}
+                        onError={onNotice}
                       />
-                    )}
+                      <button
+                        type="button"
+                        className="board-checkbtn"
+                        data-empty={card.checklist.total === 0 || undefined}
+                        aria-expanded={checklistOpen.has(card.id)}
+                        aria-label={t("Lista de comprobación de {title}", { title: card.title })}
+                        title={t("Lista de comprobación")}
+                        onClick={() => toggleChecklist(card.id)}
+                      >
+                        <ListChecks size={13} aria-hidden />
+                        {card.checklist.total > 0 &&
+                          `${card.checklist.done}/${card.checklist.total}`}
+                      </button>
+                      {checklistOpen.has(card.id) && (
+                        <TaskChecklist
+                          taskId={card.taskId}
+                          onChanged={() => void write(async () => null)}
+                        />
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-            {cardDrop?.listId === list.id && cardDrop.index >= list.cards.length && (
-              <div className="board-drop-line" />
-            )}
-          </div>
-          <AddCard
-            listId={list.id}
-            onAdd={async (title) => {
-              const made = await write(() => createBoardCard(list.id, title));
-              if (made) onTaskCreated();
-              return made !== null;
-            }}
-          />
-        </section>
-      ))}
-      <AddList
-        onAdd={(name) => write(() => addBoardList(board.id, name)).then((r) => r !== null)}
-      />
-    </div>
+              ))}
+              {cardDrop?.listId === list.id && cardDrop.index >= list.cards.length && (
+                <div className="board-drop-line" />
+              )}
+            </div>
+            <AddCard
+              listId={list.id}
+              onAdd={async (title) => {
+                const made = await write(() => createBoardCard(list.id, title));
+                if (made) onTaskCreated();
+                return made !== null;
+              }}
+            />
+          </section>
+        ))}
+        <AddList
+          onAdd={(name) => write(() => addBoardList(board.id, name)).then((r) => r !== null)}
+        />
+      </div>
+    </>
   );
 }
 

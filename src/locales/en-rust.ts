@@ -149,6 +149,12 @@ export const enRust: Record<string, string> = {
   "Esa ocurrencia no existe": "That occurrence doesn't exist",
   "Falta la ocurrencia que se edita": "The occurrence being edited is missing",
   "Falta la ocurrencia que se borra": "The occurrence being deleted is missing",
+  "Se pueden cambiar como mucho {MAX_BATCH} citas a la vez":
+    "At most {MAX_BATCH} events can be changed at once",
+  "Se pueden crear como mucho {MAX_BATCH} citas a la vez":
+    "At most {MAX_BATCH} events can be created at once",
+  "Se pueden borrar como mucho {MAX_BATCH} citas a la vez":
+    "At most {MAX_BATCH} events can be deleted at once",
   "El intervalo pedido no es válido": "The requested interval isn't valid",
   "La entrada ya es una tarea": "The entry is already a task",
   "La entrada no es una tarea": "The entry isn't a task",

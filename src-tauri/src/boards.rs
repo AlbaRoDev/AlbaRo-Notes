@@ -265,6 +265,70 @@ pub fn move_card(conn: &Connection, card_id: &str, list_id: &str, index: usize) 
     tx.commit().map_err(sql)
 }
 
+/// Moves several cards (a multi-selection) to `list_id` together: they land in the order given, at `index` among the
+/// cards of that list that stay put. All of them must belong to the list's board, or none moves.
+pub fn move_cards(conn: &Connection, card_ids: &[String], list_id: &str, index: usize) -> Result<(), String> {
+    if card_ids.len() > MAX_CARDS as usize {
+        return Err(format!("Un tablero admite como mucho {MAX_CARDS} tarjetas"));
+    }
+    let mut moved: Vec<String> = Vec::new();
+    for id in card_ids {
+        if !moved.contains(id) {
+            moved.push(id.clone());
+        }
+    }
+    if moved.is_empty() {
+        return Ok(());
+    }
+    let tx = conn.unchecked_transaction().map_err(sql)?;
+    let target_board: String = tx
+        .query_row("SELECT board_id FROM board_lists WHERE id = ?1", [list_id], |r| r.get(0))
+        .optional()
+        .map_err(sql)?
+        .ok_or("La lista no existe")?;
+    let mut from_lists: Vec<String> = Vec::new();
+    for id in &moved {
+        let (board, from): (String, String) = tx
+            .query_row("SELECT board_id, list_id FROM board_cards WHERE id = ?1", [id], |r| Ok((r.get(0)?, r.get(1)?)))
+            .optional()
+            .map_err(sql)?
+            .ok_or("La tarjeta no existe")?;
+        if board != target_board {
+            return Err("Una tarjeta solo se mueve dentro de su tablero (arrastra la tarea para añadirla a otro)".to_string());
+        }
+        if from != list_id && !from_lists.contains(&from) {
+            from_lists.push(from);
+        }
+    }
+    for id in &moved {
+        tx.execute("UPDATE board_cards SET list_id = ?2 WHERE id = ?1", [id.as_str(), list_id]).map_err(sql)?;
+    }
+    let mut rest = ids_of(&tx, "SELECT id FROM board_cards WHERE list_id = ?1 ORDER BY position, rowid", list_id)?;
+    rest.retain(|id| !moved.contains(id));
+    let at = index.min(rest.len());
+    rest.splice(at..at, moved.iter().cloned());
+    for from in &from_lists {
+        let left = ids_of(&tx, "SELECT id FROM board_cards WHERE list_id = ?1 ORDER BY position, rowid", from)?;
+        for (position, id) in left.iter().enumerate() {
+            tx.execute("UPDATE board_cards SET position = ?2 WHERE id = ?1", params![id, position as i64])
+                .map_err(sql)?;
+        }
+    }
+    for (position, id) in rest.iter().enumerate() {
+        tx.execute("UPDATE board_cards SET position = ?2 WHERE id = ?1", params![id, position as i64])
+            .map_err(sql)?;
+    }
+    tx.commit().map_err(sql)
+}
+
+/// Removes several cards (the tasks stay); one that is already gone is skipped, as with a single card.
+pub fn remove_cards(conn: &Connection, card_ids: &[String]) -> Result<(), String> {
+    if card_ids.len() > MAX_CARDS as usize {
+        return Err(format!("Un tablero admite como mucho {MAX_CARDS} tarjetas"));
+    }
+    card_ids.iter().try_for_each(|id| remove_card(conn, id))
+}
+
 /// A card for an existing task in `list_id`, at `index` (the end if `None`). One card per task and board.
 pub fn add_card(conn: &Connection, list_id: &str, task_id: &str, index: Option<usize>) -> Result<Card, String> {
     if !tasks::is_task(conn, task_id)? {
@@ -484,6 +548,41 @@ mod tests {
         let extra = tasks::add_task(&conn, "cinco").unwrap();
         add_card(&conn, &list(1), &extra.id, Some(1)).unwrap();
         assert_eq!(titles(&get_board(&conn, &a.id).unwrap(), 1), ["uno", "cinco", "dos", "cuatro"]);
+    }
+
+    #[test]
+    fn several_cards_move_together_keeping_their_order() {
+        let conn = conn();
+        let (a, b) = (create_board(&conn, "A").unwrap(), create_board(&conn, "B").unwrap());
+        let list = |i: usize| a.lists[i].id.clone();
+        let c: Vec<Card> = ["a", "b", "c", "d"].iter().map(|t| create_card(&conn, &list(0), t).unwrap()).collect();
+        let other = create_card(&conn, &list(1), "x").unwrap();
+        let ids = |cards: &[&Card]| cards.iter().map(|c| c.id.clone()).collect::<Vec<_>>();
+        // a card that comes before the drop point and one after it, within the same list: they land together
+        move_cards(&conn, &ids(&[&c[0], &c[2]]), &list(0), 2).unwrap();
+        assert_eq!(titles(&get_board(&conn, &a.id).unwrap(), 0), ["b", "d", "a", "c"]);
+        // to the front of another list, which closes up the one they left
+        move_cards(&conn, &ids(&[&c[1], &c[3]]), &list(1), 0).unwrap();
+        let board = get_board(&conn, &a.id).unwrap();
+        assert_eq!((titles(&board, 0), titles(&board, 1)), (vec!["a", "c"], vec!["b", "d", "x"]));
+        // past the end, and with the positions still a clean 0..n (the next card goes last)
+        move_cards(&conn, &ids(&[&c[0], &other]), &list(1), 99).unwrap();
+        create_card(&conn, &list(1), "y").unwrap();
+        assert_eq!(titles(&get_board(&conn, &a.id).unwrap(), 1), ["b", "d", "a", "x", "y"]);
+        // all or nothing: another board's list, a missing card or list, too many
+        assert!(move_cards(&conn, &ids(&[&c[1], &c[2]]), &b.lists[0].id, 0).is_err());
+        assert!(move_cards(&conn, &[c[1].id.clone(), "nope".to_string()], &list(2), 0).is_err());
+        assert!(move_cards(&conn, &ids(&[&c[1]]), "nope", 0).is_err());
+        assert!(move_cards(&conn, &vec!["x".to_string(); 501], &list(2), 0).is_err());
+        let board = get_board(&conn, &a.id).unwrap();
+        assert_eq!((titles(&board, 1), titles(&board, 2)), (vec!["b", "d", "a", "x", "y"], Vec::<&str>::new()));
+        // several removed at once: the tasks stay, a missing card is skipped, the rest close up
+        remove_cards(&conn, &[c[1].id.clone(), "nope".to_string(), c[3].id.clone()]).unwrap();
+        let board = get_board(&conn, &a.id).unwrap();
+        assert_eq!(titles(&board, 1), ["a", "x", "y"]);
+        assert!(tasks::is_task(&conn, &c[1].task_id).unwrap());
+        create_card(&conn, &list(1), "z").unwrap();
+        assert_eq!(titles(&get_board(&conn, &a.id).unwrap(), 1), ["a", "x", "y", "z"]);
     }
 
     #[test]

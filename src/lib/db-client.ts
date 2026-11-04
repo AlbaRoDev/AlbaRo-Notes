@@ -262,6 +262,24 @@ export async function deleteCalendarEntry(
   return invoke("delete_calendar_entry", { id, scope, occurrence });
 }
 
+/** Copies of a multi-selection created at once (one step of the history). */
+export async function createCalendarEntries(entries: EntryInput[]): Promise<CalendarEntry[]> {
+  return invoke<CalendarEntry[]>("create_calendar_entries", { entries });
+}
+
+/** A multi-selection changed at once (one step of the history); each item carries its own scope. */
+export async function updateCalendarEntries(
+  changes: { id: string; entry: EntryInput; scope: Scope; occurrence?: string }[],
+): Promise<void> {
+  return invoke("update_calendar_entries", { changes });
+}
+
+export async function deleteCalendarEntries(
+  removals: { id: string; scope: Scope; occurrence?: string }[],
+): Promise<void> {
+  return invoke("delete_calendar_entries", { removals });
+}
+
 /** An appointment becomes a task (the entry now schedules it). */
 export async function calendarEntryToTask(id: string): Promise<CalendarEntry> {
   return invoke<CalendarEntry>("calendar_entry_to_task", { id });
@@ -416,6 +434,20 @@ export async function moveBoardCard(cardId: string, listId: string, index: numbe
 /** Removes the card; the task is untouched. */
 export async function removeBoardCard(cardId: string): Promise<void> {
   return invoke("remove_board_card", { cardId });
+}
+
+/** Moves several cards together to `index` among the cards of the list that stay (one step of the history). */
+export async function moveBoardCards(
+  cardIds: string[],
+  listId: string,
+  index: number,
+): Promise<void> {
+  return invoke("move_board_cards", { cardIds, listId, index });
+}
+
+/** Removes several cards; the tasks are untouched. */
+export async function removeBoardCards(cardIds: string[]): Promise<void> {
+  return invoke("remove_board_cards", { cardIds });
 }
 
 /** A task's checklist; each change returns the whole list as it is stored. Items are addressed by position. */

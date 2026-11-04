@@ -677,6 +677,61 @@ pub fn delete_series(conn: &Connection, id: &str, scope: Scope, occurrence: Opti
     }
 }
 
+/// The most entries a multi-selection changes or deletes in one go.
+const MAX_BATCH: usize = 200;
+
+/// One change of a batch (a multi-selection moved together): the arguments of a single `update_series`.
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct EntryChange {
+    pub id: String,
+    pub entry: EntryInput,
+    pub scope: Scope,
+    #[serde(default)]
+    pub occurrence: Option<String>,
+}
+
+/// One deletion of a batch: the arguments of a single `delete_series`.
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct EntryRemoval {
+    pub id: String,
+    pub scope: Scope,
+    #[serde(default)]
+    pub occurrence: Option<String>,
+}
+
+/// Changes several entries one after another, stopping at the first refusal (the ones before it stay changed: the
+/// command is one step of the history, so a single undo puts them all back).
+pub fn update_many(conn: &Connection, changes: &[EntryChange]) -> Result<(), String> {
+    if changes.len() > MAX_BATCH {
+        return Err(format!("Se pueden cambiar como mucho {MAX_BATCH} citas a la vez"));
+    }
+    for c in changes {
+        update_series(conn, &c.id, &c.entry, c.scope, c.occurrence.as_deref())?;
+    }
+    Ok(())
+}
+
+/// Creates several entries (copies of a selection) one after another, with the same rules as `update_many`.
+pub fn create_many(conn: &Connection, inputs: &[EntryInput]) -> Result<Vec<CalendarEntry>, String> {
+    if inputs.len() > MAX_BATCH {
+        return Err(format!("Se pueden crear como mucho {MAX_BATCH} citas a la vez"));
+    }
+    inputs.iter().map(|input| create_entry(conn, input)).collect()
+}
+
+/// Deletes several entries one after another, with the same rules as `update_many`.
+pub fn delete_many(conn: &Connection, removals: &[EntryRemoval]) -> Result<(), String> {
+    if removals.len() > MAX_BATCH {
+        return Err(format!("Se pueden borrar como mucho {MAX_BATCH} citas a la vez"));
+    }
+    for r in removals {
+        delete_series(conn, &r.id, r.scope, r.occurrence.as_deref())?;
+    }
+    Ok(())
+}
+
 fn check_range(from: &str, to: &str) -> Result<(), String> {
     if !is_valid_iso_date(from) || !is_valid_iso_date(to) {
         return Err("Las fechas no son válidas (AAAA-MM-DD)".to_string());
@@ -1212,6 +1267,90 @@ mod tests {
         assert_eq!((back.task_id, back.title.as_str()), (None, "Llamar a Ana"));
         assert!(entry_unlink_task(&conn, &meet.id).is_err());
         assert!(tasks::is_task(&conn, &task_id).unwrap(), "the task stays");
+    }
+
+    #[test]
+    fn a_selection_of_entries_moves_and_is_deleted_together() {
+        let conn = conn();
+        let one = create_entry(&conn, &input(None, Some("Uno"), "2026-10-20T09:00", "2026-10-20T10:00", false)).unwrap();
+        let two = create_entry(&conn, &input(None, Some("Dos"), "2026-10-21", "2026-10-21", true)).unwrap();
+        let weekly = create_entry(&conn, &repeating("Serie", "2026-10-19T08:00", "2026-10-19T09:00", false, rule(Freq::Weekly, 1))).unwrap();
+        let change = |id: &str, entry: EntryInput, scope: Scope, occurrence: Option<&str>| EntryChange {
+            id: id.to_string(),
+            entry,
+            scope,
+            occurrence: occurrence.map(str::to_string),
+        };
+        // everything moves a day on: a plain entry, an all-day one and one occurrence of the series («only this»)
+        update_many(
+            &conn,
+            &[
+                change(&one.id, input(None, Some("Uno"), "2026-10-21T09:00", "2026-10-21T10:00", false), Scope::All, None),
+                change(&two.id, input(None, Some("Dos"), "2026-10-22", "2026-10-22", true), Scope::All, None),
+                change(
+                    &weekly.id,
+                    input(None, Some("Serie"), "2026-10-27T08:00", "2026-10-27T09:00", false),
+                    Scope::This,
+                    Some("2026-10-26"),
+                ),
+            ],
+        )
+        .unwrap();
+        let titles_on = |day: &str| list_entries(&conn, day, day).unwrap().into_iter().map(|e| e.title).collect::<Vec<_>>();
+        assert!(titles_on("2026-10-20").is_empty());
+        assert_eq!(titles_on("2026-10-21"), ["Uno"]);
+        assert_eq!(titles_on("2026-10-22"), ["Dos"]);
+        assert!(titles_on("2026-10-26").is_empty(), "that Monday was skipped…");
+        assert_eq!(titles_on("2026-10-27"), ["Serie"], "…and its copy moved");
+        assert_eq!(titles_on("2026-11-02"), ["Serie"], "the rest of the series stays");
+        // a refusal stops the batch with a message and nothing after it is touched
+        let bad = change(&two.id, input(None, Some("Dos"), "2026-10-22T10:00", "2026-10-22T09:00", false), Scope::All, None);
+        let after = change(&one.id, input(None, Some("Uno"), "2026-10-25T09:00", "2026-10-25T10:00", false), Scope::All, None);
+        assert!(update_many(&conn, &[bad, after]).is_err());
+        // copies of a selection are created together, each one checked
+        let copies = create_many(
+            &conn,
+            &[
+                input(None, Some("Copia 1"), "2026-12-01T09:00", "2026-12-01T10:00", false),
+                input(None, Some("Copia 2"), "2026-12-02", "2026-12-02", true),
+            ],
+        )
+        .unwrap();
+        assert_eq!(copies.len(), 2);
+        assert_eq!(days_of(&conn, "2026-12-01", "2026-12-02"), ["2026-12-02", "2026-12-01"]);
+        assert!(create_many(
+            &conn,
+            &[
+                input(None, Some("Ok"), "2026-12-01T09:00", "2026-12-01T10:00", false),
+                input(None, Some("Mal"), "2026-12-01T10:00", "2026-12-01T09:00", false)
+            ]
+        )
+        .is_err());
+        assert!(create_many(&conn, &vec![input(None, Some("x"), "2026-10-23", "2026-10-23", true); MAX_BATCH + 1]).is_err());
+        assert!(titles_on("2026-10-25").is_empty());
+        let removal = |id: &str, scope: Scope, occurrence: Option<&str>| EntryRemoval {
+            id: id.to_string(),
+            scope,
+            occurrence: occurrence.map(str::to_string),
+        };
+        delete_many(
+            &conn,
+            &[
+                removal(&one.id, Scope::All, None),
+                removal(&two.id, Scope::All, None),
+                removal(&weekly.id, Scope::Following, Some("2026-11-02")),
+            ],
+        )
+        .unwrap();
+        assert_eq!(
+            days_of(&conn, "2026-10-19", "2026-11-30"),
+            ["2026-10-19", "2026-10-27"],
+            "the series before its cut, and the moved copy"
+        );
+        // no more than a batch's worth, and an unknown field is refused
+        let many: Vec<EntryRemoval> = (0..=MAX_BATCH).map(|_| removal(&one.id, Scope::All, None)).collect();
+        assert!(delete_many(&conn, &many).is_err());
+        assert!(serde_json::from_value::<EntryRemoval>(json!({"id": "x", "scope": "all", "extra": 1})).is_err());
     }
 
     #[test]

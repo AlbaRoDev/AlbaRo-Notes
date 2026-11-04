@@ -15,6 +15,9 @@ import {
   timeFromAbs,
   endFromAbs,
   placeCopy,
+  shiftEntry,
+  placeGroup,
+  planBatch,
 } from "../src/lib/calendar.ts";
 
 test("times round-trip and snap to quarters of an hour", () => {
@@ -118,4 +121,67 @@ test("a pasted copy keeps its length, drops the repeat and lands where it is put
     allDay: true,
     repeat: null,
   });
+});
+
+test("a multi-selection moves as one: timed entries by minutes, all-day ones by whole days", () => {
+  const timed = { start: "2026-10-20T22:00", end: "2026-10-21T00:00", allDay: false };
+  assert.deepEqual(shiftEntry(timed, 90, 0), {
+    start: "2026-10-20T23:30",
+    end: "2026-10-21T01:30",
+  });
+  assert.deepEqual(shiftEntry(timed, -22 * 60, 0), {
+    start: "2026-10-20T00:00",
+    end: "2026-10-20T02:00",
+  });
+  // ending at midnight stays 24:00 of its own day
+  assert.equal(shiftEntry(timed, 0, 0).end, "2026-10-20T24:00");
+  const days = { start: "2026-10-30", end: "2026-11-01", allDay: true };
+  assert.deepEqual(shiftEntry(days, 999, 2), { start: "2026-11-01", end: "2026-11-03" });
+});
+
+test("a batch sends one change per series for «all» and «following», each plain entry on its own", () => {
+  const entry = (id, occurrence, repeat = true) => ({
+    entry: { id, occurrence, repeat: repeat ? {} : null },
+  });
+  const items = [
+    entry("s", "2026-10-26"),
+    entry("p", null, false),
+    entry("s", "2026-10-19"),
+    entry("t", "2026-10-21"),
+    entry("s", "2026-11-02"),
+  ];
+  const ids = (plan) => plan.map((x) => `${x.entry.id}@${x.entry.occurrence}:${x.scope}`);
+  assert.deepEqual(ids(planBatch(items, "this")), [
+    "s@2026-10-26:this",
+    "p@null:all",
+    "s@2026-10-19:this",
+    "t@2026-10-21:this",
+    "s@2026-11-02:this",
+  ]);
+  assert.deepEqual(ids(planBatch(items, "all")), [
+    "s@2026-10-26:all",
+    "p@null:all",
+    "t@2026-10-21:all",
+  ]);
+  // «following» keeps the earliest occurrence of the series, in the place the series first appeared
+  assert.deepEqual(ids(planBatch(items, "following")), [
+    "s@2026-10-19:following",
+    "p@null:all",
+    "t@2026-10-21:following",
+  ]);
+});
+
+test("a group of copies keeps the distances between its entries", () => {
+  const a = { start: "2026-10-20T10:00", end: "2026-10-20T11:00", allDay: false, repeat: { x: 1 } };
+  const b = { start: "2026-10-21T15:30", end: "2026-10-21T16:00", allDay: false, repeat: null };
+  const c = { start: "2026-10-22", end: "2026-10-23", allDay: true, repeat: null };
+  const [pa, pb, pc] = placeGroup([b, a, c], "2026-11-02", 9 * 60).sort((x, y) =>
+    x.start < y.start ? -1 : 1,
+  );
+  assert.equal(pa.start, "2026-11-02T09:00"); // the earliest goes where it was put
+  assert.equal(pa.repeat, null);
+  assert.equal(pb.start, "2026-11-03T14:30"); // one day and 5h30 later than the first, as before
+  assert.deepEqual([pc.start, pc.end], ["2026-11-04", "2026-11-05"]);
+  // dropped in a day cell (no minutes): the first keeps its time of day
+  assert.equal(placeGroup([a, b], "2026-11-02", null)[1].start, "2026-11-03T15:30");
 });

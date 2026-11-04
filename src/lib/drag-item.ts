@@ -37,11 +37,33 @@ export function readDragItem(e: { dataTransfer: DataTransfer | null }): DragItem
 const CARD_MIME = "application/x-albaro-card";
 const LIST_MIME = "application/x-albaro-list";
 
-/** A card drags as its task (it can be dropped on the calendar or into a note) and as a card of its board. */
-export function startCardDrag(e: React.DragEvent, card: { id: string; taskId: string }): void {
+const CARDS_MIME = "application/x-albaro-cards";
+
+/**
+ * A card drags as its task (it can be dropped on the calendar or into a note) and as a card of its board. Dragging one
+ * of several selected cards (`together`, in board order) also carries all of them, to move them as one.
+ */
+export function startCardDrag(
+  e: React.DragEvent,
+  card: { id: string; taskId: string },
+  together?: string[],
+): void {
   startItemDrag(e, { kind: "task", id: card.taskId });
   e.dataTransfer.setData(CARD_MIME, card.id);
+  if (together && together.length > 1) e.dataTransfer.setData(CARDS_MIME, JSON.stringify(together));
   e.dataTransfer.effectAllowed = "all";
+}
+
+/** The cards of a multi-selection drag, or `null` when a single card (or something else) is being dragged. */
+export function readCardsDrag(e: { dataTransfer: DataTransfer | null }): string[] | null {
+  try {
+    const parsed: unknown = JSON.parse(e.dataTransfer?.getData(CARDS_MIME) || "null");
+    return Array.isArray(parsed) && parsed.every((id) => typeof id === "string")
+      ? (parsed as string[])
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 export const hasCardDrag = (e: { dataTransfer: DataTransfer | null }): boolean =>

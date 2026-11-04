@@ -27,6 +27,11 @@ export function keyOf(entry: CalendarEntry): string {
   return entry.occurrence ? `${entry.id}@${entry.occurrence}` : entry.id;
 }
 
+/** Ctrl/⌘ or Shift held on a click: it adds the entry to the selection (or takes it out) instead of replacing it. */
+export function isAdditive(e: { ctrlKey: boolean; metaKey: boolean; shiftKey: boolean }): boolean {
+  return e.ctrlKey || e.metaKey || e.shiftKey;
+}
+
 /**
  * Enter ends the edit of a field and hands the focus back to the calendar. Just blurring would leave it on nothing,
  * and then Supr could not reach the calendar to delete the selected entry.

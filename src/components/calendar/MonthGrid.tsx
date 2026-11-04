@@ -4,7 +4,7 @@ import { daysOf, timeOf } from "../../lib/calendar";
 import { hasDragItem, readDragItem } from "../../lib/drag-item";
 import { useState } from "react";
 import type { CalendarEntry, Deadline } from "../../types";
-import { keyOf } from "./entry-input";
+import { isAdditive, keyOf } from "./entry-input";
 import { t } from "../../lib/i18n.ts";
 
 /** Chips shown per day before «+N más». */
@@ -19,7 +19,7 @@ export function MonthGrid({
   month,
   entries,
   deadlines,
-  selectedId,
+  selectedIds,
   onSelect,
   onPoint,
   onOpenDay,
@@ -30,8 +30,9 @@ export function MonthGrid({
   month: number;
   entries: CalendarEntry[];
   deadlines: Deadline[];
-  selectedId: string | null;
-  onSelect: (id: string) => void;
+  selectedIds: Set<string>;
+  /** `additive`: Ctrl/⌘/Shift was held, so the entry joins the selection (or leaves it). */
+  onSelect: (id: string, additive?: boolean) => void;
   /** A day cell was pressed: where a paste lands. */
   onPoint: (date: string) => void;
   onOpenDay: (date: string) => void;
@@ -113,8 +114,8 @@ export function MonthGrid({
                     type="button"
                     className="cal-chip"
                     data-color={entry.color ?? undefined}
-                    data-selected={keyOf(entry) === selectedId || undefined}
-                    onClick={() => onSelect(keyOf(entry))}
+                    data-selected={selectedIds.has(keyOf(entry)) || undefined}
+                    onClick={(e) => onSelect(keyOf(entry), isAdditive(e))}
                     title={entry.title}
                   >
                     {!entry.allDay && <em>{timeOf(entry.start)}</em>} {entry.repeat ? "↻ " : ""}

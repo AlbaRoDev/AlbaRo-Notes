@@ -9,13 +9,14 @@ import {
   dragSpan,
   endFromAbs,
   layoutDay,
+  shiftEntry,
   snap,
   stamp,
   timeFromAbs,
 } from "../../lib/calendar";
 import { hasDragItem, readDragItem } from "../../lib/drag-item";
 import type { CalendarEntry, Deadline, EntryInput } from "../../types";
-import { keyOf, toInput } from "./entry-input";
+import { isAdditive, keyOf, toInput } from "./entry-input";
 import { t } from "../../lib/i18n.ts";
 
 /** Pixels per hour: 15 minutes are 12 px. */
@@ -32,6 +33,8 @@ interface Preview {
   /** Absolute minutes (see `absOf`): a block can cross midnight. */
   start: number;
   end: number;
+  /** Set when the dragged block is one of a selection: the others move by the same amount. */
+  group?: { minutes: number; days: number };
 }
 
 const dayLabel = (iso: string) => {
@@ -49,20 +52,22 @@ export function TimeGrid({
   days,
   entries,
   deadlines,
-  selectedId,
+  selectedIds,
   onSelect,
   onPoint,
   onOpenDay,
   onCreate,
   onCreateAllDay,
   onChange,
+  onChangeMany,
   onDropTask,
 }: {
   days: string[];
   entries: CalendarEntry[];
   deadlines: Deadline[];
-  selectedId: string | null;
-  onSelect: (id: string | null) => void;
+  selectedIds: Set<string>;
+  /** `additive`: Ctrl/⌘/Shift was held, so the entry joins the selection (or leaves it) instead of replacing it. */
+  onSelect: (id: string | null, additive?: boolean) => void;
   /** The grid was pressed on an empty spot: where a paste lands (minutes are null in the all-day strip). */
   onPoint: (date: string, minutes: number | null) => void;
   onOpenDay: (date: string) => void;
@@ -70,6 +75,8 @@ export function TimeGrid({
   /** A double click on a day of the all-day strip. */
   onCreateAllDay: (date: string) => void;
   onChange: (entry: CalendarEntry, input: EntryInput) => void;
+  /** A block of a multi-selection was dragged: all of them moved by the same amount. */
+  onChangeMany: (moves: { entry: CalendarEntry; input: EntryInput }[]) => void;
   /** A task dropped on a day: at a time (a one-hour block) or, with `null`, as an all-day entry. */
   onDropTask: (taskId: string, date: string, start: number | null) => void;
 }) {
@@ -193,22 +200,39 @@ export function TimeGrid({
     e.stopPropagation();
     const from = absOf(entry.start);
     const to = absOf(entry.end);
+    const additive = isAdditive(e);
+    // dragging one block of a selection drags them all
+    const together = mode === "move" && selectedIds.size > 1 && selectedIds.has(keyOf(entry));
     let last: Preview = { id: keyOf(entry), start: from, end: to };
+    let dayShift = 0;
     track(
       e,
       (x, y, _dx, dy) => {
-        const days =
+        dayShift =
           mode === "move" ? dayNumber(locate(x, y)?.date ?? grabDate) - dayNumber(grabDate) : 0;
+        const span = dragSpan(mode, from, to, dy / PX_PER_MIN + dayShift * DAY_MINUTES);
         last = {
           id: keyOf(entry),
-          ...dragSpan(mode, from, to, dy / PX_PER_MIN + days * DAY_MINUTES),
+          ...span,
+          group: together ? { minutes: span.start - from, days: dayShift } : undefined,
         };
         setPreview(last);
       },
       (clicked) => {
         setPreview(null);
-        if (clicked) return onSelect(keyOf(entry));
-        if (last.start !== from || last.end !== to)
+        if (clicked) return onSelect(keyOf(entry), additive);
+        if (last.start === from && last.end === to) return;
+        if (last.group) {
+          const { minutes, days: shifted } = last.group;
+          onChangeMany(
+            entries
+              .filter((x) => selectedIds.has(keyOf(x)))
+              .map((x) => ({
+                entry: x,
+                input: { ...toInput(x), ...shiftEntry(x, minutes, shifted) },
+              })),
+          );
+        } else
           onChange(entry, {
             ...toInput(entry),
             start: timeFromAbs(last.start),
@@ -226,11 +250,13 @@ export function TimeGrid({
     const dayStart = dayNumber(date) * DAY_MINUTES;
     const dayEnd = dayStart + DAY_MINUTES;
     const shown = timed
-      .map((entry) =>
-        preview?.id === keyOf(entry)
-          ? { entry, from: preview.start, to: preview.end }
-          : { entry, from: absOf(entry.start), to: absOf(entry.end) },
-      )
+      .map((entry) => {
+        if (preview?.id === keyOf(entry)) return { entry, from: preview.start, to: preview.end };
+        const [from, to] = [absOf(entry.start), absOf(entry.end)];
+        // the other blocks of a selection travel with the one being dragged
+        const shift = preview?.group && selectedIds.has(keyOf(entry)) ? preview.group.minutes : 0;
+        return { entry, from: from + shift, to: to + shift };
+      })
       .filter((b) => b.from < dayEnd && b.to > dayStart)
       .map((b) => ({
         entry: b.entry,
@@ -326,8 +352,8 @@ export function TimeGrid({
                   type="button"
                   className="cal-chip"
                   data-color={entry.color ?? undefined}
-                  data-selected={keyOf(entry) === selectedId || undefined}
-                  onClick={() => onSelect(keyOf(entry))}
+                  data-selected={selectedIds.has(keyOf(entry)) || undefined}
+                  onClick={(e) => onSelect(keyOf(entry), isAdditive(e))}
                 >
                   {entry.repeat ? "↻ " : ""}
                   {entry.title}
@@ -383,8 +409,12 @@ export function TimeGrid({
                     className="cal-block"
                     data-color={entry.color ?? undefined}
                     data-task={entry.taskId ? "" : undefined}
-                    data-selected={keyOf(entry) === selectedId || undefined}
-                    data-dragging={preview?.id === keyOf(entry) || undefined}
+                    data-selected={selectedIds.has(keyOf(entry)) || undefined}
+                    data-dragging={
+                      preview?.id === keyOf(entry) ||
+                      (preview?.group && selectedIds.has(keyOf(entry))) ||
+                      undefined
+                    }
                     data-before={before || undefined}
                     data-after={after || undefined}
                     style={{

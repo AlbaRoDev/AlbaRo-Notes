@@ -6,9 +6,12 @@ import {
   calendarEntryUnlinkTask,
   calendarScheduledTasks,
   exportCalendar,
+  createCalendarEntries,
   createCalendarEntry,
+  deleteCalendarEntries,
   deleteCalendarEntry,
   listCalendarEntries,
+  updateCalendarEntries,
   updateCalendarEntry,
 } from "../../lib/db-client";
 import {
@@ -19,7 +22,7 @@ import {
   todayIso,
   weekDays,
 } from "../../lib/date-utils";
-import { DAY_MINUTES, placeCopy, stamp } from "../../lib/calendar";
+import { DAY_MINUTES, placeCopy, placeGroup, planBatch, stamp } from "../../lib/calendar";
 import { readPref, writePref } from "../../lib/prefs";
 import type { CalendarEntry, Deadline, EntryInput, Scope } from "../../types";
 import type { TaskHost } from "../workspace/Tasks";
@@ -93,7 +96,11 @@ export function CalendarSection({ host }: { host: TaskHost }) {
   const [entries, setEntries] = useState<CalendarEntry[]>([]);
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
   const [scheduled, setScheduled] = useState<Set<string>>(new Set());
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Ctrl/⌘/Shift + click adds entries to the selection; the panel edits an entry only while exactly one is selected
+  const [selection, setSelection] = useState<string[]>([]);
+  const selectedId = selection.length === 1 ? selection[0] : null;
+  const selectedIds = useMemo(() => new Set(selection), [selection]);
+  const setSelectedId = (id: string | null) => setSelection(id ? [id] : []);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
   useEffect(() => writePref("calendar.view", view), [view]);
@@ -149,11 +156,23 @@ export function CalendarSection({ host }: { host: TaskHost }) {
     if (made) select(keyOf(made));
   };
 
+  /** Several new entries at once (copies of a selection): one step of the history, and the copies end up selected. */
+  const createMany = async (inputs: EntryInput[]) => {
+    if (inputs.length === 1) return create(inputs[0]);
+    const made = await write(() => createCalendarEntries(inputs));
+    if (made) {
+      leaveDraft(null);
+      setSelection(made.map(keyOf));
+    }
+  };
+
   // A change to a repeating entry asks how far it reaches. A drag asks at once; the fields of the panel do not: they
   // pile up in `draft` (shown in the panel) and the question comes when the entry is left (another one is picked, the panel closed).
   const [pending, setPending] = useState<
     | { kind: "update"; entry: CalendarEntry; input: EntryInput; reselect: boolean }
     | { kind: "delete"; entry: CalendarEntry }
+    | { kind: "moveMany"; moves: { entry: CalendarEntry; input: EntryInput }[] }
+    | { kind: "deleteMany"; entries: CalendarEntry[] }
     | null
   >(null);
   const [draft, setDraft] = useState<{
@@ -196,13 +215,71 @@ export function CalendarSection({ host }: { host: TaskHost }) {
     setDraft({ key: keyOf(entry), entry, input });
     return Promise.resolve(true);
   };
-  /** Picks another entry (or none): leaving one that has a draft asks how far the draft reaches. */
-  const select = (id: string | null) => {
-    if (draft && draft.key !== id) {
+  /** Leaving an entry that has a draft asks how far the draft reaches. */
+  const leaveDraft = (keep: string | null) => {
+    if (draft && draft.key !== keep) {
       setPending({ kind: "update", entry: draft.entry, input: draft.input, reselect: false });
       setDraft(null);
     }
+  };
+  /** Picks another entry (or none). */
+  const select = (id: string | null) => {
+    leaveDraft(id);
     setSelectedId(id);
+  };
+  /** Adds the entry to the selection, or takes it out when it is already there. */
+  const toggle = (id: string) => {
+    leaveDraft(null);
+    setSelection((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+  };
+  const pick = (id: string | null, additive?: boolean) =>
+    additive && id ? toggle(id) : select(id);
+  // the selected entries that are on screen (a selection can outlive a change of week)
+  const chosen = entries.filter((e) => selectedIds.has(keyOf(e)));
+
+  /** A selection dragged in the grid: one request, one step of the history; a series in it asks for the scope once. */
+  const changeMany = (moves: { entry: CalendarEntry; input: EntryInput }[]) => {
+    if (moves.some((m) => m.entry.repeat)) setPending({ kind: "moveMany", moves });
+    else void applyMany(planBatch(moves, "all"));
+  };
+  const applyMany = async (plan: { entry: CalendarEntry; input: EntryInput; scope: Scope }[]) => {
+    const done = await write(() =>
+      updateCalendarEntries(
+        plan.map(({ entry, input, scope }) => ({
+          id: entry.id,
+          entry: input,
+          scope,
+          occurrence: entry.occurrence ?? undefined,
+        })),
+      ),
+    );
+    // an occurrence that moved has a new identity (its day): the old selection no longer points at anything
+    if (done !== null && plan.some((p) => p.entry.repeat)) setSelection([]);
+  };
+  const removeMany = async (plan: { entry: CalendarEntry; scope: Scope }[]) => {
+    const done = await write(() =>
+      deleteCalendarEntries(
+        plan.map(({ entry, scope }) => ({
+          id: entry.id,
+          scope,
+          occurrence: entry.occurrence ?? undefined,
+        })),
+      ),
+    );
+    if (done !== null) {
+      setDraft(null);
+      setSelection([]);
+    }
+  };
+  const askToRemoveMany = (list: CalendarEntry[]) => {
+    if (list.some((e) => e.repeat)) setPending({ kind: "deleteMany", entries: list });
+    else
+      void removeMany(
+        planBatch(
+          list.map((entry) => ({ entry })),
+          "all",
+        ),
+      );
   };
   const remove = async (entry: CalendarEntry, scope: Scope) => {
     const done = await write(() =>
@@ -237,19 +314,26 @@ export function CalendarSection({ host }: { host: TaskHost }) {
     setDraftRev((r) => r + 1);
   });
   // Copy, paste and duplicate: an in-memory copy of the entry, pasted where the grid was last pressed (or in place).
-  const clip = useRef<EntryInput | null>(null);
+  const clip = useRef<EntryInput[]>([]);
   const point = useRef<{ date: string; minutes: number | null } | null>(null);
+  // what copy and duplicate act on: the selection, or the one entry open in the panel
+  const targets = chosen.length > 1 ? chosen : selected ? [selected] : [];
   const copy = () => {
-    if (selected) clip.current = toInput(selected);
+    if (targets.length) clip.current = targets.map(toInput);
   };
   const duplicate = () => {
-    if (selected) void create({ ...toInput(selected), repeat: null });
+    if (targets.length) void createMany(targets.map((e) => ({ ...toInput(e), repeat: null })));
   };
   const paste = () => {
     const [src, at] = [clip.current, point.current];
-    if (!src) return;
-    if (at && at.date >= from && at.date <= to) void create(placeCopy(src, at.date, at.minutes));
-    else void create({ ...src, repeat: null });
+    if (!src.length) return;
+    if (at && at.date >= from && at.date <= to)
+      void createMany(
+        src.length === 1
+          ? [placeCopy(src[0], at.date, at.minutes)]
+          : placeGroup(src, at.date, at.minutes),
+      );
+    else void createMany(src.map((s) => ({ ...s, repeat: null })));
   };
   const onClipKey = useEffectEvent((e: globalThis.KeyboardEvent) => {
     if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || e.defaultPrevented || pending)
@@ -267,9 +351,9 @@ export function CalendarSection({ host }: { host: TaskHost }) {
       field.value === field.defaultValue;
     if (field && !untouchedTitle) return;
     if (!field && key !== "v" && window.getSelection()?.toString()) return;
-    if (key === "c" && selected) copy();
-    else if (key === "d" && selected) duplicate();
-    else if (key === "v" && clip.current) paste();
+    if (key === "c" && targets.length) copy();
+    else if (key === "d" && targets.length) duplicate();
+    else if (key === "v" && clip.current.length) paste();
     else return;
     e.preventDefault();
   });
@@ -325,10 +409,22 @@ export function CalendarSection({ host }: { host: TaskHost }) {
    * whose title is still the untouched «Nueva cita», all selected: deleting that is deleting the entry (nobody keeps it).
    */
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    const typing = target.closest("input, textarea, select, [contenteditable='true']");
+    if (e.key === "Escape" && chosen.length > 1 && !typing && !pending) {
+      setSelection([]);
+      return;
+    }
     if (e.key !== "Delete" && e.key !== "Backspace") return;
     if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey || e.defaultPrevented) return;
-    if (!selected || pending) return;
-    const target = e.target as HTMLElement;
+    if (pending) return;
+    if (chosen.length > 1) {
+      if (typing) return;
+      e.preventDefault();
+      askToRemoveMany(chosen);
+      return;
+    }
+    if (!selected) return;
     if (target.closest("input, textarea, select, [contenteditable='true']")) {
       const field = target instanceof HTMLInputElement ? target : null;
       const untouched =
@@ -436,8 +532,8 @@ export function CalendarSection({ host }: { host: TaskHost }) {
             month={month}
             entries={entries}
             deadlines={deadlines}
-            selectedId={selectedId}
-            onSelect={select}
+            selectedIds={selectedIds}
+            onSelect={pick}
             onPoint={(date) => (point.current = { date, minutes: null })}
             onOpenDay={openDay}
             onCreateOnDay={(date) => newAppointment(date, true)}
@@ -448,19 +544,38 @@ export function CalendarSection({ host }: { host: TaskHost }) {
             days={days}
             entries={entries}
             deadlines={deadlines}
-            selectedId={selectedId}
-            onSelect={select}
+            selectedIds={selectedIds}
+            onSelect={pick}
             onPoint={(date, minutes) => (point.current = { date, minutes })}
             onOpenDay={openDay}
             onCreate={(input) => void create(input)}
             onCreateAllDay={(date) => newAppointment(date, true)}
             onChange={change}
+            onChangeMany={changeMany}
             onDropTask={dropTask}
           />
         )}
       </div>
       <aside className="cal-side">
-        {selected ? (
+        {chosen.length > 1 ? (
+          <div className="cal-multi">
+            <h3>{t("{count} citas seleccionadas", { count: chosen.length })}</h3>
+            <p>{t("Arrastra una para mover todas; Supr las borra.")}</p>
+            <button
+              type="button"
+              onClick={duplicate}
+              title={t("Duplicar (Ctrl+D). Copiar: Ctrl+C; pegar: Ctrl+V")}
+            >
+              {t("Duplicar")}
+            </button>
+            <button type="button" onClick={() => askToRemoveMany(chosen)}>
+              {t("Borrar")}
+            </button>
+            <button type="button" onClick={() => setSelection([])}>
+              {t("Deseleccionar")}
+            </button>
+          </div>
+        ) : selected ? (
           <EntryEditor
             key={`${keyOf(selected)}-${draftRev}`}
             entry={selected}
@@ -487,14 +602,22 @@ export function CalendarSection({ host }: { host: TaskHost }) {
       </aside>
       {pending && (
         <ScopeDialog
-          verb={pending.kind}
+          verb={pending.kind === "update" || pending.kind === "moveMany" ? "update" : "delete"}
           onCancel={() => setPending(null)}
           onPick={(scope) => {
             const asked = pending;
             setPending(null);
             if (asked.kind === "update")
               void apply(asked.entry, asked.input, scope, asked.reselect);
-            else void remove(asked.entry, scope);
+            else if (asked.kind === "delete") void remove(asked.entry, scope);
+            else if (asked.kind === "moveMany") void applyMany(planBatch(asked.moves, scope));
+            else
+              void removeMany(
+                planBatch(
+                  asked.entries.map((entry) => ({ entry })),
+                  scope,
+                ),
+              );
           }}
         />
       )}
