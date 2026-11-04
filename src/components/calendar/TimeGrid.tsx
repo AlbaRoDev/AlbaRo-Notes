@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { SquareCheck } from "lucide-react";
 import { WEEKDAYS, dayNumber, todayIso } from "../../lib/date-utils";
 import {
   DAY_MINUTES,
@@ -17,6 +18,7 @@ import {
 import { hasDragItem, readDragItem } from "../../lib/drag-item";
 import type { CalendarEntry, Deadline, EntryInput } from "../../types";
 import { isAdditive, keyOf, toInput } from "./entry-input";
+import { TaskChecklist } from "../boards/TaskChecklist";
 import { t } from "../../lib/i18n.ts";
 
 /** Pixels per hour: 15 minutes are 12 px. */
@@ -26,6 +28,11 @@ const PX_PER_MIN = HOUR_PX / 60;
 const CLICK_SLOP = 4;
 const FIRST_VISIBLE_HOUR = 7;
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
+/** A block at least this tall (px) has room for the task's checklist under its title and time. */
+const LIST_MIN_PX = 90;
+/** The shortest a block is drawn (a 15-minute one is 12 px); below `SHORT_PX` it drops its padding to fit one line. */
+const MIN_BLOCK_PX = 16;
+const SHORT_PX = 30;
 
 interface Preview {
   /** The entry being dragged (none while creating). */
@@ -53,6 +60,7 @@ export function TimeGrid({
   entries,
   deadlines,
   selectedIds,
+  showLists,
   onSelect,
   onPoint,
   onOpenDay,
@@ -66,6 +74,8 @@ export function TimeGrid({
   entries: CalendarEntry[];
   deadlines: Deadline[];
   selectedIds: Set<string>;
+  /** Show a task's checklist inside its block when the block is tall enough. */
+  showLists: boolean;
   /** `additive`: Ctrl/⌘/Shift was held, so the entry joins the selection (or leaves it) instead of replacing it. */
   onSelect: (id: string | null, additive?: boolean) => void;
   /** The grid was pressed on an empty spot: where a paste lands (minutes are null in the all-day strip). */
@@ -84,6 +94,14 @@ export function TimeGrid({
   const [preview, setPreview] = useState<Preview | null>(null);
   const [ghost, setGhost] = useState<{ date: string; start: number } | null>(null);
   const [allDayOver, setAllDayOver] = useState<string | null>(null);
+  // tasks whose checklist is folded in their blocks (a view state, not saved)
+  const [folded, setFolded] = useState<Set<string>>(() => new Set());
+  const toggleFolded = (taskId: string) =>
+    setFolded((f) => {
+      const next = new Set(f);
+      if (!next.delete(taskId)) next.add(taskId);
+      return next;
+    });
   const [now, setNow] = useState(() => new Date());
   const scrollRef = useRef<HTMLDivElement>(null);
   const columns = useRef(new Map<string, HTMLDivElement>());
@@ -409,6 +427,7 @@ export function TimeGrid({
                     className="cal-block"
                     data-color={entry.color ?? undefined}
                     data-task={entry.taskId ? "" : undefined}
+                    data-short={(end - start) * PX_PER_MIN < SHORT_PX || undefined}
                     data-selected={selectedIds.has(keyOf(entry)) || undefined}
                     data-dragging={
                       preview?.id === keyOf(entry) ||
@@ -419,20 +438,35 @@ export function TimeGrid({
                     data-after={after || undefined}
                     style={{
                       top: start * PX_PER_MIN,
-                      height: Math.max((end - start) * PX_PER_MIN, 14),
+                      height: Math.max((end - start) * PX_PER_MIN, MIN_BLOCK_PX),
                       left: `${(column / cols) * 100}%`,
                       width: `${100 / cols}%`,
                     }}
                     onPointerDown={(e) => startDrag(e, entry, "move", date)}
                   >
-                    <strong>
-                      {entry.repeat ? "↻ " : ""}
-                      {entry.title}
-                    </strong>
-                    <span>
-                      {label}
-                      {entry.location ? ` · ${entry.location}` : ""}
-                    </span>
+                    {/* title and time share the line when they fit; otherwise the time drops below (and is clipped in a short block) */}
+                    <div className="cal-block-head">
+                      <strong>
+                        {entry.taskId && <SquareCheck size={13} aria-hidden="true" />}
+                        {entry.repeat ? "↻ " : ""}
+                        {entry.title}
+                      </strong>
+                      <span>
+                        {label}
+                        {entry.location ? ` · ${entry.location}` : ""}
+                      </span>
+                    </div>
+                    {showLists && entry.taskId && (end - start) * PX_PER_MIN >= LIST_MIN_PX && (
+                      // its own presses: ticking an item must not start a drag of the block
+                      <div className="cal-block-list" onPointerDown={(e) => e.stopPropagation()}>
+                        <TaskChecklist
+                          taskId={entry.taskId}
+                          compact
+                          collapsed={folded.has(entry.taskId)}
+                          onToggle={() => toggleFolded(entry.taskId!)}
+                        />
+                      </div>
+                    )}
                     {!after && (
                       <div
                         className="cal-resize"

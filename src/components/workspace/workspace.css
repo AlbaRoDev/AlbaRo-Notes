@@ -439,6 +439,38 @@
   color: var(--text-muted);
 }
 
+.manager-tabs button {
+  transition:
+    background-color 0.15s,
+    color 0.15s,
+    transform 0.1s;
+}
+
+.manager-tabs button:active {
+  transform: scale(0.95);
+}
+
+.manager-tabs button svg {
+  transition: transform 0.2s cubic-bezier(0.34, 1.7, 0.64, 1);
+}
+
+.manager-tabs button:hover svg,
+.manager-tabs button[aria-current="page"] svg {
+  transform: scale(1.15);
+}
+
+/* a section fades up as it opens (opacity and a nudge only, and no fill: a fixed peek inside must not be trapped) */
+.manager > :not(.manager-tabs) {
+  animation: section-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes section-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
 .manager-tabs button:hover {
   background: rgba(var(--ink), 0.06);
 }
@@ -481,8 +513,28 @@
   color: var(--text-muted);
 }
 
+.tasks-add {
+  transition:
+    box-shadow 0.15s,
+    background-color 0.15s;
+}
+
+.tasks-add:hover {
+  background: rgba(var(--ink), 0.06);
+}
+
 .tasks-add:focus-within {
+  background: rgba(var(--ink), 0.06);
   box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.3);
+}
+
+.tasks-add svg {
+  transition: transform 0.2s cubic-bezier(0.34, 1.7, 0.64, 1);
+}
+
+.tasks-add:focus-within svg {
+  color: var(--accent);
+  transform: rotate(90deg);
 }
 
 .tasks-add input {

@@ -93,6 +93,7 @@ export function CalendarSection({ host }: { host: TaskHost }) {
   });
   const [anchor, setAnchor] = useState(todayIso);
   const [showDeadlines, setShowDeadlines] = useState(() => readPref("calendar.deadlines") !== "0");
+  const [showLists, setShowLists] = useState(() => readPref("calendar.checklists") !== "0");
   const [entries, setEntries] = useState<CalendarEntry[]>([]);
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
   const [scheduled, setScheduled] = useState<Set<string>>(new Set());
@@ -105,6 +106,7 @@ export function CalendarSection({ host }: { host: TaskHost }) {
   const [saved, setSaved] = useState<string | null>(null);
   useEffect(() => writePref("calendar.view", view), [view]);
   useEffect(() => writePref("calendar.deadlines", showDeadlines ? "1" : "0"), [showDeadlines]);
+  useEffect(() => writePref("calendar.checklists", showLists ? "1" : "0"), [showLists]);
 
   const [year, month] = [Number(anchor.slice(0, 4)), Number(anchor.slice(5, 7))];
   const days = useMemo(() => (view === "day" ? [anchor] : weekDays(anchor)), [view, anchor]);
@@ -483,6 +485,19 @@ export function CalendarSection({ host }: { host: TaskHost }) {
             />
             {t("Fechas límite")}
           </label>
+          <label
+            className="cal-toggle"
+            title={t(
+              "Muestra la lista de comprobación de las tareas dentro de sus bloques, si caben",
+            )}
+          >
+            <input
+              type="checkbox"
+              checked={showLists}
+              onChange={(e) => setShowLists(e.target.checked)}
+            />
+            {t("Checks")}
+          </label>
           <div className="cal-views" role="group" aria-label={t("Vista")}>
             {VIEWS.map(({ id, label }) => (
               <button key={id} type="button" aria-pressed={view === id} onClick={() => setView(id)}>
@@ -545,6 +560,7 @@ export function CalendarSection({ host }: { host: TaskHost }) {
             entries={entries}
             deadlines={deadlines}
             selectedIds={selectedIds}
+            showLists={showLists}
             onSelect={pick}
             onPoint={(date, minutes) => (point.current = { date, minutes })}
             onOpenDay={openDay}

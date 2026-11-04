@@ -42,7 +42,6 @@ export function TasksSection({ host }: { host: TaskHost }) {
   const [error, setError] = useState<string | null>(null);
   const [openTask, setOpenTask] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
-  const [adding, setAdding] = useState(false);
   // Ctrl+F finds in the table (the page editors beside it, when a task is open, take the key instead)
   const root = useRef<HTMLDivElement>(null);
   const [find, setFind] = useState({ open: false, token: 0 });
@@ -76,18 +75,16 @@ export function TasksSection({ host }: { host: TaskHost }) {
 
   const submit = async () => {
     const title = draft.trim();
-    if (!title || !base || adding) return;
-    setAdding(true);
+    if (!title || !base) return;
+    setDraft(""); // the box is free for the next title at once; a refusal puts this one back
     try {
       await addTask(title);
-      setDraft("");
       setError(null);
       onPagesChanged();
       emitDatabaseChange(base.databaseId, TASKS_SOURCE);
     } catch (e) {
       setError(String(e));
-    } finally {
-      setAdding(false);
+      setDraft((now) => now || title);
     }
   };
 
@@ -147,7 +144,6 @@ export function TasksSection({ host }: { host: TaskHost }) {
           type="text"
           value={draft}
           maxLength={200}
-          readOnly={adding} // not disabled: a disabled input drops the focus
           placeholder={t("Añadir una tarea…")}
           aria-label={t("Añadir una tarea")}
           onChange={(e) => setDraft(e.target.value)}

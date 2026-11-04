@@ -369,6 +369,11 @@ export const en: Record<string, string> = {
   "Ir a una fecha": "Go to a date",
   "Muestra la «Fecha límite» de las tareas como banderas": 'Shows the tasks\' "Due date" as flags',
   "Fechas límite": "Due dates",
+  "Muestra la lista de comprobación de las tareas dentro de sus bloques, si caben":
+    "Shows each task's checklist inside its block when it fits",
+  Checks: "Checklists",
+  "Mostrar la lista": "Show the list",
+  "Ocultar la lista": "Hide the list",
   Vista: "View",
   "Guarda todo el calendario como un archivo .ics para abrirlo en otra aplicación":
     "Saves the whole calendar as an .ics file to open in another app",

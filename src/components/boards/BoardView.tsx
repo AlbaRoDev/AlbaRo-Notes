@@ -26,6 +26,7 @@ import {
 import type { BoardData, BoardList, CellValue, Property } from "../../types";
 import { CardFields } from "./CardFields";
 import { TaskChecklist } from "./TaskChecklist";
+import { useFlip } from "../../lib/flip.ts";
 import { t } from "../../lib/i18n.ts";
 
 /** A name that reads as text and saves when it loses the focus (Enter too; Esc or a refusal put the old one back). */
@@ -102,7 +103,7 @@ interface BoardViewProps {
  */
 export function BoardView({
   board,
-  write,
+  write: plainWrite,
   onOpenTask,
   onTaskCreated,
   onNotice,
@@ -123,6 +124,14 @@ export function BoardView({
   const [listDrop, setListDrop] = useState<number | null>(null);
   const [confirmList, setConfirmList] = useState<string | null>(null);
   const listsRef = useRef<HTMLDivElement>(null);
+  // after a write the cards glide to their new places (the snapshot is taken once the write is done, before the reload)
+  const snapshot = useFlip(listsRef, board);
+  const write: BoardViewProps["write"] = (action) =>
+    plainWrite(async () => {
+      const done = await action();
+      snapshot();
+      return done;
+    });
   // Ctrl/⌘/Shift + click selects several cards, to move or remove them together (a view state, not saved)
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const chosen = board.lists.flatMap((l) =>
@@ -273,6 +282,7 @@ export function BoardView({
             className="board-list"
             data-list
             data-list-id={list.id}
+            data-over={cardDrop?.listId === list.id || undefined}
             data-drop-before={listDrop === position || undefined}
             data-drop-after={
               (listDrop === board.lists.length && position === board.lists.length - 1) || undefined
@@ -321,7 +331,9 @@ export function BoardView({
                 label={t("Nombre de la lista {name}", { name: list.name })}
                 onCommit={(name) => void write(() => renameBoardList(list.id, name))}
               />
-              <span className="board-count">{list.cards.length}</span>
+              <span className="board-count" key={list.cards.length}>
+                {list.cards.length}
+              </span>
               {confirmList === list.id ? (
                 <span className="board-confirm">
                   {list.cards.length > 0
@@ -354,7 +366,7 @@ export function BoardView({
             </header>
             <div className="board-cards">
               {list.cards.map((card, i) => (
-                <div key={card.id} className="board-card-slot">
+                <div key={card.id} className="board-card-slot" data-flip={card.id}>
                   {cardDrop?.listId === list.id && cardDrop.index === i && (
                     <div className="board-drop-line" />
                   )}
@@ -364,10 +376,16 @@ export function BoardView({
                     data-card-id={card.id}
                     data-selected={selected.has(card.id) || undefined}
                     draggable
-                    onDragStart={(e) =>
-                      startCardDrag(e, card, selected.has(card.id) ? chosen : undefined)
-                    }
-                    onDragEnd={() => setCardDrop(null)}
+                    onDragStart={(e) => {
+                      startCardDrag(e, card, selected.has(card.id) ? chosen : undefined);
+                      const el = e.currentTarget;
+                      // dimmed once the browser has taken the drag image, so the picture stays whole
+                      setTimeout(() => el.setAttribute("data-dragging", ""), 0);
+                    }}
+                    onDragEnd={(e) => {
+                      e.currentTarget.removeAttribute("data-dragging");
+                      setCardDrop(null);
+                    }}
                   >
                     <button
                       type="button"
@@ -452,18 +470,16 @@ function AddCard({
   onAdd: (title: string) => Promise<boolean>;
 }) {
   const [draft, setDraft] = useState("");
-  const [busy, setBusy] = useState(false);
   return (
     <form
       className="board-add"
       onSubmit={(e) => {
         e.preventDefault();
         const title = draft.trim();
-        if (!title || busy) return;
-        setBusy(true);
+        if (!title) return;
+        setDraft(""); // free for the next one at once; a refusal puts the title back
         void onAdd(title).then((ok) => {
-          if (ok) setDraft("");
-          setBusy(false);
+          if (!ok) setDraft((now) => now || title);
         });
       }}
     >
@@ -472,7 +488,6 @@ function AddCard({
         type="text"
         value={draft}
         maxLength={200}
-        readOnly={busy} // not disabled: a disabled input drops the focus
         placeholder={t("Añadir una tarjeta…")}
         aria-label={t("Añadir una tarjeta")}
         data-list-id={listId}
@@ -484,18 +499,16 @@ function AddCard({
 
 function AddList({ onAdd }: { onAdd: (name: string) => Promise<boolean> }) {
   const [draft, setDraft] = useState("");
-  const [busy, setBusy] = useState(false);
   return (
     <form
       className="board-add board-add-list"
       onSubmit={(e) => {
         e.preventDefault();
         const name = draft.trim();
-        if (!name || busy) return;
-        setBusy(true);
+        if (!name) return;
+        setDraft("");
         void onAdd(name).then((ok) => {
-          if (ok) setDraft("");
-          setBusy(false);
+          if (!ok) setDraft((now) => now || name);
         });
       }}
     >
@@ -504,7 +517,6 @@ function AddList({ onAdd }: { onAdd: (name: string) => Promise<boolean> }) {
         type="text"
         value={draft}
         maxLength={100}
-        readOnly={busy}
         placeholder={t("Añadir otra lista…")}
         aria-label={t("Añadir una lista")}
         onChange={(e) => setDraft(e.target.value)}

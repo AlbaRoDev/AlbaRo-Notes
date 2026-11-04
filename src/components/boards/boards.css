@@ -371,13 +371,40 @@
   cursor: grab;
   transition:
     box-shadow 0.12s,
-    border-color 0.12s;
+    border-color 0.12s,
+    transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.15s;
+  animation: card-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .board-card:hover {
   border-color: var(--border-strong);
   border-left-color: rgb(var(--accent-rgb));
   box-shadow: 0 3px 8px rgba(var(--ink), 0.16);
+  transform: translateY(-1px);
+}
+
+/* the card being carried stays behind, faded, where it was picked up */
+.board-card[data-dragging] {
+  opacity: 0.4;
+  transform: scale(0.97);
+}
+
+/* a card appears (made, dropped in from the tray, or moved to another list) with a small pop */
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+
+/* the list a card or a task would land in */
+.board-list {
+  transition: box-shadow 0.15s;
+}
+
+.board-list[data-over] {
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.45);
 }
 
 .board-card-title {
@@ -409,6 +436,42 @@
   margin: -2px 0;
   border-radius: 2px;
   background: var(--accent);
+  animation: drop-line-in 120ms ease-out;
+}
+
+@keyframes drop-line-in {
+  from {
+    opacity: 0;
+    transform: scaleX(0.4);
+  }
+}
+
+/* the count of a list bumps when a card comes or goes */
+.board-count {
+  animation: count-bump 220ms cubic-bezier(0.34, 1.7, 0.64, 1);
+}
+
+@keyframes count-bump {
+  from {
+    transform: scale(1.35);
+  }
+}
+
+.board-icon-btn:active,
+.board-checkbtn:active,
+.board-label-add:active {
+  transform: scale(0.88);
+}
+
+.board-card-remove,
+.board-label-add,
+.board-checkbtn,
+.board-icon-btn {
+  transition:
+    opacity 0.12s,
+    background-color 0.12s,
+    color 0.12s,
+    transform 0.1s;
 }
 
 .board-add {
@@ -444,6 +507,7 @@
 }
 
 .board-selection {
+  animation: pop-in 120ms ease-out;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
