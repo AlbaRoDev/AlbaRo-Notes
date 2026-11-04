@@ -21,13 +21,16 @@ interface TrayLabels {
   hint: string;
   pendingEmpty: string;
   dragTitle: string;
+  /** A task can be dropped again after it is placed (the calendar): none ever leaves the tray. */
+  repeatable?: boolean;
 }
 
 const CALENDAR_LABELS: TrayLabels = {
   pending: "Por programar",
   hint: "Arrastra una tarea al calendario; se puede programar varias veces.",
-  pendingEmpty: "Todas las tareas tienen algún hueco.",
+  pendingEmpty: "No hay tareas.",
   dragTitle: "arrástrala al calendario",
+  repeatable: true,
 };
 
 type PanelKind = "filter" | "sort" | "group";
@@ -78,7 +81,8 @@ export function TaskTray({
   labels?: TrayLabels;
   prefKey?: string;
 }) {
-  const [all, setAll] = useState(false);
+  const [showPlaced, setAll] = useState(false);
+  const all = showPlaced || !!labels.repeatable;
   const [query, setQuery] = useState("");
   const [panel, setPanel] = useState<PanelKind | null>(null);
   const [config, setConfig] = useState(() => readConfig(prefKey));
@@ -155,14 +159,16 @@ export function TaskTray({
           aria-label="Buscar tareas"
           onChange={(e) => setQuery(e.target.value)}
         />
-        <div className="cal-tray-seg" role="group" aria-label="Qué tareas mostrar">
-          <button type="button" aria-pressed={!all} onClick={() => setAll(false)}>
-            {labels.pending}
-          </button>
-          <button type="button" aria-pressed={all} onClick={() => setAll(true)}>
-            Todas
-          </button>
-        </div>
+        {!labels.repeatable && (
+          <div className="cal-tray-seg" role="group" aria-label="Qué tareas mostrar">
+            <button type="button" aria-pressed={!all} onClick={() => setAll(false)}>
+              {labels.pending}
+            </button>
+            <button type="button" aria-pressed={all} onClick={() => setAll(true)}>
+              Todas
+            </button>
+          </div>
+        )}
         {database && (
           <div className="cal-tray-config" role="group" aria-label="Filtrar, ordenar y agrupar">
             {PANELS.map(([kind, label, Icon]) => (
