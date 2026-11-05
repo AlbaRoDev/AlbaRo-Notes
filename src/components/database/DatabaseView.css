@@ -513,6 +513,181 @@ button.db-prop-name {
   border-color: var(--border);
 }
 
+/* Filter panel, as Notion's: a searchable property list, then flat rows with the value under the property */
+.page-editor .ProseMirror .filter-panel {
+  gap: 0.35em;
+}
+
+.page-editor .ProseMirror .filter-panel .fl-rule {
+  display: grid;
+  grid-template-columns: 3.2em minmax(0, 1fr) minmax(0, 1.15fr) auto;
+  align-items: center;
+  gap: 0.25em;
+}
+
+.page-editor .ProseMirror .filter-panel .fl-join {
+  padding-left: 0.3em;
+  font-size: 0.85em;
+  color: var(--text-faint);
+}
+
+.page-editor .ProseMirror .filter-panel select.fl-join {
+  padding-left: 0;
+}
+
+.page-editor .ProseMirror .filter-panel .fl-value {
+  grid-column: 2 / 4;
+  min-width: 0;
+}
+
+.page-editor .ProseMirror .filter-panel .fl-value :is(input, select) {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.page-editor .ProseMirror .filter-panel .fl-value .db-option-cell {
+  box-sizing: border-box;
+  min-height: 2em;
+  padding: 0.3em 0.5em;
+  border-radius: 6px;
+  background: rgba(var(--ink), 0.06);
+}
+
+.page-editor .ProseMirror .filter-panel .fl-value .db-option-cell:hover {
+  background: rgba(var(--ink), 0.12);
+}
+
+.page-editor .ProseMirror .filter-panel .fl-rule select {
+  border-color: transparent;
+  background: rgba(var(--ink), 0.06);
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.page-editor .ProseMirror .filter-panel .fl-rule select:hover {
+  background: rgba(var(--ink), 0.12);
+}
+
+.page-editor .ProseMirror .filter-panel button.fl-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  border-color: transparent;
+  background: none;
+  color: var(--text-muted);
+}
+
+.page-editor .ProseMirror .filter-panel button.fl-ghost:hover:not(:disabled) {
+  background: rgba(var(--ink), 0.1);
+  color: var(--text);
+}
+
+.page-editor .ProseMirror .filter-panel button.fl-danger:hover:not(:disabled) {
+  color: var(--danger);
+}
+
+.page-editor .ProseMirror .filter-panel .fl-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.3em;
+  padding-top: 0.35em;
+  border-top: 1px solid var(--border);
+}
+
+.page-editor .ProseMirror .filter-panel .fl-rule + .fl-rule {
+  margin-top: 0.15em;
+}
+
+/* The values that go in: every choice listed, ticking one includes it */
+.page-editor .ProseMirror .filter-panel .fl-choices {
+  display: grid;
+  gap: 0.3em;
+}
+
+.page-editor .ProseMirror .filter-panel .fl-choices ul {
+  display: grid;
+  max-height: 12em;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.page-editor .ProseMirror .filter-panel .fl-choices li {
+  margin: 0;
+  padding: 0;
+}
+
+.page-editor .ProseMirror .filter-panel label.fl-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.2em 0.4em;
+  border-radius: 6px;
+  cursor: var(--cursor-pointer, pointer);
+}
+
+.page-editor .ProseMirror .filter-panel label.fl-choice:hover {
+  background: rgba(var(--ink), 0.08);
+}
+
+.page-editor .ProseMirror .filter-panel label.fl-choice input {
+  flex: none;
+  width: auto;
+  margin: 0;
+  padding: 0;
+}
+
+.page-editor .ProseMirror .filter-panel .fl-picker {
+  display: grid;
+  gap: 0.3em;
+}
+
+.page-editor .ProseMirror .filter-panel .fl-rule ~ .fl-picker {
+  padding-top: 0.35em;
+  border-top: 1px solid var(--border);
+}
+
+.page-editor .ProseMirror .filter-panel .fl-picker ul {
+  display: grid;
+  max-height: 14em;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.page-editor .ProseMirror .filter-panel .fl-picker li {
+  margin: 0;
+  padding: 0;
+}
+
+.page-editor .ProseMirror .filter-panel .fl-picker li button {
+  display: flex;
+  align-items: center;
+  gap: 0.55em;
+  width: 100%;
+  box-sizing: border-box;
+  border-color: transparent;
+  background: none;
+  text-align: left;
+}
+
+.page-editor .ProseMirror .filter-panel .fl-picker li button:hover {
+  background: rgba(var(--ink), 0.1);
+}
+
+.page-editor .ProseMirror .filter-panel .fl-picker li button svg {
+  flex: none;
+  opacity: 0.6;
+}
+
+.page-editor .ProseMirror .filter-panel .fl-empty {
+  padding: 0.3em 0.6em;
+  font-size: 0.85em;
+  color: var(--text-faint);
+}
+
 .page-editor .ProseMirror .db-panel label.db-check {
   display: flex;
   align-items: center;

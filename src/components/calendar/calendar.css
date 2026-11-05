@@ -618,33 +618,21 @@
   position: relative;
 }
 
-/* Filtrar / Ordenar / Agrupar: each with its colour, filled when open or in use */
+/* Filtrar / Ordenar / Agrupar: quiet text buttons, tinted when open or in use, with the panel floating under them */
 .cal-tray-config button {
-  --tool: var(--tag-blue);
-  border-radius: 999px;
-  padding: 3px 10px 3px 8px;
+  border-color: transparent;
+  padding: 3px 8px 3px 6px;
   font-size: 0.8rem;
 }
 
-.cal-tray-config button[data-kind="sort"] {
-  --tool: var(--tag-orange);
-}
-
-.cal-tray-config button[data-kind="group"] {
-  --tool: var(--tag-purple);
-}
-
 .cal-tray-config button svg {
-  color: var(--text);
   opacity: 0.6;
 }
 
-.cal-tray-config button:hover,
 .cal-tray-config button[aria-pressed="true"],
 .cal-tray-config button[data-used="true"] {
-  border-color: transparent;
-  background: var(--tool);
-  color: var(--text);
+  background: rgba(var(--accent-rgb), 0.14);
+  color: var(--accent);
 }
 
 .cal-tray-config button[aria-pressed="true"] svg,
@@ -656,28 +644,46 @@
   min-width: 1.1em;
   padding: 0 4px;
   border-radius: 999px;
-  background: rgba(var(--ink), 0.14);
+  background: rgba(var(--accent-rgb), 0.2);
   font-size: 0.7rem;
   font-weight: 600;
   text-align: center;
 }
 
-.cal-tray li button svg {
+.cal-tray-pop {
+  position: relative;
+}
+
+.cal-tray-pop > .cal-tray-float {
+  position: absolute;
+  top: calc(100% - 0.2rem);
+  right: 0;
+  left: 0;
+  z-index: 50;
+  max-height: 60vh;
+  overflow-y: auto;
+  border-radius: 8px;
+  background: var(--bg-popover);
+  box-shadow: var(--shadow-popover);
+  animation: pop-in 120ms ease-out;
+}
+
+.cal-tray-section li button svg {
   flex: none;
   color: var(--accent);
 }
 
-.cal-tray ul {
+.cal-tray-section ul {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.cal-tray li + li {
+.cal-tray-section li + li {
   margin-top: 0.25rem;
 }
 
-.cal-tray li button {
+.cal-tray-section li button {
   display: flex;
   align-items: center;
   gap: 0.45rem;
@@ -698,12 +704,12 @@
     box-shadow 0.12s;
 }
 
-.cal-tray li button:hover {
+.cal-tray-section li button:hover {
   background: rgba(var(--accent-rgb), 0.1);
   box-shadow: 0 2px 6px rgba(var(--ink), 0.12);
 }
 
-.cal-tray li span {
+.cal-tray-section li span {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1079,14 +1085,14 @@
     color 0.2s;
 }
 
-.cal-tray li button {
+.cal-tray-section li button {
   transition:
     background 0.12s,
     box-shadow 0.12s,
     transform 0.1s;
 }
 
-.cal-tray li button:active {
+.cal-tray-section li button:active {
   transform: scale(0.97);
 }
 
@@ -1116,4 +1122,16 @@
   .cal-now::before {
     animation: none;
   }
+}
+
+/* the floating tray panel is the box itself */
+.page-editor.cal-tray-float .ProseMirror .db-panel {
+  max-width: none;
+  margin-top: 0;
+  border: none;
+}
+
+/* the three tools share one narrow row: only the open or used one spells its name out */
+.cal-tray-config button:not([aria-pressed="true"], [data-used="true"]) span {
+  display: none;
 }

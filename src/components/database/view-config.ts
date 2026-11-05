@@ -26,15 +26,16 @@ export const OPERATORS: Record<PropertyKind, Operator[]> = {
   number: ["eq", "neq", "gt", "gte", "lt", "lte", "is_empty", "is_not_empty"],
   date: ["is", "before", "after", "on_or_before", "on_or_after", "is_empty", "is_not_empty"],
   select: ["is", "is_not", "is_empty", "is_not_empty"],
-  relation: ["contains", "not_contains", "is_empty", "is_not_empty"],
+  relation: ["contains", "contains_all", "not_contains", "is_empty", "is_not_empty"],
   place: ["contains", "not_contains", "is_empty", "is_not_empty"],
-  tags: ["contains", "not_contains", "is_empty", "is_not_empty"],
+  tags: ["contains", "contains_all", "not_contains", "is_empty", "is_not_empty"],
   // «es» marcada / sin marcar (the value is a boolean)
   checkbox: ["is"],
 };
 
-export const OPERATOR_LABELS: Record<Operator, string> = {
+const OPERATOR_LABELS: Record<Operator, string> = {
   contains: "contiene",
+  contains_all: t("contiene todas"),
   not_contains: t("no contiene"),
   is: "es",
   is_not: t("no es"),
@@ -51,6 +52,12 @@ export const OPERATOR_LABELS: Record<Operator, string> = {
   on_or_before: t("es anterior o igual a"),
   on_or_after: t("es posterior o igual a"),
 };
+
+/** A list property reads «contiene alguna» / «contiene todas» (the any / all of a multiple choice), not just «contiene». */
+export const operatorLabel = (type: PropertyKind, op: Operator) =>
+  op === "contains" && (type === "tags" || type === "relation")
+    ? t("contiene alguna")
+    : OPERATOR_LABELS[op];
 
 export const needsValue = (op: Operator) => op !== "is_empty" && op !== "is_not_empty";
 

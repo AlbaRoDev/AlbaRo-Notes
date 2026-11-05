@@ -52,6 +52,8 @@ pub enum BoolOp {
 #[serde(rename_all = "snake_case")]
 pub enum Operator {
     Contains,
+    /// A list of tags or linked rows: has every value asked for (`Contains` = has any of them).
+    ContainsAll,
     NotContains,
     Is,
     IsNot,
@@ -354,9 +356,9 @@ pub fn operators_for(kind: &str) -> &'static [Operator] {
         "number" => &[Eq, Neq, Gt, Gte, Lt, Lte, IsEmpty, IsNotEmpty],
         "date" => &[Is, Before, After, OnOrBefore, OnOrAfter, IsEmpty, IsNotEmpty],
         "select" => &[Is, IsNot, IsEmpty, IsNotEmpty],
-        "relation" => &[Contains, NotContains, IsEmpty, IsNotEmpty],
+        "relation" => &[Contains, ContainsAll, NotContains, IsEmpty, IsNotEmpty],
         // «contiene la etiqueta X»
-        "tags" => &[Contains, NotContains, IsEmpty, IsNotEmpty],
+        "tags" => &[Contains, ContainsAll, NotContains, IsEmpty, IsNotEmpty],
         // a place filters by its label
         "place" => &[Contains, NotContains, IsEmpty, IsNotEmpty],
         // «es» marcada / sin marcar (the value is a boolean)
@@ -382,7 +384,24 @@ fn load_schema(conn: &Connection, database_id: &str) -> Result<Schema, String> {
     Ok(schema)
 }
 
+/// The most values one rule can list (a select, tags or relation rule matches any of them).
+const MAX_RULE_VALUES: usize = 50;
+
+/// What a rule asks for: the values of a list, or the one scalar.
+fn targets(value: &Value) -> Vec<&Value> {
+    match value {
+        Value::Array(a) => a.iter().collect(),
+        v => vec![v],
+    }
+}
+
 fn check_value(kind: &str, value: &Value) -> Result<(), String> {
+    if let (Value::Array(list), "select" | "tags" | "relation") = (value, kind) {
+        if list.is_empty() || list.len() > MAX_RULE_VALUES {
+            return Err("El filtro lleva entre 1 y 50 valores".to_string());
+        }
+        return list.iter().try_for_each(|v| check_value(kind, v));
+    }
     let ok = match kind {
         "text" => value.as_str().is_some_and(|s| s.chars().count() <= MAX_TEXT),
         "number" => value.as_f64().is_some_and(f64::is_finite),
@@ -670,10 +689,10 @@ fn rule_matches(rule: &FilterRule, kind: &str, cell: &Option<Value>) -> bool {
         }
         "select" => {
             let c = cell.as_ref().and_then(Value::as_str);
-            let t = target.as_str().unwrap_or("");
+            let listed = c.is_some_and(|c| targets(target).iter().any(|t| t.as_str() == Some(c)));
             match rule.operator {
-                Is => c == Some(t),
-                IsNot => c != Some(t),
+                Is => listed,
+                IsNot => !listed,
                 _ => true,
             }
         }
@@ -688,10 +707,12 @@ fn rule_matches(rule: &FilterRule, kind: &str, cell: &Option<Value>) -> bool {
         }
         "relation" | "tags" => {
             let linked = cell.as_ref().and_then(Value::as_array);
-            let has = linked.is_some_and(|a| a.iter().any(|v| v == target));
+            let wanted = targets(target);
+            let has = |t: &&Value| linked.is_some_and(|a| a.contains(t));
             match rule.operator {
-                Contains => has,
-                NotContains => !has,
+                Contains => wanted.iter().any(has),
+                ContainsAll => wanted.iter().all(has),
+                NotContains => !wanted.iter().any(has),
                 _ => true,
             }
         }
@@ -1299,8 +1320,14 @@ pub fn rename_option_in_filters(conn: &Connection, database_id: &str, property_i
         let widget_filters = c.dashboard.iter_mut().flat_map(|d| d.widgets.iter_mut()).map(|w| &mut w.filter);
         for filter in std::iter::once(&mut c.filter).chain(widget_filters) {
             for rule in filter.rules.iter_mut().filter(|r| r.property == property_id) {
-                if rule.value.as_ref().and_then(Value::as_str) == Some(old) {
-                    rule.value = Some(json!(new));
+                match &mut rule.value {
+                    Some(Value::String(v)) if v == old => *v = new.to_string(),
+                    Some(Value::Array(list)) => {
+                        for v in list.iter_mut().filter(|v| v.as_str() == Some(old)) {
+                            *v = json!(new);
+                        }
+                    }
+                    _ => {}
                 }
             }
         }
@@ -1564,6 +1591,12 @@ mod tests {
         // select
         assert_eq!(f(json!([rule("s", "is", json!("Hecho"))]), "and"), ["r1", "r4"]);
         assert_eq!(f(json!([rule("s", "is_not", json!("Hecho"))]), "and"), ["r2", "r3"]);
+        // select with a list: «es» any of them, «no es» none (rows with no value are not in the list)
+        assert_eq!(f(json!([rule("s", "is", json!(["Hecho", "Pendiente"]))]), "and"), ["r1", "r2", "r4"]);
+        assert_eq!(f(json!([rule("s", "is_not", json!(["Pendiente"]))]), "and"), ["r1", "r3", "r4"]);
+        // relation with a list
+        assert_eq!(f(json!([rule("rel", "contains", json!(["p1", "p2"]))]), "and"), ["r1", "r2"]);
+        assert_eq!(f(json!([rule("rel", "contains_all", json!(["p1", "p2"]))]), "and"), ["r1"]);
         // relation
         assert_eq!(f(json!([rule("rel", "contains", json!("p2"))]), "and"), ["r1", "r2"]);
         assert_eq!(f(json!([rule("rel", "not_contains", json!("p1"))]), "and"), ["r2", "r3", "r4"]);
@@ -1836,6 +1869,17 @@ mod tests {
             ids(json!({ "filter": { "rules": [{ "property": t, "operator": "is_empty" }] } })).row_ids,
             [rows[3].clone()]
         );
+        // a list of tags: «contiene» has any of them, «contiene todas» every one, «no contiene» none
+        let both = json!(["Trabajo", "Casa"]);
+        assert_eq!(
+            ids(json!({ "filter": { "rules": [rule(&t, "contains", both.clone())] } })).row_ids,
+            [rows[0].clone(), rows[1].clone(), rows[2].clone()]
+        );
+        assert_eq!(ids(json!({ "filter": { "rules": [rule(&t, "contains_all", both.clone())] } })).row_ids, [rows[0].clone()]);
+        assert_eq!(ids(json!({ "filter": { "rules": [rule(&t, "not_contains", both.clone())] } })).row_ids, [rows[3].clone()]);
+        // a list can't be empty, nor hold a value that isn't a tag-sized text
+        assert!(update_view_config(&conn, &view, &json!({ "filter": { "rules": [rule(&t, "contains", json!([]))] } })).is_err());
+        assert!(update_view_config(&conn, &view, &json!({ "filter": { "rules": [rule(&t, "contains", json!(["a", 3]))] } })).is_err());
         // sorted by the first tag, in the order of the options; empties last
         assert_eq!(
             ids(json!({ "sorts": [{ "property": t, "direction": "asc" }] })).row_ids,
@@ -1867,6 +1911,10 @@ mod tests {
         // renaming a tag follows into the filter that uses it
         ids(json!({ "filter": { "rules": [rule(&t, "contains", json!("Casa"))] } }));
         databases::rename_select_option(&conn, &t, "Casa", "Hogar").unwrap();
+        assert_eq!(query_view(&conn, &view).unwrap().row_ids, [rows[0].clone(), rows[2].clone()]);
+        // ...also when the rule lists several
+        ids(json!({ "filter": { "rules": [rule(&t, "contains", json!(["Hogar", "Vacía"]))] } }));
+        databases::rename_select_option(&conn, &t, "Hogar", "Casa").unwrap();
         assert_eq!(query_view(&conn, &view).unwrap().row_ids, [rows[0].clone(), rows[2].clone()]);
     }
 

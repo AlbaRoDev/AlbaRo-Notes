@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   CalendarDays,
   ChartColumn,
@@ -12,6 +12,7 @@ import {
   Newspaper,
   Plus,
   Table as TableIcon,
+  Trash2,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -22,15 +23,17 @@ import type {
   Granularity,
   Property,
   SortRule,
+  TagColor,
   ViewConfig,
   ViewInfo,
   ViewKind,
 } from "../../types";
 import { Cell } from "./DatabaseCells";
+import { TYPE_ICONS, optionColor } from "./property-types";
 import {
   GRANULARITY_LABELS,
   OPERATORS,
-  OPERATOR_LABELS,
+  operatorLabel,
   TITLE_ID,
   TITLE_PROPERTY,
   VIEW_KIND_LABELS,
@@ -309,6 +312,63 @@ export function SortPanel({
 
 // ------------------------------------------------------------------ filter
 
+type RuleValueType = FilterRule["value"];
+
+/** What a select, tags or relation rule lists: one value or several. */
+const pickedOf = (value: RuleValueType): string[] =>
+  Array.isArray(value) ? value : typeof value === "string" ? [value] : [];
+
+/**
+ * Notion's way to say which values go in: every choice of the property is listed and ticking one includes it.
+ * Rust matches a row against any of the ticked values (tags and relations also have «contiene todas»).
+ */
+function ChoiceList({
+  choices,
+  picked,
+  onChange,
+}: {
+  choices: { value: string; label: string; color?: TagColor }[];
+  picked: string[];
+  onChange: (next: string[] | undefined) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const shown = choices.filter((c) => fold(c.label).includes(fold(query.trim())));
+  const toggle = (value: string) => {
+    const next = picked.includes(value) ? picked.filter((v) => v !== value) : [...picked, value];
+    onChange(next.length > 0 ? next : undefined);
+  };
+  return (
+    <div className="fl-choices">
+      {choices.length > 6 && (
+        <input
+          type="text"
+          value={query}
+          placeholder={t("Buscar…")}
+          aria-label={t("Buscar…")}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      )}
+      <ul>
+        {shown.map((c) => (
+          <li key={c.value}>
+            <label className="db-check fl-choice">
+              <input
+                type="checkbox"
+                checked={picked.includes(c.value)}
+                onChange={() => toggle(c.value)}
+              />
+              <span className="db-chip db-tag" data-color={c.color}>
+                {c.label}
+              </span>
+            </label>
+          </li>
+        ))}
+        {shown.length === 0 && <li className="fl-empty">{t("Sin resultados")}</li>}
+      </ul>
+    </div>
+  );
+}
+
 function RuleValue({
   rule,
   prop,
@@ -318,7 +378,7 @@ function RuleValue({
   rule: FilterRule;
   prop: Property;
   targetRows: DatabaseRow[];
-  onValue: (value: string | number | boolean | undefined) => void;
+  onValue: (value: RuleValueType) => void;
 }) {
   if (prop.type === "checkbox") {
     return (
@@ -332,44 +392,23 @@ function RuleValue({
       </select>
     );
   }
-  if (prop.type === "tags") {
-    return (
-      <select
-        value={typeof rule.value === "string" ? rule.value : ""}
-        aria-label={t("Valor del filtro")}
-        onChange={(e) => onValue(e.target.value || undefined)}
-      >
-        <option value="">{t("Elegir etiqueta…")}</option>
-        {(prop.config.options ?? []).map((o) => (
-          <option key={o} value={o}>
-            {o}
-          </option>
-        ))}
-      </select>
-    );
-  }
-  if (prop.type === "relation") {
-    return (
-      <select
-        value={typeof rule.value === "string" ? rule.value : ""}
-        aria-label={t("Valor del filtro")}
-        onChange={(e) => onValue(e.target.value || undefined)}
-      >
-        <option value="">{t("Elegir fila…")}</option>
-        {targetRows.map((r) => (
-          <option key={r.pageId} value={r.pageId}>
-            {r.title}
-          </option>
-        ))}
-      </select>
-    );
+  if (prop.type === "select" || prop.type === "tags" || prop.type === "relation") {
+    const choices =
+      prop.type === "relation"
+        ? targetRows.map((r) => ({ value: r.pageId, label: r.title || t("Sin título") }))
+        : (prop.config.options ?? []).map((o) => ({
+            value: o,
+            label: o,
+            color: optionColor(prop, o),
+          }));
+    return <ChoiceList choices={choices} picked={pickedOf(rule.value)} onChange={onValue} />;
   }
   // The same typed cells as the table: native date/number inputs commit on blur, never per keystroke.
   return (
     <Cell
       key={String(rule.value ?? "")}
       prop={prop}
-      value={rule.value}
+      value={typeof rule.value === "object" ? undefined : rule.value}
       targetRows={[]}
       single
       commit={(v) => {
@@ -377,6 +416,56 @@ function RuleValue({
         return Promise.resolve(true);
       }}
     />
+  );
+}
+
+const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+
+/** Notion's first step: a searchable list of the properties, instead of a rule to edit field by field. */
+function PropertyPicker({
+  properties,
+  onPick,
+  onCancel,
+}: {
+  properties: Property[];
+  onPick: (p: Property) => void;
+  onCancel?: () => void;
+}) {
+  const [query, setQuery] = useState("");
+  const shown = properties.filter((p) => fold(p.name).includes(fold(query.trim())));
+  return (
+    <div className="fl-picker">
+      <input
+        autoFocus
+        type="text"
+        value={query}
+        placeholder={t("Filtrar por…")}
+        aria-label={t("Filtrar por…")}
+        onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && shown[0]) onPick(shown[0]);
+          // Esc closes the list but not the panel around it
+          if (e.key === "Escape" && onCancel) {
+            e.stopPropagation();
+            onCancel();
+          }
+        }}
+      />
+      <ul>
+        {shown.map((p) => {
+          const Icon = TYPE_ICONS[p.type];
+          return (
+            <li key={p.id}>
+              <button type="button" onClick={() => onPick(p)}>
+                <Icon size={14} strokeWidth={1.75} aria-hidden="true" />
+                {p.name}
+              </button>
+            </li>
+          );
+        })}
+        {shown.length === 0 && <li className="fl-empty">{t("Sin resultados")}</li>}
+      </ul>
+    </div>
   );
 }
 
@@ -398,21 +487,35 @@ export function FilterPanel({
     onChange({ ...config, filter: { op, rules: next } });
   const patch = (i: number, change: Partial<FilterRule>) =>
     set(rules.map((r, j) => (j === i ? { ...r, ...change } : r)));
+  const [adding, setAdding] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  const added = useRef(false);
+
+  // a new rule starts with its type's first operator (the select shows «Marcada»: the rule must hold it, or it
+  // would look active and not be) and the cursor goes to its value, so a filter is two clicks and a word
+  const ruleFor = (p: Property): FilterRule => ({
+    property: p.id,
+    operator: OPERATORS[p.type][0],
+    ...(p.type === "checkbox" ? { value: true } : {}),
+  });
+  useEffect(() => {
+    if (!added.current) return;
+    added.current = false;
+    const last = [...(root.current?.querySelectorAll(".fl-rule") ?? [])].pop();
+    last?.querySelector<HTMLElement>(".fl-value :is(input, select, [role=combobox])")?.focus();
+  }, [rules.length]);
 
   return (
-    <div className="db-panel" role="group" aria-label={t("Filtrar")}>
-      {rules.length === 0 && (
-        <p className="db-panel-meta">{t("Sin filtros: se ven todas las filas.")}</p>
-      )}
+    <div ref={root} className="db-panel filter-panel" role="group" aria-label={t("Filtrar")}>
       {rules.map((rule, i) => {
         const prop = byId.get(rule.property) ?? TITLE_PROPERTY;
         return (
-          <div key={i} className="db-rule">
+          <div key={i} className="fl-rule">
             {i === 0 ? (
-              <span className="db-rule-join">{t("Donde")}</span>
+              <span className="fl-join">{t("Donde")}</span>
             ) : i === 1 ? (
               <select
-                className="db-rule-join"
+                className="fl-join"
                 value={config.filter.op}
                 aria-label={t("Combinar filtros")}
                 onChange={(e) => set(rules, e.target.value as "and" | "or")}
@@ -421,28 +524,19 @@ export function FilterPanel({
                 <option value="or">O</option>
               </select>
             ) : (
-              <span className="db-rule-join">{config.filter.op === "and" ? "Y" : "O"}</span>
+              <span className="fl-join">{config.filter.op === "and" ? "Y" : "O"}</span>
             )}
             <PropertySelect
               value={rule.property}
               properties={all}
               label={t("Filtrar por (regla {n1})", { n1: i + 1 })}
-              onChange={(property) => {
-                // a different property means different operators and a value of another type
-                const next = byId.get(property) ?? TITLE_PROPERTY;
+              onChange={(property) =>
                 set(
                   rules.map((r, j) =>
-                    j === i
-                      ? {
-                          property,
-                          operator: OPERATORS[next.type][0],
-                          // the select shows «Marcada»: the rule must hold it, or it would look active and not be
-                          ...(next.type === "checkbox" ? { value: true } : {}),
-                        }
-                      : r,
+                    j === i ? ruleFor(byId.get(property) ?? TITLE_PROPERTY) : r,
                   ),
-                );
-              }}
+                )
+              }
             />
             <select
               value={rule.operator}
@@ -454,37 +548,54 @@ export function FilterPanel({
             >
               {OPERATORS[prop.type].map((op) => (
                 <option key={op} value={op}>
-                  {OPERATOR_LABELS[op]}
+                  {operatorLabel(prop.type, op)}
                 </option>
               ))}
             </select>
-            {needsValue(rule.operator) && (
-              <RuleValue
-                rule={rule}
-                prop={prop}
-                targetRows={rowsOf(prop)}
-                onValue={(value) => patch(i, { value })}
-              />
-            )}
             <button
               type="button"
-              className="db-icon-btn"
+              className="fl-ghost"
               aria-label={t("Quitar filtro {n1}", { n1: i + 1 })}
+              title={t("Quitar filtro")}
               onClick={() => set(rules.filter((_, j) => j !== i))}
             >
-              <X size={14} strokeWidth={1.75} aria-hidden="true" />
+              <Trash2 size={14} strokeWidth={1.75} aria-hidden="true" />
             </button>
+            {needsValue(rule.operator) && (
+              <div className="fl-value">
+                <RuleValue
+                  rule={rule}
+                  prop={prop}
+                  targetRows={rowsOf(prop)}
+                  onValue={(value) => patch(i, { value })}
+                />
+              </div>
+            )}
           </div>
         );
       })}
-      <div className="db-panel-actions">
-        <button
-          type="button"
-          onClick={() => set([...rules, { property: TITLE_ID, operator: "contains" }])}
-        >
-          {t("+ Añadir filtro")}
-        </button>
-      </div>
+      {adding || rules.length === 0 ? (
+        <PropertyPicker
+          properties={all}
+          onCancel={rules.length > 0 ? () => setAdding(false) : undefined}
+          onPick={(p) => {
+            added.current = true;
+            setAdding(false);
+            set([...rules, ruleFor(p)]);
+          }}
+        />
+      ) : (
+        <div className="fl-footer">
+          <button type="button" className="fl-ghost" onClick={() => setAdding(true)}>
+            <Plus size={14} strokeWidth={1.75} aria-hidden="true" />
+            {t("Añadir filtro")}
+          </button>
+          <button type="button" className="fl-ghost fl-danger" onClick={() => set([])}>
+            <Trash2 size={14} strokeWidth={1.75} aria-hidden="true" />
+            {t("Borrar filtros")}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

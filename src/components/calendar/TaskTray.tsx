@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpDown, Layers, ListChecks, ListFilter, type LucideIcon } from "lucide-react";
 import { subscribeDatabaseChanges } from "../../lib/database-bus";
 import { getDatabase, queryConfig } from "../../lib/db-client";
@@ -86,6 +86,17 @@ export function TaskTray({
   const all = showPlaced || !!labels.repeatable;
   const [query, setQuery] = useState("");
   const [panel, setPanel] = useState<PanelKind | null>(null);
+  // the panel floats over the list, as the database views' do: a press outside it (and outside option lists) closes it
+  const pop = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!panel) return;
+    const down = (e: MouseEvent) => {
+      const target = e.target as Element;
+      if (!pop.current?.contains(target) && !target.closest(".option-pop")) setPanel(null);
+    };
+    document.addEventListener("mousedown", down);
+    return () => document.removeEventListener("mousedown", down);
+  }, [panel]);
   const [config, setConfig] = useState(() => readConfig(prefKey));
   const [result, setResult] = useState<ViewResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -152,68 +163,71 @@ export function TaskTray({
   return (
     <section className="cal-tray" aria-label={t("Tareas")}>
       <h3>{t("Tareas")}</h3>
-      <div className="cal-tray-tools">
-        <input
-          type="search"
-          value={query}
-          placeholder={t("Buscar…")}
-          aria-label={t("Buscar tareas")}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        {!labels.repeatable && (
-          <div className="cal-tray-seg" role="group" aria-label={t("Qué tareas mostrar")}>
-            <button type="button" aria-pressed={!all} onClick={() => setAll(false)}>
-              {labels.pending}
-            </button>
-            <button type="button" aria-pressed={all} onClick={() => setAll(true)}>
-              {t("Todas")}
-            </button>
-          </div>
-        )}
-        {database && (
-          <div
-            className="cal-tray-config"
-            role="group"
-            aria-label={t("Filtrar, ordenar y agrupar")}
-          >
-            {PANELS.map(([kind, label, Icon]) => (
-              <button
-                key={kind}
-                type="button"
-                data-kind={kind}
-                data-used={count[kind] > 0}
-                aria-pressed={panel === kind}
-                onClick={() => setPanel(panel === kind ? null : kind)}
-              >
-                <Icon size={13} aria-hidden="true" />
-                {label}
-                {count[kind] > 0 && <b>{count[kind]}</b>}
+      <div className="cal-tray-pop" ref={pop}>
+        <div className="cal-tray-tools">
+          <input
+            type="search"
+            value={query}
+            placeholder={t("Buscar…")}
+            aria-label={t("Buscar tareas")}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          {!labels.repeatable && (
+            <div className="cal-tray-seg" role="group" aria-label={t("Qué tareas mostrar")}>
+              <button type="button" aria-pressed={!all} onClick={() => setAll(false)}>
+                {labels.pending}
               </button>
-            ))}
+              <button type="button" aria-pressed={all} onClick={() => setAll(true)}>
+                {t("Todas")}
+              </button>
+            </div>
+          )}
+          {database && (
+            <div
+              className="cal-tray-config"
+              role="group"
+              aria-label={t("Filtrar, ordenar y agrupar")}
+            >
+              {PANELS.map(([kind, label, Icon]) => (
+                <button
+                  key={kind}
+                  type="button"
+                  data-kind={kind}
+                  data-used={count[kind] > 0}
+                  aria-pressed={panel === kind}
+                  title={label}
+                  onClick={() => setPanel(panel === kind ? null : kind)}
+                >
+                  <Icon size={14} aria-hidden="true" />
+                  <span>{label}</span>
+                  {count[kind] > 0 && <b>{count[kind]}</b>}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        {database && panel && (
+          // The panels are the database view's own, styled by the same wrapper classes as a database page.
+          <div className="page-editor cal-tray-float">
+            <div className="ProseMirror cal-tray-panel">
+              {panel === "filter" && (
+                <FilterPanel
+                  config={clean}
+                  properties={properties}
+                  rowsOf={rowsOf}
+                  onChange={change}
+                />
+              )}
+              {panel === "sort" && (
+                <SortPanel config={clean} properties={properties} onChange={change} />
+              )}
+              {panel === "group" && (
+                <GroupPanel config={clean} properties={properties} kind="list" onChange={change} />
+              )}
+            </div>
           </div>
         )}
       </div>
-      {database && panel && (
-        // The panels are the database view's own, styled by the same wrapper classes as a database page.
-        <div className="page-editor">
-          <div className="ProseMirror cal-tray-panel">
-            {panel === "filter" && (
-              <FilterPanel
-                config={clean}
-                properties={properties}
-                rowsOf={rowsOf}
-                onChange={change}
-              />
-            )}
-            {panel === "sort" && (
-              <SortPanel config={clean} properties={properties} onChange={change} />
-            )}
-            {panel === "group" && (
-              <GroupPanel config={clean} properties={properties} kind="list" onChange={change} />
-            )}
-          </div>
-        </div>
-      )}
       {error && (
         <p className="cal-tray-empty" role="alert">
           {error}

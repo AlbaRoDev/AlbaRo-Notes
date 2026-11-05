@@ -205,6 +205,7 @@ export type Direction = "asc" | "desc";
 export type Granularity = "day" | "week" | "month" | "year";
 export type Operator =
   | "contains"
+  | "contains_all"
   | "not_contains"
   | "is"
   | "is_not"
@@ -230,8 +231,8 @@ export interface SortRule {
 export interface FilterRule {
   property: string;
   operator: Operator;
-  /** Absent while the rule is still being filled in (Rust ignores it until then). */
-  value?: string | number | boolean;
+  /** Absent while the rule is still being filled in (Rust ignores it until then). A list (select, tags, relation) matches any of its values. */
+  value?: string | number | boolean | string[];
 }
 
 interface GroupRule {
