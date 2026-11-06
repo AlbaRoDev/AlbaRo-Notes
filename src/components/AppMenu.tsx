@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import {
   Check,
+  ChevronLeft,
   ChevronRight,
   ExternalLink,
   Info,
@@ -18,6 +19,8 @@ import type { PaletteCommand } from "./search/SearchModal";
 import "./app-menu.css";
 import { getLang, t } from "../lib/i18n.ts";
 import { getFontPref } from "../lib/theme";
+import { useSizeClass } from "../lib/viewport.ts";
+import { useBackLayer } from "../hooks/useBackLayer.ts";
 
 const REPOSITORY = "https://github.com/AlbaRoDev/AlbaRo-Notes";
 const RELEASES = `${REPOSITORY}/releases`;
@@ -54,12 +57,15 @@ export function AppMenu({
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState<string | null>(null);
   const [about, setAbout] = useState(false);
+  // on a compact window the two columns do not fit: the categories give way to the items of the one chosen
+  const compact = useSizeClass() === "compact";
   const rootRef = useRef<HTMLDivElement>(null);
 
   const close = () => {
     setOpen(false);
     setActive(null);
   };
+  useBackLayer(open, close);
 
   useEffect(() => {
     if (!open) return;
@@ -111,6 +117,7 @@ export function AppMenu({
       label: t("Archivo"),
       items: ["new-page", "new-database", "import-files", "import-folder"].flatMap(byId),
     },
+    { id: "edit", label: t("Editar"), items: ["undo", "redo"].flatMap(byId) },
     {
       id: "view",
       label: t("Ver"),
@@ -184,7 +191,12 @@ export function AppMenu({
         <img src={appIcon} alt="" className="app-menu-icon" />
       </button>
       {open && (
-        <div className="app-menu-pop" role="menu" aria-label={t("Menú de AlbaRo Notes")}>
+        <div
+          className="app-menu-pop"
+          role="menu"
+          aria-label={t("Menú de AlbaRo Notes")}
+          data-drilled={(compact && current) || undefined}
+        >
           <div className="app-menu-categories">
             {menus.map((m) => (
               <button
@@ -194,7 +206,7 @@ export function AppMenu({
                 aria-haspopup="menu"
                 aria-expanded={active === m.id}
                 data-active={active === m.id || undefined}
-                onMouseEnter={() => setActive(m.id)}
+                onMouseEnter={() => !compact && setActive(m.id)}
                 onClick={() => setActive(m.id)}
               >
                 {m.label}
@@ -204,6 +216,17 @@ export function AppMenu({
           </div>
           {current && (
             <div className="app-menu-items" role="menu" aria-label={current.label}>
+              {compact && (
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="app-menu-back"
+                  onClick={() => setActive(null)}
+                >
+                  <ChevronLeft size={15} aria-hidden="true" />
+                  <span>{current.label}</span>
+                </button>
+              )}
               {current.items.map((item, i) =>
                 item === "separator" ? (
                   <hr key={`sep-${i}`} />
@@ -242,6 +265,7 @@ function About({
   dbSchema: number | null;
   onClose: () => void;
 }) {
+  useBackLayer(true, onClose);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;

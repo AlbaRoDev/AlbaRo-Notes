@@ -5,7 +5,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 12vh 16px 16px;
+  padding: 12dvh 16px 16px;
   background: rgba(15, 15, 15, 0.45);
 }
 
@@ -14,7 +14,7 @@
   flex-direction: column;
   gap: 0.4rem;
   width: min(560px, 100%);
-  max-height: 72vh;
+  max-height: 72dvh;
   padding: 1rem;
   border-radius: 12px;
   background: var(--bg-popover);

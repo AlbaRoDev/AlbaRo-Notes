@@ -20,10 +20,12 @@ import {
   Moon,
   MousePointer,
   MousePointer2,
+  Redo2,
   Sparkles,
   Sun,
   Trash2,
   Type,
+  Undo2,
 } from "lucide-react";
 import { AiPanel } from "./components/ai/AiPanel";
 import { AI_INLINE_EVENT } from "./components/editor/AiAssist";
@@ -419,6 +421,22 @@ function App() {
       run: () => enter("manager"),
     },
     {
+      id: "undo",
+      label: t("Deshacer"),
+      keywords: t("revertir atrás último cambio"),
+      icon: Undo2,
+      hint: t("Ctrl+Z"),
+      run: () => void travel(false),
+    },
+    {
+      id: "redo",
+      label: t("Rehacer"),
+      keywords: t("repetir adelante cambio deshecho"),
+      icon: Redo2,
+      hint: t("Ctrl+Shift+Z"),
+      run: () => void travel(true),
+    },
+    {
       id: "trash",
       label: t("Abrir la papelera"),
       keywords: t("borrado eliminado restaurar recuperar deshacer"),
@@ -700,7 +718,7 @@ function App() {
   return (
     <>
       {layout.main === null ? (
-        <Home onEnter={enter} version={version} menu={appMenu} />
+        <Home onEnter={enter} version={version} menu={appMenu} onSearch={openSearch} />
       ) : (
         <Workspace
           layout={{ ...layout, main: layout.main }}
@@ -726,6 +744,7 @@ function App() {
           onSplit={setSplit}
           onHome={goHome}
           menu={appMenu}
+          onSearch={openSearch}
           sidebarOpen={drawerShown}
           onToggleSidebar={() => setDrawerOpen((open) => !open)}
         />

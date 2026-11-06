@@ -11,7 +11,7 @@
   flex-direction: column;
   align-items: flex-end;
   gap: 9px;
-  max-height: 70vh;
+  max-height: 70dvh;
   padding: 12px 6px;
   overflow: hidden;
 }
@@ -46,7 +46,7 @@
   display: none;
   box-sizing: border-box;
   width: 260px;
-  max-height: 70vh;
+  max-height: 70dvh;
   padding: 6px;
   overflow-y: auto;
   border-radius: 10px;

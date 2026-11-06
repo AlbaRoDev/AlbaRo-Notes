@@ -3,6 +3,7 @@ import { ChevronsLeft, ChevronsRight, House, PanelLeft } from "lucide-react";
 import { HALVES } from "./halves";
 import { ThemeToggle } from "./ThemeToggle";
 import { WindowControls } from "./WindowControls";
+import { SearchButton } from "./SearchButton";
 import {
   DEFAULT_SPLIT,
   SNAPS,
@@ -40,6 +41,7 @@ export function Workspace({
   onSplit,
   onHome,
   menu,
+  onSearch,
   sidebarOpen,
   onToggleSidebar,
 }: {
@@ -52,6 +54,8 @@ export function Workspace({
   onHome: () => void;
   /** The app's menu, first in the bar. */
   menu: ReactNode;
+  /** The search box (palette), for the button a touch screen has instead of Ctrl+K. */
+  onSearch: () => void;
   /** The sidebar's drawer (only drawn when there is a single zone). */
   sidebarOpen: boolean;
   onToggleSidebar: () => void;
@@ -218,6 +222,7 @@ export function Workspace({
             <CompanionIcon size={16} />
           </button>
         )}
+        <SearchButton onSearch={onSearch} />
         <ThemeToggle />
         {!isMobile && <WindowControls />}
       </header>

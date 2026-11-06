@@ -19,7 +19,7 @@
   position: sticky;
   top: calc(var(--topbar-h, 38px) + 0.5rem);
   flex: 0 0 260px;
-  max-height: calc(100vh - var(--topbar-h, 38px) - 1rem);
+  max-height: calc(100dvh - var(--topbar-h, 38px) - 1rem);
   overflow-y: auto;
 }
 
@@ -208,7 +208,7 @@
 
 .cal-scroll {
   /* fills the window under the toolbar, the day headers and the all-day strip */
-  max-height: max(24rem, calc(100vh - var(--topbar-h, 38px) - 12.5rem));
+  max-height: max(24rem, calc(100dvh - var(--topbar-h, 38px) - 12.5rem));
   overflow-y: auto;
   overscroll-behavior: contain;
   /* no scrollbar: the wheel scrolls, and the day columns stay lined up with their headers */
@@ -412,7 +412,7 @@
   display: flex;
   flex-direction: column;
   /* the weeks share the window's height, and grow past it when their entries need it */
-  min-height: calc(100vh - var(--topbar-h, 38px) - 4.5rem);
+  min-height: calc(100dvh - var(--topbar-h, 38px) - 4.5rem);
   border: 1px solid var(--border);
   border-radius: 8px;
   overflow: hidden;
@@ -660,7 +660,7 @@
   right: 0;
   left: 0;
   z-index: 50;
-  max-height: 60vh;
+  max-height: 60dvh;
   overflow-y: auto;
   border-radius: 8px;
   background: var(--bg-popover);

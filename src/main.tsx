@@ -5,6 +5,7 @@ import "@fontsource-variable/eb-garamond";
 import "@fontsource-variable/libre-baskerville";
 import "@fontsource/unifrakturcook";
 import App from "./App";
+import "./touch.css";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { loadKatex } from "./lib/katex-lazy";
 import { getLang, t } from "./lib/i18n.ts";

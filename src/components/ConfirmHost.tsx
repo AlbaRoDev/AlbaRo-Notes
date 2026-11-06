@@ -1,11 +1,14 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { answerConfirm, pendingQuestion, subscribeConfirm } from "../lib/confirm";
 import "./confirm-host.css";
+import { useBackLayer } from "../hooks/useBackLayer.ts";
 import { t } from "../lib/i18n.ts";
 
 /** The dialog behind `askConfirm`. Enter confirms (the button has the focus), Esc or a click outside cancels. */
 export function ConfirmHost() {
   const question = useSyncExternalStore(subscribeConfirm, pendingQuestion);
+  // the system's back button answers «no» (on a phone, where there is no Esc)
+  useBackLayer(!!question, () => answerConfirm(false));
 
   useEffect(() => {
     if (!question) return;

@@ -168,6 +168,17 @@
   background: rgba(var(--ink), 0.08);
 }
 
+/* what only a finger needs (the desktop has the keyboard) */
+.ws-touch-only {
+  display: none;
+}
+
+@media (hover: none) {
+  .ws-touch-only {
+    display: inline-flex;
+  }
+}
+
 .workspace-switch {
   display: inline-flex;
   padding: 2px;
@@ -277,6 +288,14 @@
 
 @media (max-height: 520px) {
   .sidebar[data-drawer] .sidebar-footer {
+    display: none;
+  }
+}
+
+/* The same on a sidebar that is a column (a tablet on its side is ~550 px tall): three rows of switches would take
+   more than half of it. */
+@media (max-height: 640px) {
+  .sidebar .sidebar-footer {
     display: none;
   }
 }

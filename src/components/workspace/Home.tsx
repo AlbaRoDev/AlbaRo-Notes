@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { HALVES } from "./halves";
+import { SearchButton } from "./SearchButton";
 import { ThemeToggle } from "./ThemeToggle";
 import { WindowControls } from "./WindowControls";
 import type { Half } from "../../lib/workspace";
@@ -13,17 +14,20 @@ export function Home({
   onEnter,
   version,
   menu,
+  onSearch,
 }: {
   onEnter: (half: Half) => void;
   version: string | null;
   /** The app's menu, in the top-left corner of the bar. */
   menu: ReactNode;
+  onSearch: () => void;
 }) {
   return (
     <div className="home">
       <header className="workspace-bar home-bar" {...dragRegion}>
         {menu}
         <span className="workspace-bar-fill" {...dragRegion} />
+        <SearchButton onSearch={onSearch} />
         <ThemeToggle />
         {!isMobile && <WindowControls />}
       </header>

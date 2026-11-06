@@ -1,5 +1,5 @@
 .page-editor .ProseMirror {
-  min-height: 60vh;
+  min-height: 60dvh;
   /* room under the last block, as Notion leaves it: a click there gives a new line (NotionShortcuts) */
   padding-bottom: 30vh;
   outline: none;

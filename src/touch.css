@@ -1,0 +1,119 @@
+/*
+ * The touch layer. A finger has no hover and a bigger tip than a pointer, so under `hover: none` what the CSS
+ * of each component shows only while the pointer is over it is shown always, and under `pointer: coarse` the
+ * small buttons grow to a finger's size. Decided by the input, never by the model or the window size.
+ *
+ * The reveals use `!important` on purpose: this file has to beat rules of any specificity that live in
+ * components loaded later (lazy chunks), and the alternative is to repeat every selector with a longer one.
+ */
+
+@media (hover: none) {
+  /* keyboard shortcuts: nothing to press them with */
+  kbd,
+  .sidebar-hint,
+  .sidebar-footer--icons, /* the pointer's style: a mouse matter */
+  .search-footer {
+    display: none !important;
+  }
+
+  /* shown while hovering, in the desktop */
+  .sidebar-add,
+  .board-label-add,
+  .board-checkbtn[data-empty],
+  .task-checklist li button,
+  .cal-add,
+  .db-tab-close,
+  .option-pop .option-pop-grip,
+  .option-pop .option-pop-more,
+  .db-row-grip,
+  .db-row-check,
+  .db-row-add,
+  .page-cover-actions,
+  .page-header-add,
+  .db-table .db-relation-add {
+    opacity: 1 !important;
+  }
+
+  /* the same, but a dimmer one: on every card, cell or callout they would shout */
+  .board-card-remove,
+  .calendar-add,
+  .callout-icon[data-empty] {
+    opacity: 0.6 !important;
+  }
+
+  .sidebar-item-delete,
+  .db-table td .db-icon-btn {
+    visibility: visible !important;
+  }
+
+  /* an empty date shows its «dd/mm/aaaa» and its calendar button too */
+  .db-table .db-date[data-empty="true"] input::-webkit-datetime-edit,
+  .db-table .db-date[data-empty="true"] input::-webkit-calendar-picker-indicator {
+    opacity: 1 !important;
+  }
+}
+
+@media (pointer: coarse) {
+  /* ≥ 44 px (the finger's tip), growing with the letter size where the control has text */
+  .ws-icon-button {
+    min-width: 44px;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+
+  .workspace-switch button,
+  .sidebar-footer button,
+  .sidebar-menu button,
+  .sidebar-search,
+  .app-menu-pop button[role="menuitem"],
+  .confirm-actions button,
+  .about-actions button {
+    min-height: 44px;
+  }
+
+  .sidebar-item,
+  .slash-menu-item,
+  [role="menuitem"],
+  [role="option"] {
+    box-sizing: border-box;
+    min-height: 44px;
+  }
+
+  .search-results li[role="option"] {
+    align-items: center;
+  }
+
+  .sidebar-fold,
+  .page-crumb button,
+  .manager-tabs button,
+  .cal-bar button,
+  .cal-bar input,
+  .cal-views button,
+  .cal-notify,
+  .cal-toggle,
+  .page-topbar-actions button,
+  .page-header-add button,
+  .ai-head button,
+  .ai-input button {
+    min-height: 44px;
+  }
+
+  .page-topbar-actions button,
+  .cal-bar button,
+  .ai-head button {
+    min-width: 44px;
+  }
+
+  .sidebar-close,
+  .sidebar-item-delete,
+  .sidebar-item-disclosure,
+  .sidebar-add,
+  .app-menu-button,
+  .about-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+  }
+}

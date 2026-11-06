@@ -15,7 +15,7 @@
   position: sticky;
   top: calc(var(--topbar-h, 38px) + 0.5rem);
   flex: 0 0 240px;
-  max-height: calc(100vh - var(--topbar-h, 38px) - 1rem);
+  max-height: calc(100dvh - var(--topbar-h, 38px) - 1rem);
   overflow-y: auto;
 }
 
@@ -148,7 +148,7 @@
 .board-list {
   flex: 0 0 272px;
   box-sizing: border-box;
-  max-height: calc(100vh - var(--topbar-h, 38px) - 9rem);
+  max-height: calc(100dvh - var(--topbar-h, 38px) - 9rem);
   display: flex;
   flex-direction: column;
   padding: 0.4rem;
