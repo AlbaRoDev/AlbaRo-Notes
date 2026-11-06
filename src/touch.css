@@ -117,3 +117,27 @@
     min-height: 44px;
   }
 }
+
+/* A drag with a finger (lib/touch-drag.ts): what can be dragged is not text to select, and the copy that follows the finger */
+@media (hover: none) {
+  [draggable="true"] {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+}
+
+.touch-drag-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100000;
+  max-height: 120px;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.92;
+  background: var(--bg-popover);
+  color: var(--text);
+  border-radius: 6px;
+  box-shadow: var(--shadow-popover);
+}

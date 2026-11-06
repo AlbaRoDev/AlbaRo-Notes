@@ -11,10 +11,13 @@ import { loadKatex } from "./lib/katex-lazy";
 import { getLang, t } from "./lib/i18n.ts";
 import { invoke } from "./lib/invoke.ts";
 import { initTheme } from "./lib/theme";
+import { pushBackLayer } from "./hooks/useBackLayer.ts";
+import { installTouchDrag } from "./lib/touch-drag.ts";
 import { initViewport } from "./lib/viewport.ts";
 
 initTheme();
 initViewport();
+installTouchDrag(pushBackLayer);
 // Rust writes some texts itself (notices, the seeds of the task database): it needs to know the language.
 void invoke("set_language", { code: getLang() });
 

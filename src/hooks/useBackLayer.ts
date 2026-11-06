@@ -8,6 +8,10 @@ const getStack = () =>
     window.addEventListener("popstate", onPop),
   ));
 
+/** Opens a layer on the back stack by hand (not from a component); the returned function removes it. Phones only. */
+export const pushBackLayer = (close: () => void): (() => void) =>
+  isMobile ? getStack().push(close) : () => undefined;
+
 /**
  * While `active`, the system's back button calls `onBack` (it should close what is open). Only on phones and
  * tablets: the desktop has no back button and its history is left alone. `key` re-opens the layer when it
@@ -20,6 +24,6 @@ export function useBackLayer(active: boolean, onBack: () => void, key: unknown =
   });
   useEffect(() => {
     if (!active || !isMobile) return;
-    return getStack().push(() => latest.current());
+    return pushBackLayer(() => latest.current());
   }, [active, key]);
 }
