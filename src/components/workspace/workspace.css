@@ -348,7 +348,7 @@ html[data-size="medium"] .workspace-companion[data-sheet] {
 
 /* The switch between Notes and Gestor at the foot of a compact window, where a thumb reaches. */
 html[data-size="compact"] .workspace {
-  --tabs-h: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+  --tabs-h: calc(3.5rem * var(--text-zoom, 1) + env(safe-area-inset-bottom, 0px));
 }
 
 html[data-size="compact"] .workspace-body {

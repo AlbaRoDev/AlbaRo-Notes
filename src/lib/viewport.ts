@@ -20,6 +20,13 @@ export function initViewport() {
   if (isMobile) root.dataset.mobile = "";
   const publish = () => (root.dataset.size = current());
   publish();
+  // The system's letter size (Android's «font scale») makes the text bigger but not the lengths in `rem` or `em`: a
+  // bar `3.5rem` high stays 56 px with 32 px letters. `--text-zoom` is how much bigger the letters are, for the
+  // few boxes that hold text and must grow with it (the root's own size is 16 px unless the system changes it).
+  root.style.setProperty(
+    "--text-zoom",
+    String(parseFloat(getComputedStyle(root).fontSize) / 16 || 1),
+  );
   window.addEventListener("resize", publish);
 }
 
