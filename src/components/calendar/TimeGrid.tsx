@@ -17,7 +17,7 @@ import {
 } from "../../lib/calendar";
 import { hasDragItem, readDragItem } from "../../lib/drag-item";
 import type { CalendarEntry, Deadline, EntryInput } from "../../types";
-import { isAdditive, keyOf, toInput } from "./entry-input";
+import { dragCreates, isAdditive, keyOf, toInput } from "./entry-input";
 import { TaskChecklist } from "../boards/TaskChecklist";
 import { t } from "../../lib/i18n.ts";
 
@@ -161,6 +161,7 @@ export function TimeGrid({
     if (!at) return;
     const anchor = clamp(Math.floor(at.minutes / SLOT) * SLOT, 0, 24 * 60 - SLOT);
     onPoint(date, anchor);
+    if (!dragCreates(e.pointerType)) return; // a finger dragging here scrolls the page
     const midnight = dayNumber(date) * DAY_MINUTES;
     let span = { start: anchor, end: Math.min(anchor + 60, 24 * 60) };
     track(

@@ -42,3 +42,11 @@ export function leaveOnEnter(e: KeyboardEvent<HTMLInputElement>) {
   if (calendar) calendar.focus();
   else e.currentTarget.blur();
 }
+
+/**
+ * Dragging over empty space makes an appointment, but only with a mouse or a pen. A finger dragging is scrolling:
+ * on a touch screen the appointment comes from a double tap (a one-hour one, as with a double click).
+ */
+export function dragCreates(pointerType: string): boolean {
+  return pointerType !== "touch";
+}

@@ -244,6 +244,17 @@
   touch-action: none;
 }
 
+/* A finger on the empty part of a day scrolls; an entry keeps its press for moving it. */
+@media (pointer: coarse) {
+  .cal-col {
+    touch-action: pan-y;
+  }
+
+  .cal-block {
+    touch-action: none;
+  }
+}
+
 .cal-col[data-today] {
   background-color: rgba(var(--accent-rgb), 0.04);
 }
