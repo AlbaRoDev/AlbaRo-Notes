@@ -6,6 +6,7 @@ import type { Half } from "../../lib/workspace";
 import appIcon from "../../../src-tauri/icons/128x128.png";
 import "./workspace.css";
 import { t } from "../../lib/i18n.ts";
+import { dragRegion, isMobile } from "../../lib/viewport.ts";
 
 /** The start screen: two big cards, asked every launch. */
 export function Home({
@@ -20,11 +21,11 @@ export function Home({
 }) {
   return (
     <div className="home">
-      <header className="workspace-bar home-bar" data-tauri-drag-region>
+      <header className="workspace-bar home-bar" {...dragRegion}>
         {menu}
-        <span className="workspace-bar-fill" data-tauri-drag-region />
+        <span className="workspace-bar-fill" {...dragRegion} />
         <ThemeToggle />
-        <WindowControls />
+        {!isMobile && <WindowControls />}
       </header>
       <img src={appIcon} alt="" className="home-icon" />
       <h1>{t("AlbaRo")}</h1>

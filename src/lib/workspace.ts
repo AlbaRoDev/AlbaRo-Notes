@@ -38,9 +38,13 @@ export const promote = (l: Layout, half: Half): Layout => ({
   split: l.split === 0 ? DEFAULT_SPLIT : l.split,
 });
 
-/** The switcher, Ctrl+1/Ctrl+2 and the start screen: go to `half` the least disruptive way. */
-export function enter(l: Layout, half: Half): Layout {
-  if (l.main === null) return promote(l, half);
+/**
+ * The switcher, Ctrl+1/Ctrl+2 and the start screen: go to `half` the least disruptive way. With a single zone on
+ * screen (`single`: phones, small windows) the zones are not side by side, so the half asked for always becomes
+ * the main one, whatever width the companion had.
+ */
+export function enter(l: Layout, half: Half, single = false): Layout {
+  if (l.main === null || single) return promote(l, half);
   if (half === shownHalf(l)) return l;
   // the half asked for is the main zone folded away: unfold it instead of swapping the roles
   return l.split === 0 ? { ...l, split: DEFAULT_SPLIT } : promote(l, half);

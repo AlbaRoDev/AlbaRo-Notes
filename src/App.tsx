@@ -66,6 +66,8 @@ import { renamePage } from "./lib/rename";
 import type { PageSummary } from "./types";
 import "./App.css";
 import { setLang, t } from "./lib/i18n.ts";
+import { useSizeClass } from "./lib/viewport.ts";
+import { useBackLayer } from "./hooks/useBackLayer.ts";
 
 function App() {
   // The database check only says something when it fails; its schema version goes in the tooltip of the app version.
@@ -107,7 +109,22 @@ function App() {
     })();
   }, []);
 
-  const { layout, enter, promote, setSplit, goHome } = useLayout();
+  // Compact and medium windows show one zone at a time: the sidebar is a drawer there (see Workspace).
+  const single = useSizeClass() !== "expanded";
+  const { layout, enter, promote, setSplit, goHome } = useLayout(single);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
+  // the drawer only exists with a sidebar and a single zone: it does not wait, open, for the window to shrink again
+  const drawerShown = drawerOpen && single && layout.main !== null;
+  if (drawerOpen && !drawerShown) setDrawerOpen(false);
+  useBackLayer(drawerShown, closeDrawer);
+  // The system's back goes up a level: Gestor → Notes → start screen, which is the one that leaves the app. Declared
+  // before the page-up layer below: layers close last-opened first, so a child page goes up to its parent before this.
+  useBackLayer(
+    layout.main !== null,
+    () => (layout.main === "manager" ? promote("notes") : goHome()),
+    layout.main,
+  );
 
   // A row of a database (a task…) opens in the side peek, over the page that shows it, as in Notion; any other
   // page replaces the open one. Read through a ref so the callback stays the same one when titles change.
@@ -124,6 +141,7 @@ function App() {
     }
   }, []);
   const closePeek = useCallback(() => setPeekId(null), []);
+  useBackLayer(peekId !== null, closePeek);
 
   // Opening a page from anywhere (search, the AI, the Notes companion) brings Notes to the main zone.
   const openPage = useCallback(
@@ -201,6 +219,7 @@ function App() {
   // A page came back from the trash: the list and every open view of a database read again.
   const [trashOpen, setTrashOpen] = useState(false);
   const closeTrash = useCallback(() => setTrashOpen(false), []);
+  useBackLayer(trashOpen, closeTrash);
   const handleRestored = useCallback(() => {
     void listPages().then(setPages);
     emitAnyDatabaseChange();
@@ -281,6 +300,8 @@ function App() {
   // The mouse's «back» button goes up to the page's parent (a row's database, a sub-page's parent): the app has
   // no history to walk, and the webview's own would leave the page.
   const parentId = layout.main === "notes" ? (selectedPage?.parentId ?? null) : null;
+  // on a phone the system's back button does the same, and leaves the app from a top-level page
+  useBackLayer(parentId !== null, () => parentId && openPage(parentId), parentId);
   useEffect(() => {
     const onMouse = (e: MouseEvent) => {
       if (e.button !== 3 && e.button !== 4) return;
@@ -307,11 +328,13 @@ function App() {
   const [searchOpen, setSearchOpen] = useState(false);
   const openSearch = useCallback(() => setSearchOpen(true), []);
   const closeSearch = useCallback(() => setSearchOpen(false), []);
+  useBackLayer(searchOpen, closeSearch);
 
   // The AI assistant: stays mounted so closing it keeps the conversation.
   const [aiOpen, setAiOpen] = useState(false);
   const openAi = useCallback(() => setAiOpen(true), []);
   const closeAi = useCallback(() => setAiOpen(false), []);
+  useBackLayer(aiOpen, closeAi);
 
   // Ctrl+K (or Ctrl+P, as in Notion; Cmd on macOS) opens the palette from anywhere — the editor,
   // a table cell, with the sidebar closed. Capture phase, so no field or editor keymap sees it first.
@@ -572,6 +595,8 @@ function App() {
       onRename={handleRename}
       onSearch={openSearch}
       onAskAi={openAi}
+      drawerOpen={drawerShown}
+      onDrawerOpenChange={setDrawerOpen}
     />
   );
   const appMenu = (
@@ -694,10 +719,15 @@ function App() {
               <ManagerCompanion key={epoch} pages={pages} onOpenPage={openPage} />
             ) : null
           }
-          onEnter={enter}
+          onEnter={(half) => {
+            setDrawerOpen(false);
+            enter(half);
+          }}
           onSplit={setSplit}
           onHome={goHome}
           menu={appMenu}
+          sidebarOpen={drawerShown}
+          onToggleSidebar={() => setDrawerOpen((open) => !open)}
         />
       )}
       <AiPanel

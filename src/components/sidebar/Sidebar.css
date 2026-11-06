@@ -4,7 +4,7 @@
   top: var(--topbar-h, 0px); /* the workspace's top bar */
   flex: 0 0 auto;
   max-width: 50vw; /* a wide sidebar must not squeeze the page out of a narrow window */
-  height: calc(100vh - var(--topbar-h, 0px));
+  height: calc(100dvh - var(--topbar-h, 0px));
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -84,7 +84,7 @@
   position: sticky;
   top: var(--topbar-h, 0px);
   flex: 0 0 26px;
-  height: calc(100vh - var(--topbar-h, 0px));
+  height: calc(100dvh - var(--topbar-h, 0px));
   display: flex;
   justify-content: center;
   padding-top: 0.6rem;

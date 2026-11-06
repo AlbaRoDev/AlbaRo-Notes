@@ -3,7 +3,7 @@
 /* ---- Start screen ---- */
 .home {
   position: relative;
-  min-height: 100vh;
+  min-height: 100dvh;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -15,7 +15,7 @@
 
 /* On the start screen the bar floats over the page, with no line under it. */
 .home .home-bar {
-  --topbar-h: 46px;
+  --topbar-h: calc(46px + env(safe-area-inset-top, 0px));
   position: absolute;
   inset: 0 0 auto 0;
   background: transparent;
@@ -89,7 +89,14 @@
 
 /* ---- Workspace ---- */
 .workspace {
-  --topbar-h: 46px; /* the sidebar and the companion stick below it */
+  /* the sidebar and the companion stick below it; the safe area is the notch / status bar, which the bar slides under */
+  --topbar-h: calc(46px + env(safe-area-inset-top, 0px));
+}
+
+/* Safe areas: notches, rounded corners and gesture bars (a phone draws the app edge to edge). */
+.workspace,
+.home {
+  padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
 }
 
 .workspace-bar {
@@ -101,7 +108,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0 0.5rem;
+  padding: env(safe-area-inset-top, 0px) 0.5rem 0;
   background: var(--bg);
   box-shadow: inset 0 -1px 0 var(--border);
 }
@@ -218,7 +225,7 @@
 }
 
 .workspace-main .app-layout {
-  min-height: calc(100vh - var(--topbar-h));
+  min-height: calc(100dvh - var(--topbar-h));
 }
 
 /* A narrow main zone (see NARROW_ZONE): the sidebar floats over the page, opened and closed as always. */
@@ -235,10 +242,152 @@
   box-shadow: var(--shadow-popover);
 }
 
+/* ---- One zone at a time (compact and medium windows) ---- */
+
+/* The sidebar is a drawer over the page, opened from the bar (it floats under the bar, which stays reachable). */
+.workspace-main .app-layout > .sidebar[data-drawer] {
+  position: fixed;
+  top: var(--topbar-h);
+  bottom: 0;
+  left: 0;
+  z-index: 45;
+  width: min(85vw, 20rem);
+  max-width: none;
+  height: auto;
+  padding: 0 0 env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  box-shadow: var(--shadow-popover);
+  transform: translateX(-100%);
+  visibility: hidden;
+  transition:
+    transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    visibility 0s linear 220ms;
+}
+
+.workspace-main .app-layout > .sidebar[data-drawer][data-open] {
+  transform: none;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+/* The pointer style is a mouse matter, and in a short window the list of pages is what matters: the style and theme
+   choices are in the app menu and the bar. */
+.sidebar[data-drawer] .sidebar-footer--icons {
+  display: none;
+}
+
+@media (max-height: 520px) {
+  .sidebar[data-drawer] .sidebar-footer {
+    display: none;
+  }
+}
+
+/* What is behind a drawer or a sheet: a tap on it closes them. */
+.sidebar-scrim,
+.workspace-scrim {
+  position: fixed;
+  inset: var(--topbar-h) 0 0;
+  z-index: 44;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* The companion panel as a sheet: from the foot of the screen on compact windows, from the right on medium ones. */
+.workspace-companion[data-sheet] {
+  position: fixed;
+  z-index: 45;
+  height: auto;
+  overscroll-behavior: contain;
+  box-shadow: var(--shadow-popover);
+  visibility: hidden;
+  transition:
+    transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    visibility 0s linear 240ms;
+}
+
+html[data-size] .workspace-companion[data-sheet][data-open] {
+  transform: none;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+html[data-size="compact"] .workspace-companion[data-sheet] {
+  inset: auto 0 0;
+  max-height: min(80dvh, calc(100dvh - var(--topbar-h)));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  border-radius: 14px 14px 0 0;
+  transform: translateY(100%);
+}
+
+html[data-size="medium"] .workspace-companion[data-sheet] {
+  inset: var(--topbar-h) 0 0 auto;
+  width: min(22rem, 90vw);
+  padding-right: env(safe-area-inset-right, 0px);
+  transform: translateX(100%);
+}
+
+/* The switch between Notes and Gestor at the foot of a compact window, where a thumb reaches. */
+html[data-size="compact"] .workspace {
+  --tabs-h: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+html[data-size="compact"] .workspace-body {
+  padding-bottom: var(--tabs-h);
+}
+
+.workspace-tabs {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 20;
+  display: flex;
+  height: var(--tabs-h);
+  box-sizing: border-box;
+  padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px)
+    env(safe-area-inset-left, 0px);
+  background: var(--bg);
+  box-shadow: inset 0 1px 0 var(--border);
+}
+
+.workspace-tabs button {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.workspace-tabs button[aria-pressed="true"] {
+  color: rgb(var(--accent-rgb));
+  font-weight: 600;
+}
+
+/* With the keyboard up (a field has the focus) the bar would sit on top of it: it steps aside. */
+html[data-size="compact"]
+  .workspace:has(
+    :is(input:not([type="checkbox"], [type="radio"]), textarea, [contenteditable="true"]):focus
+  ) {
+  --tabs-h: 0px;
+}
+
+html[data-size="compact"]
+  .workspace:has(
+    :is(input:not([type="checkbox"], [type="radio"]), textarea, [contenteditable="true"]):focus
+  )
+  .workspace-tabs {
+  display: none;
+}
+
 .workspace-companion {
   position: sticky;
   top: var(--topbar-h);
-  height: calc(100vh - var(--topbar-h));
+  height: calc(100dvh - var(--topbar-h));
   overflow-y: auto;
   box-sizing: border-box;
   background: var(--bg-sidebar);
@@ -279,7 +428,7 @@
   position: sticky;
   top: var(--topbar-h);
   flex: 0 0 26px;
-  height: calc(100vh - var(--topbar-h));
+  height: calc(100dvh - var(--topbar-h));
   display: flex;
   justify-content: center;
   padding-top: 0.6rem;
@@ -418,6 +567,10 @@
 /* ---- The Gestor's main zone ---- */
 .manager {
   padding: 0 1.5rem 2rem;
+}
+
+html[data-size="compact"] .manager {
+  padding-inline: 0.75rem;
 }
 
 .manager-tabs {

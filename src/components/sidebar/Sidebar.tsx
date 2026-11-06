@@ -40,6 +40,7 @@ import {
 import appIcon from "../../../src-tauri/icons/128x128.png";
 import "./Sidebar.css";
 import { t } from "../../lib/i18n.ts";
+import { useSizeClass } from "../../lib/viewport.ts";
 
 const MIN_WIDTH = 200;
 const MAX_WIDTH = 480;
@@ -94,6 +95,9 @@ interface SidebarProps {
   onSearch: () => void;
   /** Opens the AI assistant. */
   onAskAi: () => void;
+  /** With a single zone on screen the sidebar is a drawer over the page instead of a column beside it. */
+  drawerOpen: boolean;
+  onDrawerOpenChange: (open: boolean) => void;
 }
 
 /** Maps each page to its direct children, in `pages` order. */
@@ -130,7 +134,16 @@ export function Sidebar({
   onRename,
   onSearch,
   onAskAi,
+  drawerOpen,
+  onDrawerOpenChange,
 }: SidebarProps) {
+  const single = useSizeClass() !== "expanded";
+  // Whatever is chosen in the drawer closes it, so the page (or the dialog it opens) is what is left on screen.
+  const closeDrawer = () => single && onDrawerOpenChange(false);
+  const andClose = (action: () => void) => () => {
+    action();
+    closeDrawer();
+  };
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   // The «+» offers the two kinds of page; a database page is its own kind, not a sub-page.
   // Drawn in a portal at fixed coordinates: the sidebar clips whatever overflows it.
@@ -161,17 +174,18 @@ export function Sidebar({
   useEffect(() => onStylePrefChange(setStyle), []);
   useEffect(() => onCursorPrefChange(setCursor), []);
 
-  // Notion's shortcut: Ctrl+\ toggles the sidebar (Cmd on macOS). Ctrl+Shift+L lives in App, which outlasts the sidebar.
+  // Notion's shortcut: Ctrl+\ toggles the sidebar (Cmd on macOS); the app menu sends the same key. Ctrl+Shift+L lives in App, which outlasts the sidebar.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "\\") {
         e.preventDefault();
-        setCollapsed((c) => !c);
+        if (single) onDrawerOpenChange(!drawerOpen);
+        else setCollapsed((c) => !c);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [single, drawerOpen, onDrawerOpenChange]);
 
   // The «+» menu floats, so a click anywhere else closes it.
   useEffect(() => {
@@ -250,7 +264,7 @@ export function Sidebar({
         <div
           className="sidebar-item"
           data-selected={page.id === selectedPageId}
-          onClick={() => onSelect(page.id)}
+          onClick={andClose(() => onSelect(page.id))}
           // an ordinary page can be dragged onto a task (to link them) or into a note (as a mention)
           draggable={page.kind === "page" && !page.databaseId}
           onDragStart={(e) => startItemDrag(e, { kind: "page", id: page.id })}
@@ -329,7 +343,7 @@ export function Sidebar({
   const rootDatabases = topLevel.filter((p) => p.kind === "database");
   const favorites = pages.filter((p) => p.favorite);
 
-  const openButton = collapsed && (
+  const openButton = !single && collapsed && (
     <button
       type="button"
       className="sidebar-open"
@@ -347,19 +361,21 @@ export function Sidebar({
     <>
       <nav
         className="sidebar"
-        data-collapsed={collapsed || undefined}
+        data-collapsed={(!single && collapsed) || undefined}
         data-resizing={resizing || undefined}
-        style={{ width: collapsed ? 0 : width }}
-        inert={collapsed}
+        data-drawer={single || undefined}
+        data-open={(single && drawerOpen) || undefined}
+        style={single ? undefined : { width: collapsed ? 0 : width }}
+        inert={single ? !drawerOpen : collapsed}
       >
-        <div className="sidebar-inner" style={{ width }}>
+        <div className="sidebar-inner" style={single ? undefined : { width }}>
           <div className="sidebar-workspace">
             <img src={appIcon} alt="" className="sidebar-workspace-icon" />
             <span className="sidebar-workspace-name">{t("AlbaRo Notes")}</span>
             <button
               type="button"
               className="sidebar-close"
-              onClick={() => setCollapsed(true)}
+              onClick={() => (single ? onDrawerOpenChange(false) : setCollapsed(true))}
               title={t("Cerrar barra lateral (Ctrl+\\)")}
               aria-label={t("Cerrar barra lateral")}
             >
@@ -367,7 +383,11 @@ export function Sidebar({
             </button>
           </div>
           <div className="sidebar-body">
-            <button type="button" className="sidebar-item sidebar-search" onClick={onSearch}>
+            <button
+              type="button"
+              className="sidebar-item sidebar-search"
+              onClick={andClose(onSearch)}
+            >
               <Search
                 size={16}
                 strokeWidth={1.75}
@@ -377,7 +397,11 @@ export function Sidebar({
               <span className="sidebar-item-title">{t("Buscar")}</span>
               <kbd className="sidebar-hint">{t("Ctrl+K")}</kbd>
             </button>
-            <button type="button" className="sidebar-item sidebar-search" onClick={onAskAi}>
+            <button
+              type="button"
+              className="sidebar-item sidebar-search"
+              onClick={andClose(onAskAi)}
+            >
               <Sparkles
                 size={16}
                 strokeWidth={1.75}
@@ -455,6 +479,7 @@ export function Sidebar({
                         onClick={() => {
                           setMenuOpen(false);
                           onCreate(kind);
+                          closeDrawer();
                         }}
                       >
                         {kind === "page" ? <FileText size={16} /> : <Database size={16} />}
@@ -486,7 +511,11 @@ export function Sidebar({
                 </Fold>
               </>
             )}
-            <button type="button" className="sidebar-item sidebar-search" onClick={onOpenTrash}>
+            <button
+              type="button"
+              className="sidebar-item sidebar-search"
+              onClick={andClose(onOpenTrash)}
+            >
               <Trash2
                 size={16}
                 strokeWidth={1.75}
@@ -546,22 +575,33 @@ export function Sidebar({
             ))}
           </div>
         </div>
-        <div
-          className="sidebar-resize"
-          role="separator"
-          aria-orientation="vertical"
-          aria-label={t("Redimensionar barra lateral")}
-          aria-valuemin={MIN_WIDTH}
-          aria-valuemax={MAX_WIDTH}
-          aria-valuenow={width}
-          tabIndex={0}
-          onPointerDown={startResize}
-          onKeyDown={(e) => {
-            if (e.key === "ArrowLeft") setWidth((w) => clampWidth(w - 16));
-            if (e.key === "ArrowRight") setWidth((w) => clampWidth(w + 16));
-          }}
-        />
+        {!single && (
+          <div
+            className="sidebar-resize"
+            role="separator"
+            aria-orientation="vertical"
+            aria-label={t("Redimensionar barra lateral")}
+            aria-valuemin={MIN_WIDTH}
+            aria-valuemax={MAX_WIDTH}
+            aria-valuenow={width}
+            tabIndex={0}
+            onPointerDown={startResize}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowLeft") setWidth((w) => clampWidth(w - 16));
+              if (e.key === "ArrowRight") setWidth((w) => clampWidth(w + 16));
+            }}
+          />
+        )}
       </nav>
+      {single && drawerOpen && (
+        <button
+          type="button"
+          className="sidebar-scrim"
+          onClick={closeDrawer}
+          tabIndex={-1}
+          aria-label={t("Cerrar barra lateral")}
+        />
+      )}
       {openButton}
     </>
   );

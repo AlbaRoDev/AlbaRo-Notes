@@ -21,6 +21,9 @@ const katexWoff2Only = (): Plugin => ({
 export default defineConfig(() => ({
   plugins: [react(), katexWoff2Only()],
 
+  // `TAURI_ENV_PLATFORM` (android, ios, windows…) is set by the Tauri CLI: the page tells a phone build from a desktop one.
+  envPrefix: ["VITE_", "TAURI_ENV_"],
+
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent Vite from obscuring rust errors

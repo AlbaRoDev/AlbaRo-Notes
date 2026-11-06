@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ChevronsLeft, ChevronsRight, House } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { ChevronsLeft, ChevronsRight, House, PanelLeft } from "lucide-react";
 import { HALVES } from "./halves";
 import { ThemeToggle } from "./ThemeToggle";
 import { WindowControls } from "./WindowControls";
@@ -14,6 +14,8 @@ import {
 } from "../../lib/workspace";
 import "./workspace.css";
 import { t } from "../../lib/i18n.ts";
+import { dragRegion, isMobile, useSizeClass } from "../../lib/viewport.ts";
+import { useBackLayer } from "../../hooks/useBackLayer.ts";
 
 /** Each zone keeps at least this much (px) unless it is folded away altogether. */
 const MIN_ZONE = 240;
@@ -25,6 +27,10 @@ const ZONE_GLIDE_MS = 260;
 /**
  * The main zone (the half you picked) next to the companion panel, with a draggable border between
  * them. Both zones stay mounted when one is folded, so nothing loses its state.
+ *
+ * Only on an expanded window. On compact and medium ones a single zone is on screen: the companion becomes a
+ * sheet opened from the bar, the sidebar a drawer (`onToggleSidebar`), and on compact the Notes/Gestor switch moves
+ * to a bar at the foot of the screen, where a thumb reaches.
  */
 export function Workspace({
   layout,
@@ -34,6 +40,8 @@ export function Workspace({
   onSplit,
   onHome,
   menu,
+  sidebarOpen,
+  onToggleSidebar,
 }: {
   layout: Layout & { main: Half };
   main: ReactNode;
@@ -44,14 +52,26 @@ export function Workspace({
   onHome: () => void;
   /** The app's menu, first in the bar. */
   menu: ReactNode;
+  /** The sidebar's drawer (only drawn when there is a single zone). */
+  sidebarOpen: boolean;
+  onToggleSidebar: () => void;
 }) {
   const bodyRef = useRef<HTMLDivElement>(null);
   const { split } = layout;
-  const shown = shownHalf(layout);
+  const size = useSizeClass();
+  const single = size !== "expanded";
+  // With one zone on screen it is always the main one (a width saved from a desktop session does not apply).
+  const shown = single ? layout.main : shownHalf(layout);
   // Dragging shows the raw position and snaps on release, so the border follows the pointer smoothly.
   const [dragSplit, setDragSplit] = useState<number | null>(null);
   const hasCompanion = companion !== null;
-  const ratio = hasCompanion ? (dragSplit ?? split) : 1;
+  const ratio = hasCompanion && !single ? (dragSplit ?? split) : 1;
+  // The companion as a sheet over the page (single zone only). Closed whenever it cannot be shown.
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const sheetShown = sheetOpen && single && hasCompanion;
+  if (sheetOpen && !sheetShown) setSheetOpen(false);
+  const closeSheet = useCallback(() => setSheetOpen(false), []);
+  useBackLayer(sheetShown, closeSheet);
   // Where the rail and a double click bring a folded zone back to.
   const mainRef = useRef<HTMLElement>(null);
   const [mainNarrow, setMainNarrow] = useState(false);
@@ -126,14 +146,46 @@ export function Workspace({
     if (next !== undefined) onSplit(next);
   };
 
-  const mainFolded = ratio <= 0;
-  const companionFolded = hasCompanion && ratio >= 1;
+  const mainFolded = !single && ratio <= 0;
+  const companionFolded = !single && hasCompanion && ratio >= 1;
   const companionHalf = otherHalf(layout.main);
+  const CompanionIcon = HALVES[companionHalf].Icon;
   const unfold = () => onSplit(lastOpen.current);
+  const switchTo = (half: Half) => {
+    setSheetOpen(false);
+    onEnter(half);
+  };
+  const halfButtons = (iconSize: number, withKey: boolean) =>
+    (["notes", "manager"] as const).map((half) => {
+      const { label, Icon, key } = HALVES[half];
+      return (
+        <button
+          key={half}
+          type="button"
+          aria-pressed={half === shown}
+          onClick={() => switchTo(half)}
+          title={withKey ? `${label} (Ctrl+${key})` : undefined}
+        >
+          <Icon size={iconSize} aria-hidden />
+          {label}
+        </button>
+      );
+    });
 
   return (
     <div className="workspace">
-      <header className="workspace-bar" data-tauri-drag-region>
+      <header className="workspace-bar" {...dragRegion}>
+        {single && (
+          <button
+            type="button"
+            className="ws-icon-button"
+            onClick={onToggleSidebar}
+            aria-label={t("Abrir barra lateral")}
+            aria-expanded={sidebarOpen}
+          >
+            <PanelLeft size={16} />
+          </button>
+        )}
         {menu}
         <button
           type="button"
@@ -144,30 +196,30 @@ export function Workspace({
         >
           <House size={16} />
         </button>
-        <div
-          className="workspace-switch"
-          role="group"
-          aria-label={t("Cambiar entre Notas y Gestor")}
-        >
-          {(["notes", "manager"] as const).map((half) => {
-            const { label, Icon, key } = HALVES[half];
-            return (
-              <button
-                key={half}
-                type="button"
-                aria-pressed={half === shown}
-                onClick={() => onEnter(half)}
-                title={`${label} (Ctrl+${key})`}
-              >
-                <Icon size={15} aria-hidden />
-                {label}
-              </button>
-            );
-          })}
-        </div>
-        <span className="workspace-bar-fill" data-tauri-drag-region />
+        {size !== "compact" && (
+          <div
+            className="workspace-switch"
+            role="group"
+            aria-label={t("Cambiar entre Notas y Gestor")}
+          >
+            {halfButtons(15, true)}
+          </div>
+        )}
+        <span className="workspace-bar-fill" {...dragRegion} />
+        {single && hasCompanion && (
+          <button
+            type="button"
+            className="ws-icon-button"
+            onClick={() => setSheetOpen((open) => !open)}
+            title={t("Mostrar {label}", { label: HALVES[companionHalf].label })}
+            aria-label={t("Mostrar {label}", { label: HALVES[companionHalf].label })}
+            aria-expanded={sheetShown}
+          >
+            <CompanionIcon size={16} />
+          </button>
+        )}
         <ThemeToggle />
-        <WindowControls />
+        {!isMobile && <WindowControls />}
       </header>
       <div className="workspace-body" ref={bodyRef} data-dragging={dragSplit !== null || undefined}>
         {mainFolded && (
@@ -191,7 +243,7 @@ export function Workspace({
         >
           {main}
         </section>
-        {hasCompanion && !mainFolded && !companionFolded && (
+        {hasCompanion && !single && !mainFolded && !companionFolded && (
           <div
             className="workspace-divider"
             data-dragging={dragSplit !== null}
@@ -214,14 +266,17 @@ export function Workspace({
         {hasCompanion && (
           <aside
             className="workspace-zone workspace-companion"
-            style={{ flexGrow: 1 - ratio }}
+            style={single ? undefined : { flexGrow: 1 - ratio }}
             data-folded={companionFolded || undefined}
+            data-sheet={single || undefined}
+            data-open={sheetShown || undefined}
+            inert={single && !sheetShown}
             aria-label={t("{label} (panel compañero)", { label: HALVES[companionHalf].label })}
           >
             <button
               type="button"
               className="workspace-companion-close"
-              onClick={() => onSplit(1)}
+              onClick={single ? closeSheet : () => onSplit(1)}
               title={t("Cerrar el panel")}
               aria-label={t("Cerrar el panel compañero")}
             >
@@ -241,7 +296,21 @@ export function Workspace({
             <ChevronsLeft size={16} />
           </button>
         )}
+        {sheetShown && (
+          <button
+            type="button"
+            className="workspace-scrim"
+            onClick={closeSheet}
+            tabIndex={-1}
+            aria-label={t("Cerrar el panel")}
+          />
+        )}
       </div>
+      {size === "compact" && (
+        <nav className="workspace-tabs" aria-label={t("Cambiar entre Notas y Gestor")}>
+          {halfButtons(20, false)}
+        </nav>
+      )}
     </div>
   );
 }

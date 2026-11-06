@@ -10,10 +10,10 @@ import { loadKatex } from "./lib/katex-lazy";
 import { getLang, t } from "./lib/i18n.ts";
 import { invoke } from "./lib/invoke.ts";
 import { initTheme } from "./lib/theme";
+import { initViewport } from "./lib/viewport.ts";
 
 initTheme();
-// Test bench: a desktop window pretending to be a phone (set by scripts/tauri.mjs).
-if (import.meta.env.VITE_ALBARO_MOBILE) document.documentElement.dataset.mobile = "";
+initViewport();
 // Rust writes some texts itself (notices, the seeds of the task database): it needs to know the language.
 void invoke("set_language", { code: getLang() });
 

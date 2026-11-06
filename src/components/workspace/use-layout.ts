@@ -4,8 +4,11 @@ import { enter, parseSplit, promote, type Half, type Layout } from "../../lib/wo
 
 const SPLIT_KEY = "workspace.split";
 
-/** Which half is the main zone and how wide it is. The start screen is asked every launch, so `main` is not remembered; the width is. */
-export function useLayout() {
+/**
+ * Which half is the main zone and how wide it is. The start screen is asked every launch, so `main` is not remembered; the width is.
+ * `single`: only one zone fits on screen (see `enter`).
+ */
+export function useLayout(single: boolean) {
   const [layout, setLayout] = useState<Layout>(() => ({
     main: null,
     split: parseSplit(readPref(SPLIT_KEY)),
@@ -15,7 +18,7 @@ export function useLayout() {
 
   return {
     layout,
-    enter: useCallback((half: Half) => setLayout((l) => enter(l, half)), []),
+    enter: useCallback((half: Half) => setLayout((l) => enter(l, half, single)), [single]),
     promote: useCallback((half: Half) => setLayout((l) => promote(l, half)), []),
     setSplit: useCallback((split: number) => setLayout((l) => ({ ...l, split })), []),
     goHome: useCallback(() => setLayout((l) => ({ ...l, main: null })), []),

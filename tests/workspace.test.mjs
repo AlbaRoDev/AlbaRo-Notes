@@ -61,3 +61,14 @@ test("with the main zone folded away, the companion is what is shown", () => {
   assert.deepEqual(promote(folded, "manager"), { main: "manager", split: DEFAULT_SPLIT });
   assert.equal(shownHalf({ main: null, split: 0.5 }), null);
 });
+
+test("with a single zone on screen, entering a half always makes it the main one", () => {
+  // the width saved from a desktop session (main zone folded away) must not trap a phone on one half
+  const folded = { main: "notes", split: 0 };
+  assert.deepEqual(enter(folded, "manager", true), { main: "manager", split: DEFAULT_SPLIT });
+  assert.deepEqual(enter({ main: "notes", split: 0.5 }, "manager", true), {
+    main: "manager",
+    split: 0.5,
+  });
+  assert.deepEqual(enter({ main: null, split: 0.5 }, "notes", true), { main: "notes", split: 0.5 });
+});

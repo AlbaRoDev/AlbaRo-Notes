@@ -300,6 +300,12 @@ select optgroup {
   padding-right: clamp(3.5rem, 8%, 6rem);
 }
 
+/* A compact window has no gutter for the block handles: the text uses the width. */
+html[data-size="compact"] .container,
+html[data-size="compact"] .container--wide {
+  padding: 1.5rem 1rem 2rem;
+}
+
 /* The app's version, always at the foot of the page (a failed database check shows above it). */
 .app-footer {
   margin: 2rem 0 0;
