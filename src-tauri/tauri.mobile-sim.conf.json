@@ -1,0 +1,15 @@
+{
+  "app": {
+    "windows": [
+      {
+        "title": "AlbaRo Notes (pruebas, móvil)",
+        "width": 384,
+        "height": 832,
+        "minWidth": 320,
+        "minHeight": 480,
+        "decorations": false,
+        "dragDropEnabled": false
+      }
+    ]
+  }
+}

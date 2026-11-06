@@ -1,4 +1,8 @@
 mod ai;
+#[cfg(desktop)]
+mod app_update;
+#[cfg(mobile)]
+#[path = "app_update_mobile.rs"]
 mod app_update;
 mod attachments;
 mod boards;
