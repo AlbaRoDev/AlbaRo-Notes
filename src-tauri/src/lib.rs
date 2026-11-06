@@ -335,6 +335,23 @@ mod tests {
         );
         assert_eq!(capability["windows"], serde_json::json!(["main"]));
         assert!(capability.get("remote").is_none(), "no remote origin may use IPC");
+        assert_eq!(capability["platforms"], serde_json::json!(["windows", "linux", "macOS"]));
+    }
+
+    /// The phone's page gets the desktop's permissions minus the window controls: no title bar of
+    /// its own there. Every platform must be covered by exactly one of the two files, or the page
+    /// would have no permission at all (or both).
+    #[test]
+    fn the_phone_gets_the_desktop_permissions_without_the_window_controls() {
+        let read = |text: &str| -> serde_json::Value { serde_json::from_str(text).unwrap() };
+        let desktop = read(include_str!("../capabilities/default.json"));
+        let mobile = read(include_str!("../capabilities/mobile.json"));
+        let list = |c: &serde_json::Value| -> Vec<String> { c["permissions"].as_array().unwrap().iter().map(|p| p.as_str().unwrap().to_string()).collect() };
+        let expected: Vec<String> = list(&desktop).into_iter().filter(|p| !p.starts_with("core:window:")).collect();
+        assert_eq!(list(&mobile), expected);
+        assert_eq!(mobile["windows"], serde_json::json!(["main"]));
+        assert!(mobile.get("remote").is_none(), "no remote origin may use IPC");
+        assert_eq!(mobile["platforms"], serde_json::json!(["android", "iOS"]));
     }
 
     #[test]

@@ -1,0 +1,16 @@
+{
+  "$schema": "../gen/schemas/mobile-schema.json",
+  "identifier": "mobile",
+  "description": "What the page may ask of Tauri itself on a phone or tablet: the same as the desktop capability without the window controls (there is no title bar of its own and no window to move). The app version, the data folder path (to build asset URLs), hear events, and open http(s)/mailto/tel links in the system.",
+  "windows": ["main"],
+  "platforms": ["android", "iOS"],
+  "permissions": [
+    "core:app:allow-version",
+    "core:event:allow-listen",
+    "core:event:allow-unlisten",
+    "core:path:allow-join",
+    "core:path:allow-resolve-directory",
+    "opener:allow-default-urls",
+    "opener:allow-open-url"
+  ]
+}
