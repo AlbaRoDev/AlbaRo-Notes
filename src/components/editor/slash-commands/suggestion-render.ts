@@ -1,6 +1,29 @@
 import { ReactRenderer } from "@tiptap/react";
 import type { SuggestionOptions } from "@tiptap/suggestion";
+import { menuRoom } from "./menu-room.ts";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
+
+type FloatingMiddleware = NonNullable<
+  NonNullable<SuggestionOptions["floatingUi"]>["middleware"]
+>[number];
+
+/**
+ * Tells the list how much room it has (`--menu-room`, read by its CSS) on the side it ended up: a phone in landscape
+ * with its keyboard up has a few lines of window, and the menu, anchored on the cursor, would be cut off.
+ * It sits after `flip`, so it measures the side that was chosen, and asks for the position again if the room changed.
+ */
+export const fitInWindow: FloatingMiddleware = {
+  name: "fitInWindow",
+  fn({ elements, placement }) {
+    const cursor = elements.reference.getBoundingClientRect();
+    const bar = document.querySelector<HTMLElement>(".mobile-bar")?.offsetHeight ?? 0;
+    const value = `${menuRoom(placement, cursor, window.innerHeight, bar)}px`;
+    const floating = elements.floating as HTMLElement;
+    if (floating.style.getPropertyValue("--menu-room") === value) return {};
+    floating.style.setProperty("--menu-room", value);
+    return { reset: { rects: true } };
+  },
+};
 
 export interface SuggestionMenuHandle {
   onKeyDown: (props: { event: KeyboardEvent }) => boolean;

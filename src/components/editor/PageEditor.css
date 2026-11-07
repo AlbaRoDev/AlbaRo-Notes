@@ -195,6 +195,15 @@
   gap: 1em;
 }
 
+/* In a narrow window the columns stack (a phone) or wrap (a small tablet): side by side they were a few letters wide. */
+html[data-size="compact"] .page-editor .ProseMirror .columns-grid > div {
+  grid-template-columns: 1fr;
+}
+
+html[data-size="medium"] .page-editor .ProseMirror .columns-grid > div {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+}
+
 .page-editor .ProseMirror div[data-type="column"] {
   min-width: 0;
 }
@@ -684,6 +693,12 @@
   border-collapse: collapse;
   width: 100%;
   table-layout: fixed;
+}
+
+/* A table that does not fit scrolls sideways inside its wrapper instead of squeezing its columns into letters. */
+html[data-size="compact"] .page-editor .ProseMirror table,
+html[data-size="medium"] .page-editor .ProseMirror table {
+  table-layout: auto;
 }
 
 .page-editor .ProseMirror th,

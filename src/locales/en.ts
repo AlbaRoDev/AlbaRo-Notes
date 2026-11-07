@@ -1318,4 +1318,9 @@ export const en: Record<string, string> = {
   "Letra Garamond": "Garamond font",
   "Letra Antiqua": "Antiqua font",
   "Letra Fraktur": "Fraktur font",
+  "Ocultar el teclado": "Hide the keyboard",
+  "Subir el bloque": "Move the block up",
+  "Bajar el bloque": "Move the block down",
+  "Quitar sangría": "Outdent",
+  Sangría: "Indent",
 };

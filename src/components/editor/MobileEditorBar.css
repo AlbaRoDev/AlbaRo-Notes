@@ -1,0 +1,91 @@
+/* The bar over the on-screen keyboard (MobileEditorBar). Only for a finger: with a mouse the page has its handles and shortcuts. */
+.mobile-bar {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .mobile-bar {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1100;
+    display: block;
+    border-top: 1px solid var(--border);
+    background: var(--bg-popover);
+    color: var(--text);
+  }
+
+  /* one line, scrolling sideways when the window is narrower than the buttons */
+  .mobile-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .mobile-bar-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-bar-row button {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: none;
+    color: inherit;
+  }
+
+  .mobile-bar-row button:disabled {
+    opacity: 0.35;
+  }
+
+  .mobile-bar-row button[aria-pressed="true"] {
+    color: var(--accent);
+  }
+
+  .mobile-bar-sep {
+    flex: 0 0 1px;
+    height: 24px;
+    margin: 0 3px;
+    background: var(--border);
+  }
+
+  /* the link and colour boxes open upwards, over the bar */
+  .mobile-bar .selection-popover {
+    top: auto;
+    right: 8px;
+    bottom: calc(100% + 6px);
+    left: 8px;
+    min-width: 0;
+  }
+
+  /* the colour squares (styled in SelectionToolbar.css only under the toolbar over the selection): a finger's size, in rows */
+  .mobile-bar .selection-swatch {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  /* the grip and «+» that appear beside a tapped block repeat the bar's buttons (a finger has no hover to show them on) */
+  .block-handle {
+    display: none;
+  }
+
+  /* the toolbar over the selection gives way: the system's own menu opens there */
+  .selection-toolbar {
+    display: none;
+  }
+}

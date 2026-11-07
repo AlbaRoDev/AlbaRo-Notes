@@ -24,6 +24,7 @@ import { SlashCommand } from "./slash-commands/SlashCommand";
 import { AI_INLINE_EVENT, AiAssist, openAiAssist } from "./AiAssist";
 import { BlockHandle } from "./BlockHandle";
 import { SelectionToolbar } from "./SelectionToolbar";
+import { MobileEditorBar } from "./MobileEditorBar";
 import { AiInline } from "../ai/AiInline";
 import {
   createDatabasePage,
@@ -87,6 +88,15 @@ interface PageEditorProps {
   /** Set when this page is a row of a database: its property panel renders under the title. */
   rowDatabaseId?: string | null;
 }
+
+// The cursor stays this far from the edge of the window when typing scrolls to it: under touch, the bar over the
+// keyboard covers the foot of the window.
+const CURSOR_MARGIN = {
+  top: 8,
+  right: 8,
+  bottom: window.matchMedia("(pointer: coarse)").matches ? 64 : 8,
+  left: 8,
+};
 
 export function PageEditor({
   pageId,
@@ -180,6 +190,7 @@ export function PageEditor({
           }),
         ],
     content: ownDatabaseId ? EMPTY_DATABASE_PAGE : EMPTY_CONTENT,
+    editorProps: { scrollMargin: CURSOR_MARGIN, scrollThreshold: CURSOR_MARGIN },
     onUpdate: ({ editor }) => {
       setSaveStatus("saving");
       scheduleSave(editor.getJSON());
@@ -386,6 +397,7 @@ export function PageEditor({
               <>
                 <AiInline editor={editor} />
                 <SelectionToolbar editor={editor} />
+                <MobileEditorBar editor={editor} />
                 <BlockHandle editor={editor} />
               </>
             )}

@@ -2,7 +2,7 @@ import { Extension } from "@tiptap/react";
 import { PluginKey } from "@tiptap/pm/state";
 import Suggestion from "@tiptap/suggestion";
 import { PageMentionMenu } from "./PageMentionMenu";
-import { suggestionRender } from "./slash-commands/suggestion-render";
+import { fitInWindow, suggestionRender } from "./slash-commands/suggestion-render";
 import { getKnownPages, searchPages } from "../../lib/page-links";
 import type { PageSummary } from "../../types";
 
@@ -29,6 +29,7 @@ export const PageMentionSuggest = Extension.create({
             ])
             .run();
         },
+        floatingUi: { middleware: [fitInWindow] },
         render: suggestionRender(PageMentionMenu),
       }),
     );

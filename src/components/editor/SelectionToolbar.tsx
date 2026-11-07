@@ -2,59 +2,13 @@ import { useEffect, useReducer, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Editor } from "@tiptap/core";
 import { TextSelection } from "@tiptap/pm/state";
-import {
-  Bold,
-  Code,
-  Italic,
-  Link2,
-  Palette,
-  Sparkles,
-  Strikethrough,
-  Underline,
-} from "lucide-react";
+import { Link2, Palette, Sparkles } from "lucide-react";
 import { MARK_COLORS, lastColors } from "./ColorMarks";
+import { MARKS } from "./text-marks";
 import { OPEN_LINK_EVENT } from "./NotionShortcuts";
 import { getAiAssist, openAiAssist } from "./AiAssist";
 import "./SelectionToolbar.css";
 import { t } from "../../lib/i18n.ts";
-
-const MARKS = [
-  {
-    mark: "bold",
-    label: t("Negrita"),
-    hint: t("Ctrl+B"),
-    Icon: Bold,
-    run: (e: Editor) => e.chain().focus().toggleBold().run(),
-  },
-  {
-    mark: "italic",
-    label: t("Cursiva"),
-    hint: t("Ctrl+I"),
-    Icon: Italic,
-    run: (e: Editor) => e.chain().focus().toggleItalic().run(),
-  },
-  {
-    mark: "underline",
-    label: t("Subrayado"),
-    hint: t("Ctrl+U"),
-    Icon: Underline,
-    run: (e: Editor) => e.chain().focus().toggleUnderline().run(),
-  },
-  {
-    mark: "strike",
-    label: t("Tachado"),
-    hint: t("Ctrl+Shift+S"),
-    Icon: Strikethrough,
-    run: (e: Editor) => e.chain().focus().toggleStrike().run(),
-  },
-  {
-    mark: "code",
-    label: t("Código"),
-    hint: t("Ctrl+E"),
-    Icon: Code,
-    run: (e: Editor) => e.chain().focus().toggleCode().run(),
-  },
-];
 
 /** The address typed for a link, made into one the Link mark accepts (http, https or mailto; no scheme = https), or null. */
 function linkAddress(raw: string): string | null {
@@ -74,7 +28,7 @@ function linkAddress(raw: string): string | null {
 }
 
 /** The link's address box, under the toolbar: Enter applies, empty or «Quitar» removes. */
-function LinkPanel({ editor, onDone }: { editor: Editor; onDone: () => void }) {
+export function LinkPanel({ editor, onDone }: { editor: Editor; onDone: () => void }) {
   const [error, setError] = useState(false);
   const current = (editor.getAttributes("link").href as string | undefined) ?? "";
   const apply = (raw: string) => {
@@ -132,7 +86,7 @@ const COLOR_LABELS: Record<string, string> = {
 };
 
 /** Text colour and background, as Notion's «Color» menu: the names, never a value (App.css has the figures). */
-function ColorPanel({ editor }: { editor: Editor }) {
+export function ColorPanel({ editor }: { editor: Editor }) {
   const row = (mark: "textColor" | "backgroundColor", title: string) => (
     <div className="selection-colors" role="group" aria-label={title}>
       <span>{title}</span>

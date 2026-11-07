@@ -238,6 +238,28 @@
   color: var(--accent);
 }
 
+/* A finger: bigger buttons on the picture's toolbar and a wider edge to drag its width from. */
+@media (pointer: coarse) {
+  .page-editor .ProseMirror .image-toolbar button {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* thirteen buttons of a finger's size do not fit in a phone's width: they wrap inside the picture instead of running off both sides */
+  .page-editor .ProseMirror .image-toolbar {
+    left: 0;
+    box-sizing: border-box;
+    flex-wrap: wrap;
+    max-width: 100%;
+    transform: none;
+  }
+
+  .page-editor .ProseMirror .image-handle {
+    width: 16px;
+    height: 56px;
+  }
+}
+
 .page-editor .ProseMirror .image-toolbar-sep {
   align-self: stretch;
   width: 1px;
@@ -564,12 +586,16 @@
 }
 
 .page-editor .ProseMirror .code-block-toolbar select {
+  /* shrinks before pushing «Copiar» out of the block (a narrow window or large letters) */
+  min-width: 0;
   padding: 0.15em 0.3em;
+  text-overflow: ellipsis;
 }
 
 .page-editor .ProseMirror .code-block-copy {
   display: inline-flex;
   align-items: center;
+  flex: 0 0 auto;
   gap: 0.35em;
   padding: 0.15em 0.5em;
 }

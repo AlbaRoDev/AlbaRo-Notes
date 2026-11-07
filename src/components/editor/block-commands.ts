@@ -58,6 +58,17 @@ export function duplicateBlock(editor: Editor, picked: { from: number; to: numbe
   return true;
 }
 
+/** An empty line right under the block, with «/» typed so the command menu opens where it is. */
+export function addBlockBelow(editor: Editor, pos: number, node: PMNode) {
+  const after = pos + node.nodeSize;
+  editor
+    .chain()
+    .insertContentAt(after, { type: "paragraph" })
+    .focus(after + 1)
+    .insertContent("/")
+    .run();
+}
+
 /** Swaps the block with the one above (-1) or below (1) it, in the same parent; the cursor travels with it. */
 export function moveBlock(editor: Editor, dir: -1 | 1) {
   const { state } = editor;

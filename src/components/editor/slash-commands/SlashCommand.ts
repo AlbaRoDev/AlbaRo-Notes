@@ -1,7 +1,7 @@
 import { Extension } from "@tiptap/react";
 import Suggestion from "@tiptap/suggestion";
 import { SlashMenu } from "./SlashMenu";
-import { suggestionRender } from "./suggestion-render";
+import { fitInWindow, suggestionRender } from "./suggestion-render";
 import { filterSlashCommandItems, type SlashCommandItem } from "./items";
 
 /**
@@ -26,6 +26,7 @@ export const SlashCommand = Extension.create({
         command: ({ editor, range, props }) => {
           props.run(editor, range);
         },
+        floatingUi: { middleware: [fitInWindow] },
         render: suggestionRender(SlashMenu),
       }),
     ];
