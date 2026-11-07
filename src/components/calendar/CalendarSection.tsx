@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Download, Plus } from "lucide-react";
 import {
   calendarDeadlines,
@@ -410,8 +410,10 @@ export function CalendarSection({ host }: { host: TaskHost }) {
    * Not while typing: inside a field the key edits the text. The one exception is the entry that was just created,
    * whose title is still the untouched «Nueva cita», all selected: deleting that is deleting the entry (nobody keeps it).
    */
-  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    const target = e.target as HTMLElement;
+  const onDeleteKey = useEffectEvent((e: globalThis.KeyboardEvent) => {
+    const target = e.target instanceof HTMLElement ? e.target : document.body;
+    // the focus is on the page (body) when the field that had it went away (a closed panel): the key still reaches the calendar
+    if (target !== document.body && !target.closest(".cal")) return;
     const typing = target.closest("input, textarea, select, [contenteditable='true']");
     if (e.key === "Escape" && chosen.length > 1 && !typing && !pending) {
       setSelection([]);
@@ -439,11 +441,14 @@ export function CalendarSection({ host }: { host: TaskHost }) {
     }
     e.preventDefault();
     askToRemove(selected);
-  };
+  });
+  useEffect(() => {
+    document.addEventListener("keydown", onDeleteKey);
+    return () => document.removeEventListener("keydown", onDeleteKey);
+  }, []);
 
   return (
-    // tabIndex -1: a click anywhere in the calendar gives it the focus, so the key reaches `onKeyDown`
-    <div className="cal" tabIndex={-1} onKeyDown={onKeyDown}>
+    <div className="cal">
       <div className="cal-main">
         <div className="cal-bar">
           <button type="button" className="cal-today" onClick={() => setAnchor(todayIso())}>

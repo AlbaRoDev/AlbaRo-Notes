@@ -457,8 +457,15 @@ export function TimeGrid({
                       </span>
                     </div>
                     {showLists && entry.taskId && (end - start) * PX_PER_MIN >= LIST_MIN_PX && (
-                      // its own presses: ticking an item must not start a drag of the block
-                      <div className="cal-block-list" onPointerDown={(e) => e.stopPropagation()}>
+                      // ticking an item must not start a drag of the block, but the rest of the area (the list may be short or
+                      // empty) is still the block: a press there selects it
+                      <div
+                        className="cal-block-list"
+                        onPointerDown={(e) =>
+                          (e.target as HTMLElement).closest("button, input, label") &&
+                          e.stopPropagation()
+                        }
+                      >
                         <TaskChecklist
                           taskId={entry.taskId}
                           compact
