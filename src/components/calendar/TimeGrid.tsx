@@ -20,6 +20,7 @@ import type { CalendarEntry, Deadline, EntryInput } from "../../types";
 import { dragCreates, isAdditive, keyOf, toInput } from "./entry-input";
 import { TaskChecklist } from "../boards/TaskChecklist";
 import { t } from "../../lib/i18n.ts";
+import { useSizeClass } from "../../lib/viewport.ts";
 
 /** Pixels per hour: 15 minutes are 12 px. */
 const HOUR_PX = 48;
@@ -106,8 +107,24 @@ export function TimeGrid({
   const scrollRef = useRef<HTMLDivElement>(null);
   const columns = useRef(new Map<string, HTMLDivElement>());
 
+  // On a narrow screen the grid is as tall as the day and the page scrolls (not a box inside the page): it opens
+  // with the page scrolled to the first visible hour, the day headers kept in view by CSS.
+  const compact = useSizeClass() === "compact";
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = FIRST_VISIBLE_HOUR * HOUR_PX;
+    const box = scrollRef.current;
+    if (!box) return;
+    if (!compact) {
+      box.scrollTop = FIRST_VISIBLE_HOUR * HOUR_PX;
+      return;
+    }
+    const head = box.parentElement?.querySelector<HTMLElement>(".cal-head")?.offsetHeight ?? 0;
+    const bar = document.querySelector<HTMLElement>(".workspace-bar")?.offsetHeight ?? 0;
+    window.scrollTo(
+      0,
+      box.getBoundingClientRect().top + window.scrollY + FIRST_VISIBLE_HOUR * HOUR_PX - head - bar,
+    );
+    // only when the grid appears: moving between weeks keeps where the person is
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 60_000);

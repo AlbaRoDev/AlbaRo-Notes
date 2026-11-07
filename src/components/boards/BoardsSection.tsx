@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Plus, Tag, Trash2 } from "lucide-react";
+import { ChevronUp, Plus, Tag, Trash2 } from "lucide-react";
 import { subscribeDatabaseChanges } from "../../lib/database-bus";
 import {
   createBoard,
@@ -20,6 +20,8 @@ import type { TaskHost } from "../workspace/Tasks";
 import { BoardView, EditableName } from "./BoardView";
 import "./boards.css";
 import { t } from "../../lib/i18n.ts";
+import { useSizeClass } from "../../lib/viewport.ts";
+import { useBackLayer } from "../../hooks/useBackLayer.ts";
 
 const CURRENT_KEY = "boards.current";
 const FIELDS_KEY = "boards.fields.";
@@ -47,6 +49,10 @@ export function BoardsSection({ host }: { host: TaskHost }) {
   const [openTask, setOpenTask] = useState<string | null>(null);
   const [newName, setNewName] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  // A narrow screen: the task tray is a sheet at the foot, folded until asked for (Back folds it).
+  const compact = useSizeClass() === "compact";
+  const [trayOpen, setTrayOpen] = useState(false);
+  useBackLayer(compact && trayOpen, () => setTrayOpen(false));
 
   // the tasks come from the task database; it is created here too if the Gestor opened on this section
   useEffect(() => {
@@ -294,7 +300,20 @@ export function BoardsSection({ host }: { host: TaskHost }) {
         )}
       </div>
       {board && (
-        <aside className="boards-side">
+        <aside
+          className="boards-side"
+          data-open={trayOpen}
+          // a task dragged out of the tray leaves room for the lists it is dropped on
+          onDragStart={() => setTrayOpen(false)}
+        >
+          <button
+            type="button"
+            className="boards-side-handle"
+            aria-expanded={trayOpen}
+            onClick={() => setTrayOpen((open) => !open)}
+          >
+            <ChevronUp size={16} aria-hidden="true" /> {t("Tareas")}
+          </button>
           <TaskTray
             pages={pages}
             scheduled={onBoard}

@@ -245,3 +245,12 @@
 .families-list button {
   transition: background-color 0.12s;
 }
+
+@media (pointer: coarse) {
+  .families-bar select,
+  .families-bar button,
+  .family-panel select,
+  .family-panel button {
+    min-height: var(--touch-min, 44px);
+  }
+}

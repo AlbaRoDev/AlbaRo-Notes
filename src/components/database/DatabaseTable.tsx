@@ -72,9 +72,12 @@ import { typeChoiceOf } from "./property-types";
 import { calcLabel, computeCalc } from "./calculations";
 import { PropertyMenu, type MenuView } from "./PropertyMenu";
 import { useDatabase } from "./useDatabase";
+import { useBackLayer } from "../../hooks/useBackLayer.ts";
+import { useSizeClass } from "../../lib/viewport.ts";
 import { askConfirm } from "../../lib/confirm";
 import { TITLE_ID, VIEW_KIND_LABELS, normalizeConfig } from "./view-config";
 import "./DatabaseView.css";
+import "./database-touch.css";
 import { t } from "../../lib/i18n.ts";
 
 const UNTITLED = t("Sin título");
@@ -141,15 +144,19 @@ export function DatabaseTable({
   const [panel, setPanel] = useState<Panel | null>(null);
   useEffect(() => {
     if (!panel || panel.kind === "form") return; // the form builder is a page, not a menu
-    const down = (e: MouseEvent) => {
+    // pointerdown, not mousedown: a finger's mousedown only arrives after it lifts
+    const down = (e: PointerEvent) => {
       const target = e.target as Element;
       if (toolbarWrap.current?.contains(target) || target.closest(".option-pop, .prop-menu"))
         return;
       setPanel(null);
     };
-    document.addEventListener("mousedown", down);
-    return () => document.removeEventListener("mousedown", down);
+    document.addEventListener("pointerdown", down);
+    return () => document.removeEventListener("pointerdown", down);
   }, [panel]);
+  // On a narrow screen the panel is a sheet over the bottom of the window: Back closes it.
+  const compact = useSizeClass() === "compact";
+  useBackLayer(compact && panel !== null && panel.kind !== "form", () => setPanel(null));
   // The menu of a row's grip (open, duplicate, delete); the row it belongs to is picked.
   const [rowMenu, setRowMenu] = useState<{ id: string; x: number; y: number } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -612,10 +619,15 @@ export function DatabaseTable({
   const tableRows = kind === "form" ? [...shown].reverse() : shown;
   const columns = tableProps.length + 2;
 
+  // A narrow screen keeps the title column to part of it (and pinned, below), so the next one shows.
+  const titleCap = compact ? Math.round(window.innerWidth * 0.6) : Infinity;
   const widthOf = (id: string) =>
     dragWidth?.id === id
       ? dragWidth.width
-      : (config.columnWidths?.[id] ?? (id === TITLE_ID ? TITLE_WIDTH : COLUMN_WIDTH));
+      : Math.min(
+          config.columnWidths?.[id] ?? (id === TITLE_ID ? TITLE_WIDTH : COLUMN_WIDTH),
+          id === TITLE_ID ? titleCap : Infinity,
+        );
   const tableWidth =
     widthOf(TITLE_ID) + tableProps.reduce((sum, p) => sum + widthOf(p.id), 0) + ACTION_WIDTH;
   // Dragging a header's right edge resizes its column live; the view's config is written once, on release.
@@ -669,7 +681,10 @@ export function DatabaseTable({
 
   // «Fijar»: the columns up to the frozen one stick to the left while the table scrolls sideways.
   const order = [TITLE_ID, ...tableProps.map((p) => p.id)];
-  const frozenIndex = config.frozenUpTo ? order.indexOf(config.frozenUpTo) : -1;
+  const frozenIndex = Math.max(
+    config.frozenUpTo ? order.indexOf(config.frozenUpTo) : -1,
+    compact ? 0 : -1,
+  );
   const stickyOf = (index: number): { style?: CSSProperties; className?: string } => {
     if (index > frozenIndex) return {};
     const left = order.slice(0, index).reduce((sum, id) => sum + widthOf(id), 0);

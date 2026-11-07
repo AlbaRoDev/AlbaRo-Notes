@@ -70,6 +70,7 @@ import "./App.css";
 import { setLang, t } from "./lib/i18n.ts";
 import { useSizeClass } from "./lib/viewport.ts";
 import { useBackLayer } from "./hooks/useBackLayer.ts";
+import { backTarget } from "./lib/workspace";
 
 function App() {
   // The database check only says something when it fails; its schema version goes in the tooltip of the app version.
@@ -122,10 +123,18 @@ function App() {
   useBackLayer(drawerShown, closeDrawer);
   // The system's back goes up a level: Gestor → Notes → start screen, which is the one that leaves the app. Declared
   // before the page-up layer below: layers close last-opened first, so a child page goes up to its parent before this.
+  // A page opened from the Gestor (a task from its appointment, say) goes back to the Gestor, not up to the database
+  // the task belongs to: it is the screen the person came from.
+  const [fromManager, setFromManager] = useState(false);
+  if (fromManager && layout.main !== "notes") setFromManager(false);
   useBackLayer(
     layout.main !== null,
-    () => (layout.main === "manager" ? promote("notes") : goHome()),
-    layout.main,
+    () => {
+      const to = backTarget(layout.main, fromManager);
+      if (to === "home") goHome();
+      else if (to) promote(to);
+    },
+    `${layout.main}:${fromManager}`,
   );
 
   // A row of a database (a task…) opens in the side peek, over the page that shows it, as in Notion; any other
@@ -146,8 +155,18 @@ function App() {
   useBackLayer(peekId !== null, closePeek);
 
   // Opening a page from anywhere (search, the AI, the Notes companion) brings Notes to the main zone.
+  const mainRef = useRef(layout.main);
+  useEffect(() => {
+    mainRef.current = layout.main;
+  }, [layout.main]);
+  const singleRef = useRef(single);
+  useEffect(() => {
+    singleRef.current = single;
+  }, [single]);
   const openPage = useCallback(
     (pageId: string) => {
+      // from the Gestor, on a screen with one zone, the way back is the Gestor
+      setFromManager(singleRef.current && mainRef.current === "manager");
       setSelectedPageId(pageId);
       setPeekId(null);
       promote("notes");
@@ -303,7 +322,7 @@ function App() {
   // no history to walk, and the webview's own would leave the page.
   const parentId = layout.main === "notes" ? (selectedPage?.parentId ?? null) : null;
   // on a phone the system's back button does the same, and leaves the app from a top-level page
-  useBackLayer(parentId !== null, () => parentId && openPage(parentId), parentId);
+  useBackLayer(parentId !== null && !fromManager, () => parentId && openPage(parentId), parentId);
   useEffect(() => {
     const onMouse = (e: MouseEvent) => {
       if (e.button !== 3 && e.button !== 4) return;

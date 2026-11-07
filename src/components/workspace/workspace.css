@@ -592,6 +592,22 @@ html[data-size="compact"] .manager {
   padding-inline: 0.75rem;
 }
 
+/* the sections of the Gestor in one row that scrolls, not two rows */
+html[data-size="compact"] .manager-tabs {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+html[data-size="compact"] .manager-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+html[data-size="compact"] .manager-tabs button {
+  flex: none;
+  padding-inline: 0.6rem;
+}
+
 .manager-tabs {
   display: flex;
   flex-wrap: wrap;

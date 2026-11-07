@@ -526,3 +526,110 @@
   font: inherit;
   font-size: 0.8rem;
 }
+
+/* ---- a narrow screen ---- */
+.boards-side-handle {
+  display: none;
+}
+
+/* a list per screen, snapping, with the next one peeking; the tray is a sheet at the foot, folded until asked for */
+html[data-size="compact"] .boards {
+  flex-direction: column;
+  padding-bottom: calc(3rem * var(--text-zoom, 1));
+}
+
+html[data-size="compact"] .boards-main {
+  width: 100%;
+}
+
+html[data-size="compact"] .board-lists {
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+}
+
+html[data-size="compact"] .board-list {
+  flex: 0 0 calc(100% - 2.2rem);
+  scroll-snap-align: start;
+}
+
+html[data-size="compact"] .boards-side {
+  position: fixed;
+  inset: auto 0 var(--tabs-h, 0px);
+  z-index: 30;
+  flex: none;
+  width: auto;
+  max-height: none;
+  overflow: hidden;
+  border-radius: 14px 14px 0 0;
+  background: var(--bg-sidebar);
+  box-shadow: var(--shadow-popover);
+}
+
+html[data-size="compact"] .boards-side-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  width: 100%;
+  min-height: 44px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+}
+
+html[data-size="compact"] .boards-side > :not(.boards-side-handle) {
+  display: none;
+}
+
+html[data-size="compact"] .boards-side[data-open="true"] > :not(.boards-side-handle) {
+  display: block;
+  box-sizing: border-box;
+  max-height: 55dvh;
+  margin: 0 0.5rem 0.5rem;
+  overflow-y: auto;
+}
+
+html[data-size="compact"] .boards-side[data-open="true"] .boards-side-handle svg {
+  transform: rotate(180deg);
+}
+
+/* a finger: what is pressed on a board is as big as elsewhere (`--touch-min` is set with the database views) */
+@media (pointer: coarse) {
+  .board-icon-btn,
+  .board-card-remove,
+  .board-label-add,
+  .board-checkbtn,
+  .board-grip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-width: var(--touch-min, 44px);
+    min-height: var(--touch-min, 44px);
+  }
+
+  /* the labels, their «+» and the checklist button share a row instead of one each */
+  .board-card-extra {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 0.25rem;
+    padding-block: 0;
+  }
+
+  .board-card-extra > .task-checklist {
+    flex: 1 1 100%;
+  }
+
+  .board-card-title,
+  .board-list-name,
+  .board-name,
+  .boards-bar button,
+  .boards-new,
+  .boards-new-form input,
+  .boards-new-form button {
+    box-sizing: border-box;
+    min-height: var(--touch-min, 44px);
+  }
+}

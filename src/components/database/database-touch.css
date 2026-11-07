@@ -1,0 +1,208 @@
+/*
+ * Databases and their views on a finger and a small screen. Loaded after DatabaseView.css: the layout goes by the
+ * window's size class (`data-size`), the sizes of what is tapped by the input (`pointer: coarse`), never by model.
+ * The selectors keep the `html` in front so they win over the component rules whatever the order the chunks load in.
+ */
+
+/* the tabs sit in a list of their own so a narrow screen can scroll it; elsewhere it is not a box at all */
+html .page-editor .ProseMirror .db-tabs-list {
+  display: contents;
+}
+
+@media (pointer: coarse) {
+  html {
+    --touch-min: 44px;
+  }
+
+  /* the view tabs and the bar under them */
+  html .page-editor .ProseMirror .db-tab {
+    min-height: var(--touch-min);
+    padding: 0.2em 0.8em;
+    white-space: nowrap;
+  }
+
+  /* the settings panel of the active tab already deletes the view, so the little × goes */
+  html .page-editor .ProseMirror .db-tab-close {
+    display: none;
+  }
+
+  html .page-editor .ProseMirror .db-tool {
+    min-height: var(--touch-min);
+    padding: 0 0.5em;
+  }
+
+  html .page-editor .ProseMirror .db-icon-btn,
+  html .page-editor .ProseMirror .db-add-row,
+  html .page-editor .ProseMirror .form-submit,
+  html .page-editor .ProseMirror .map-add,
+  html .page-editor .ProseMirror .calendar-today,
+  html .page-editor .ProseMirror .calendar-modes button {
+    min-width: var(--touch-min);
+    min-height: var(--touch-min);
+    box-sizing: border-box;
+  }
+
+  html .page-editor .ProseMirror .db-input:not(.db-checkbox) {
+    min-height: var(--touch-min);
+    box-sizing: border-box;
+  }
+
+  /* a card shows every property of the row: a little shorter, or one card would fill the screen */
+  html .page-editor .ProseMirror .card .db-input:not(.db-checkbox) {
+    min-height: 38px;
+  }
+
+  /* the properties panel of a row page sits above the editor, not inside it */
+  html .row-props .db-input:not(.db-checkbox),
+  html .row-props .db-icon-btn,
+  html .row-props-source {
+    min-height: var(--touch-min);
+    box-sizing: border-box;
+  }
+
+  html .row-props .db-input.db-checkbox {
+    width: 24px;
+    height: 24px;
+  }
+
+  html .page-editor .ProseMirror .db-input.db-checkbox {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* the table: a row as tall as a finger */
+  html .page-editor .ProseMirror .db-table th,
+  html .page-editor .ProseMirror .db-table td {
+    height: var(--touch-min);
+  }
+
+  /* the grip is as tall as the row; the tick of a row is a drawn box, so it only grows to 22 px */
+  html .page-editor .ProseMirror .db-row-grip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-width: 32px;
+    min-height: var(--touch-min);
+  }
+
+  html .page-editor .ProseMirror .db-table .db-row-check {
+    width: 22px;
+    height: 22px;
+    margin: 0 4px;
+  }
+
+  html .page-editor .ProseMirror .card-title,
+  html .page-editor .ProseMirror .timeline-label,
+  html .page-editor .ProseMirror .map-place,
+  html .page-editor .ProseMirror .map-open {
+    min-height: var(--touch-min);
+    box-sizing: border-box;
+  }
+
+  html .page-editor .ProseMirror .map-place {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+  }
+
+  /* a pin keeps its place and its look, only the part of the screen that answers to a tap grows */
+  html .page-editor .ProseMirror .map-pin::after {
+    content: "";
+    position: absolute;
+    inset: -9px;
+  }
+}
+
+/* the view tabs scroll sideways instead of taking four rows */
+html[data-size="compact"] .page-editor .ProseMirror .db-tabs {
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
+
+html[data-size="compact"] .page-editor .ProseMirror .db-tabs-list {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 0.2em;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+html[data-size="compact"] .page-editor .ProseMirror .db-tabs-list::-webkit-scrollbar {
+  display: none;
+}
+
+html[data-size="compact"] .page-editor .ProseMirror .db-tab-wrap {
+  flex: none;
+}
+
+html[data-size="compact"] .page-editor .ProseMirror .db-tabs > .db-icon-btn {
+  flex: none;
+}
+
+/* the table: the title (pinned) leaves room for the next column, and «Abrir» is only its icon */
+html[data-size="compact"] .page-editor .ProseMirror .db-row-add {
+  display: none;
+}
+
+html[data-size="compact"] .page-editor .ProseMirror .db-table td .db-open-btn {
+  position: static;
+  flex: none;
+  justify-content: center;
+  min-width: 36px;
+  padding: 0;
+  gap: 0;
+  font-size: 0;
+}
+
+/* a column of the board per screen, snapping, with the next one peeking */
+html[data-size="compact"] .page-editor .ProseMirror .board {
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  gap: 0.6em;
+}
+
+html[data-size="compact"] .page-editor .ProseMirror .board-column {
+  flex: 0 0 calc(100% - 2.2em);
+  min-width: 0;
+  scroll-snap-align: start;
+}
+
+/* the month/year pickers share the row */
+html[data-size="compact"] .page-editor .ProseMirror .calendar-select {
+  flex: 1 1 7em;
+  min-width: 0;
+}
+
+html[data-size="compact"] .page-editor .ProseMirror .calendar-year {
+  flex: 0 0 5.5em;
+}
+
+/* sort, filter and group open as a sheet at the foot of the window, over a dimmed page (Back closes it) */
+html[data-size="compact"]
+  .page-editor
+  .ProseMirror
+  .db-toolbar-wrap
+  > .db-panel:not(.form-builder) {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 900;
+  width: auto;
+  max-width: none;
+  max-height: 65dvh;
+  box-sizing: border-box;
+  padding-bottom: calc(0.7em + env(safe-area-inset-bottom, 0px));
+  border-radius: 14px 14px 0 0;
+  box-shadow:
+    0 0 0 100vmax rgba(0, 0, 0, 0.35),
+    var(--shadow-popover);
+  animation: db-sheet-up 160ms ease-out;
+}
+
+@keyframes db-sheet-up {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}

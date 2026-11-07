@@ -49,3 +49,13 @@ export function enter(l: Layout, half: Half, single = false): Layout {
   // the half asked for is the main zone folded away: unfold it instead of swapping the roles
   return l.split === 0 ? { ...l, split: DEFAULT_SPLIT } : promote(l, half);
 }
+
+/**
+ * Where the system's back button goes from the main zone: Gestor → Notes → start screen. A page that was opened
+ * from the Gestor (a task from its appointment) goes back to the Gestor, the screen the person came from.
+ */
+export function backTarget(main: Half | null, fromManager: boolean): Half | "home" | null {
+  if (main === null) return null;
+  if (main === "manager") return "notes";
+  return fromManager ? "manager" : "home";
+}

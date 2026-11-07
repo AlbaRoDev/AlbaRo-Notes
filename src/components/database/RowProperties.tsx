@@ -10,6 +10,7 @@ import { PropIcon } from "./PropIcon";
 import { typeChoiceOf } from "./property-types";
 import { useDatabase } from "./useDatabase";
 import "./DatabaseView.css";
+import "./database-touch.css";
 import { t } from "../../lib/i18n.ts";
 
 /**

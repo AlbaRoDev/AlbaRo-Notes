@@ -1146,3 +1146,123 @@
 .cal-tray-config button:not([aria-pressed="true"], [data-used="true"]) span {
   display: none;
 }
+
+/* ---- a narrow screen ---- */
+
+/* what only a narrow screen uses is not there otherwise */
+.cal-extras {
+  display: contents;
+}
+
+.cal-extras-toggle,
+.cal-side-handle {
+  display: none;
+}
+
+/* the bar keeps two rows: Today, arrows and title; then the views, notices, more and the new appointment */
+html[data-size="compact"] .cal-bar h2 {
+  flex: 1 1 8rem;
+  min-width: 0;
+  margin: 0;
+  font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-size="compact"] .cal-views {
+  display: flex;
+  flex: 1 1 auto;
+}
+
+html[data-size="compact"] .cal-views button {
+  flex: 1 1 0;
+  padding-inline: 0.4rem;
+}
+
+html[data-size="compact"] .cal-extras-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* the date jump, the two switches and the .ics export fold behind «more» */
+html[data-size="compact"] .cal-extras {
+  display: none;
+  order: 9;
+  flex: 1 1 100%;
+}
+
+html[data-size="compact"] .cal-extras[data-open="true"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* the tray and the editor of an entry sit in a sheet over the foot of the screen, not after a whole week of grid */
+html[data-size="compact"] .cal {
+  flex-direction: column;
+  padding-bottom: calc(3rem * var(--text-zoom, 1));
+}
+
+html[data-size="compact"] .cal-side {
+  position: fixed;
+  inset: auto 0 var(--tabs-h, 0px);
+  z-index: 30;
+  flex: none;
+  width: auto;
+  max-height: none;
+  overflow: hidden;
+  border-radius: 14px 14px 0 0;
+  background: var(--bg-sidebar);
+  box-shadow: var(--shadow-popover);
+}
+
+html[data-size="compact"] .cal-side-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  width: 100%;
+  min-height: 44px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+}
+
+html[data-size="compact"] .cal-side > :not(.cal-side-handle) {
+  display: none;
+}
+
+html[data-size="compact"] .cal-side[data-open="true"] > :not(.cal-side-handle) {
+  display: block;
+  box-sizing: border-box;
+  max-height: 55dvh;
+  margin: 0 0.5rem 0.5rem;
+  overflow-y: auto;
+}
+
+html[data-size="compact"] .cal-side[data-open="true"] .cal-side-handle svg {
+  transform: rotate(180deg);
+}
+
+/* the grid is as tall as the whole day and the page scrolls with it, so a drag anywhere moves the same thing;
+   the day headers stay under the top bar while it does (`clip`, unlike `hidden`, does not trap them) */
+html[data-size="compact"] .cal-scroll {
+  max-height: none;
+  overflow: visible;
+  overscroll-behavior: auto;
+}
+
+html[data-size="compact"] .cal-grid {
+  overflow: clip;
+}
+
+html[data-size="compact"] .cal-head {
+  position: sticky;
+  top: var(--topbar-h, 38px);
+  z-index: 5;
+  background: var(--bg);
+}

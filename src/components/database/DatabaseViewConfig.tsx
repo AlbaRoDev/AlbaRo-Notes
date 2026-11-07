@@ -104,45 +104,61 @@ export function ViewTabs({
   onDelete: (view: ViewInfo) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  // On a narrow screen the tabs scroll: the active one is brought into view (the page itself is left alone).
+  const list = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const box = list.current;
+    const tab = box?.querySelector<HTMLElement>('[aria-selected="true"]');
+    if (!box || !tab) return;
+    const [from, to] = [
+      tab.offsetLeft - box.offsetLeft,
+      tab.offsetLeft - box.offsetLeft + tab.offsetWidth,
+    ];
+    if (from < box.scrollLeft) box.scrollLeft = from;
+    else if (to > box.scrollLeft + box.clientWidth) box.scrollLeft = to - box.clientWidth;
+  }, [activeId]);
   return (
-    <div className="db-tabs" role="tablist" aria-label={t("Vistas")}>
-      {views.map((v) => (
-        <span key={v.id} className="db-tab-wrap">
-          <button
-            type="button"
-            role="tab"
-            className="db-tab"
-            aria-selected={v.id === activeId}
-            aria-expanded={v.id === activeId ? settingsOpen : undefined}
-            title={v.id === activeId ? t("Ajustes de la vista") : undefined}
-            onClick={() => (v.id === activeId ? onToggleSettings() : onSelect(v.id))}
-          >
-            {(() => {
-              const Icon = KIND_ICONS[v.type];
-              return (
-                <Icon
-                  size={13}
-                  strokeWidth={1.75}
-                  aria-label={VIEW_KIND_LABELS[v.type]}
-                  className="db-tab-icon"
-                />
-              );
-            })()}
-            {v.name}
-          </button>
-          {views.length > 1 && (
+    <div className="db-tabs">
+      {/* its own scroller, so the «+» menu below is not clipped when a narrow screen scrolls the tabs */}
+      <div className="db-tabs-list" role="tablist" aria-label={t("Vistas")} ref={list}>
+        {views.map((v) => (
+          <span key={v.id} className="db-tab-wrap">
             <button
               type="button"
-              className="db-tab-close"
-              aria-label={t("Borrar la vista {name}", { name: v.name })}
-              title={t("Borrar la vista")}
-              onClick={() => onDelete(v)}
+              role="tab"
+              className="db-tab"
+              aria-selected={v.id === activeId}
+              aria-expanded={v.id === activeId ? settingsOpen : undefined}
+              title={v.id === activeId ? t("Ajustes de la vista") : undefined}
+              onClick={() => (v.id === activeId ? onToggleSettings() : onSelect(v.id))}
             >
-              <X size={12} strokeWidth={1.75} aria-hidden="true" />
+              {(() => {
+                const Icon = KIND_ICONS[v.type];
+                return (
+                  <Icon
+                    size={13}
+                    strokeWidth={1.75}
+                    aria-label={VIEW_KIND_LABELS[v.type]}
+                    className="db-tab-icon"
+                  />
+                );
+              })()}
+              {v.name}
             </button>
-          )}
-        </span>
-      ))}
+            {views.length > 1 && (
+              <button
+                type="button"
+                className="db-tab-close"
+                aria-label={t("Borrar la vista {name}", { name: v.name })}
+                title={t("Borrar la vista")}
+                onClick={() => onDelete(v)}
+              >
+                <X size={12} strokeWidth={1.75} aria-hidden="true" />
+              </button>
+            )}
+          </span>
+        ))}
+      </div>
       <button
         type="button"
         className="db-icon-btn"
@@ -436,7 +452,8 @@ function PropertyPicker({
   return (
     <div className="fl-picker">
       <input
-        autoFocus
+        // a finger gets the list of properties; the keyboard comes only if the search box is tapped
+        autoFocus={!matchMedia("(pointer: coarse)").matches}
         type="text"
         value={query}
         placeholder={t("Filtrar por…")}

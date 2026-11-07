@@ -1,5 +1,8 @@
 import { useEffect, useEffectEvent, useMemo, useRef, useState, type KeyboardEvent } from "react";
-import { ChevronLeft, ChevronRight, Download, Plus } from "lucide-react";
+import { sizeClassFor } from "../../lib/size-class.ts";
+import { useSizeClass } from "../../lib/viewport.ts";
+import { useBackLayer } from "../../hooks/useBackLayer.ts";
+import { ChevronLeft, ChevronRight, ChevronUp, Download, MoreHorizontal, Plus } from "lucide-react";
 import {
   calendarDeadlines,
   calendarEntryToTask,
@@ -89,7 +92,9 @@ export function CalendarSection({ host }: { host: TaskHost }) {
   const { pages, onPagesChanged, onOpenPage } = host;
   const [view, setView] = useState<View>(() => {
     const stored = readPref("calendar.view");
-    return VIEWS.find((v) => v.id === stored)?.id ?? "week";
+    // with nothing chosen yet, a narrow screen starts on one day (seven columns don't fit a phone)
+    const first: View = sizeClassFor(window.innerWidth) === "compact" ? "day" : "week";
+    return VIEWS.find((v) => v.id === stored)?.id ?? first;
   });
   const [anchor, setAnchor] = useState(todayIso);
   const [showDeadlines, setShowDeadlines] = useState(() => readPref("calendar.deadlines") !== "0");
@@ -104,6 +109,10 @@ export function CalendarSection({ host }: { host: TaskHost }) {
   const setSelectedId = (id: string | null) => setSelection(id ? [id] : []);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
+  // A narrow screen: the side (task tray or the entry's editor) is a sheet at the foot, and the bar keeps its extras folded.
+  const compact = useSizeClass() === "compact";
+  const [sideOpen, setSideOpen] = useState(false);
+  const [extrasOpen, setExtrasOpen] = useState(false);
   useEffect(() => writePref("calendar.view", view), [view]);
   useEffect(() => writePref("calendar.deadlines", showDeadlines ? "1" : "0"), [showDeadlines]);
   useEffect(() => writePref("calendar.checklists", showLists ? "1" : "0"), [showLists]);
@@ -238,6 +247,12 @@ export function CalendarSection({ host }: { host: TaskHost }) {
     additive && id ? toggle(id) : select(id);
   // the selected entries that are on screen (a selection can outlive a change of week)
   const chosen = entries.filter((e) => selectedIds.has(keyOf(e)));
+  // On a narrow screen the side is a sheet: Back closes it (and lets go of the entry it was editing).
+  const sheetOpen = sideOpen || selected !== null || chosen.length > 1;
+  useBackLayer(compact && sheetOpen, () => {
+    setSideOpen(false);
+    select(null);
+  });
 
   /** A selection dragged in the grid: one request, one step of the history; a series in it asks for the scope once. */
   const changeMany = (moves: { entry: CalendarEntry; input: EntryInput }[]) => {
@@ -466,38 +481,57 @@ export function CalendarSection({ host }: { host: TaskHost }) {
             <ChevronRight size={16} aria-hidden="true" />
           </button>
           <h2>{titleOf(view, anchor)}</h2>
-          <input
-            type="date"
-            className="cal-date"
-            value={anchor}
-            aria-label={t("Ir a una fecha")}
-            onChange={(e) => e.target.value && setAnchor(e.target.value)}
-          />
-          <span className="cal-bar-gap" />
-          <label
-            className="cal-toggle"
-            title={t("Muestra la «Fecha límite» de las tareas como banderas")}
-          >
+          <div className="cal-extras" data-open={extrasOpen}>
             <input
-              type="checkbox"
-              checked={showDeadlines}
-              onChange={(e) => setShowDeadlines(e.target.checked)}
+              type="date"
+              className="cal-date"
+              value={anchor}
+              aria-label={t("Ir a una fecha")}
+              onChange={(e) => e.target.value && setAnchor(e.target.value)}
             />
-            {t("Fechas límite")}
-          </label>
-          <label
-            className="cal-toggle"
-            title={t(
-              "Muestra la lista de comprobación de las tareas dentro de sus bloques, si caben",
-            )}
-          >
-            <input
-              type="checkbox"
-              checked={showLists}
-              onChange={(e) => setShowLists(e.target.checked)}
-            />
-            {t("Checks")}
-          </label>
+            <span className="cal-bar-gap" />
+            <label
+              className="cal-toggle"
+              title={t("Muestra la «Fecha límite» de las tareas como banderas")}
+            >
+              <input
+                type="checkbox"
+                checked={showDeadlines}
+                onChange={(e) => setShowDeadlines(e.target.checked)}
+              />
+              {t("Fechas límite")}
+            </label>
+            <label
+              className="cal-toggle"
+              title={t(
+                "Muestra la lista de comprobación de las tareas dentro de sus bloques, si caben",
+              )}
+            >
+              <input
+                type="checkbox"
+                checked={showLists}
+                onChange={(e) => setShowLists(e.target.checked)}
+              />
+              {t("Checks")}
+            </label>
+            <button
+              type="button"
+              title={t(
+                "Guarda todo el calendario como un archivo .ics para abrirlo en otra aplicación",
+              )}
+              onClick={() => {
+                setSaved(null);
+                exportCalendar(showDeadlines)
+                  .then((path) => {
+                    if (path) setSaved(path);
+                    setError(null);
+                  })
+                  .catch((e) => setError(String(e)));
+              }}
+            >
+              <Download size={14} aria-hidden="true" /> {t(".ics")}
+            </button>
+          </div>
           <div className="cal-views" role="group" aria-label={t("Vista")}>
             {VIEWS.map(({ id, label }) => (
               <button key={id} type="button" aria-pressed={view === id} onClick={() => setView(id)}>
@@ -508,20 +542,13 @@ export function CalendarSection({ host }: { host: TaskHost }) {
           <NotificationSettings onError={setError} />
           <button
             type="button"
-            title={t(
-              "Guarda todo el calendario como un archivo .ics para abrirlo en otra aplicación",
-            )}
-            onClick={() => {
-              setSaved(null);
-              exportCalendar(showDeadlines)
-                .then((path) => {
-                  if (path) setSaved(path);
-                  setError(null);
-                })
-                .catch((e) => setError(String(e)));
-            }}
+            className="cal-extras-toggle"
+            aria-expanded={extrasOpen}
+            aria-label={t("Más acciones")}
+            title={t("Más acciones")}
+            onClick={() => setExtrasOpen((open) => !open)}
           >
-            <Download size={14} aria-hidden="true" /> {t(".ics")}
+            <MoreHorizontal size={16} aria-hidden="true" />
           </button>
           <button
             type="button"
@@ -572,7 +599,24 @@ export function CalendarSection({ host }: { host: TaskHost }) {
           />
         )}
       </div>
-      <aside className="cal-side">
+      <aside
+        className="cal-side"
+        data-open={sheetOpen}
+        // a task dragged out of the tray leaves room for the calendar it is dropped on
+        onDragStart={() => setSideOpen(false)}
+      >
+        <button
+          type="button"
+          className="cal-side-handle"
+          aria-expanded={sheetOpen}
+          onClick={() => {
+            if (!sheetOpen) return setSideOpen(true);
+            setSideOpen(false);
+            select(null);
+          }}
+        >
+          <ChevronUp size={16} aria-hidden="true" /> {t("Tareas")}
+        </button>
         {chosen.length > 1 ? (
           <div className="cal-multi">
             <h3>{t("{count} citas seleccionadas", { count: chosen.length })}</h3>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CalendarDays, Columns3, ListChecks, Shapes, type LucideIcon } from "lucide-react";
 import { readPref, writePref } from "../../lib/prefs";
 import { startItemDrag } from "../../lib/drag-item";
@@ -57,10 +57,23 @@ export function ManagerMain({ host }: { host: TaskHost }) {
   });
   useEffect(() => writePref(SECTION_KEY, section), [section]);
   const current = SECTIONS.find((s) => s.id === section)!;
+  // On a narrow screen the tabs scroll: the one in use is brought into view (the page itself is left alone).
+  const tabs = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const box = tabs.current;
+    const tab = box?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!box || !tab) return;
+    const [from, to] = [
+      tab.offsetLeft - box.offsetLeft,
+      tab.offsetLeft - box.offsetLeft + tab.offsetWidth,
+    ];
+    if (from < box.scrollLeft) box.scrollLeft = from;
+    else if (to > box.scrollLeft + box.clientWidth) box.scrollLeft = to - box.clientWidth;
+  }, [section]);
 
   return (
     <div className="manager">
-      <nav className="manager-tabs" aria-label={t("Secciones del Gestor")}>
+      <nav className="manager-tabs" aria-label={t("Secciones del Gestor")} ref={tabs}>
         {SECTIONS.map(({ id, label, Icon }) => (
           <button
             key={id}

@@ -190,8 +190,8 @@
   position: sticky;
   left: 0;
   z-index: 2;
-  flex: 0 0 176px;
-  width: 176px;
+  flex: 0 0 var(--timeline-label, 176px);
+  width: var(--timeline-label, 176px);
   box-sizing: border-box;
   padding: 0 0.5em;
   font: inherit;

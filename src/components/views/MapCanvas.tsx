@@ -10,6 +10,7 @@ import { attachmentUrl } from "../../lib/attachments";
 import { fetchMapTile } from "../../lib/db-client";
 import "./views.css";
 import { t } from "../../lib/i18n.ts";
+import { pinchLevel } from "../../lib/pinch.ts";
 
 const TILE = 256;
 const MIN_ZOOM = 1;
@@ -175,6 +176,16 @@ export function MapCanvas({
   const zoomBy = (by: number) =>
     setView({ ...current, z: Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z + by)) });
 
+  // Fingers on the map: two of them pinch (each time the distance grows or shrinks by 1.7 times, one zoom level),
+  // and two quick taps in the same spot zoom in on it. A mouse only ever has one pointer down.
+  const fingers = useRef(new Map<number, { x: number; y: number }>());
+  const pinch = useRef<number | null>(null);
+  const lastTap = useRef<{ t: number; x: number; y: number } | null>(null);
+  const spread = () => {
+    const [a, b] = [...fingers.current.values()];
+    return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : 0;
+  };
+
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (e.button !== 0 || (e.target as HTMLElement).closest(".map-pin, .map-controls")) return;
     try {
@@ -182,23 +193,53 @@ export function MapCanvas({
     } catch {
       // the pointer is already gone (or synthetic): the drag still works while it stays over the map
     }
+    fingers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (fingers.current.size === 2) {
+      pinch.current = spread();
+      drag.current = null; // the first finger's pan (or tap) is over
+      return;
+    }
     drag.current = { x: e.clientX, y: e.clientY, cx, cy, moved: false };
   };
   const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (fingers.current.has(e.pointerId))
+      fingers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinch.current !== null) {
+      const now = spread();
+      const step = pinchLevel(pinch.current, now);
+      if (step === 0) return;
+      zoomBy(step);
+      pinch.current = now;
+      return;
+    }
     const d = drag.current;
     if (!d) return;
     const [dx, dy] = [e.clientX - d.x, e.clientY - d.y];
     if (Math.abs(dx) + Math.abs(dy) > 4) d.moved = true;
     if (d.moved) setView({ z, lat: toLat(d.cy - dy, z), lng: toLng(d.cx - dx, z) });
   };
-  const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
+  const onPointerEnd = (e: ReactPointerEvent<HTMLDivElement>) => {
+    fingers.current.delete(e.pointerId);
+    if (fingers.current.size < 2) pinch.current = null;
     const d = drag.current;
     drag.current = null;
-    if (!d || d.moved || !addMode) return;
+    if (!d || d.moved || e.type === "pointercancel") return;
     const rect = e.currentTarget.getBoundingClientRect();
     const [wx, wy] = [originX + e.clientX - rect.left, originY + e.clientY - rect.top];
-    setAddMode(false);
-    onAddAt(round6(toLat(wy, z)), round6(wrapLng(toLng(wx, z))));
+    if (addMode) {
+      setAddMode(false);
+      onAddAt(round6(toLat(wy, z)), round6(wrapLng(toLng(wx, z))));
+      return;
+    }
+    const [now, before] = [Date.now(), lastTap.current];
+    if (
+      before &&
+      now - before.t < 350 &&
+      Math.hypot(e.clientX - before.x, e.clientY - before.y) < 30
+    ) {
+      lastTap.current = null;
+      setView({ lat: toLat(wy, z), lng: wrapLng(toLng(wx, z)), z: Math.min(MAX_ZOOM, z + 1) });
+    } else lastTap.current = { t: now, x: e.clientX, y: e.clientY };
   };
 
   return (
@@ -211,7 +252,8 @@ export function MapCanvas({
         data-adding={addMode}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
+        onPointerUp={onPointerEnd}
+        onPointerCancel={onPointerEnd}
         role="application"
         aria-label={t("Mapa")}
       >

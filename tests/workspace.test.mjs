@@ -8,6 +8,7 @@ import {
   enter,
   promote,
   shownHalf,
+  backTarget,
   DEFAULT_SPLIT,
 } from "../src/lib/workspace.ts";
 
@@ -71,4 +72,11 @@ test("with a single zone on screen, entering a half always makes it the main one
     split: 0.5,
   });
   assert.deepEqual(enter({ main: null, split: 0.5 }, "notes", true), { main: "notes", split: 0.5 });
+});
+
+test("back goes Gestor → Notes → start, and a page opened from the Gestor goes back to the Gestor", () => {
+  assert.equal(backTarget("manager", false), "notes");
+  assert.equal(backTarget("notes", false), "home");
+  assert.equal(backTarget("notes", true), "manager");
+  assert.equal(backTarget(null, false), null);
 });

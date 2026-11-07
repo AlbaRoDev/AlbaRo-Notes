@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { dayNumber, formatDayMonth, fromDayNumber, todayIso } from "../../lib/date-utils";
 import type { DatedItem, UndatedItem } from "./view-items";
 import "./views.css";
 import { t } from "../../lib/i18n.ts";
+import { useSizeClass } from "../../lib/viewport.ts";
 
 interface TimelineChartProps {
   items: DatedItem[];
@@ -22,7 +23,9 @@ const SCALE_LABELS: Record<Scale, string> = {
 };
 /** Days a «previous / next» click moves the window. */
 const SHIFT_DAYS: Record<Scale, number> = { day: 14, week: 42, month: 180 };
+/** The column of titles; a narrow screen gives the bars more of the width. */
 const LABEL_WIDTH = 176;
+const LABEL_WIDTH_COMPACT = 112;
 const MIN_SPAN_DAYS = 60;
 
 /**
@@ -31,6 +34,7 @@ const MIN_SPAN_DAYS = 60;
  * what the entries are.
  */
 export function TimelineChart({ items, undated = [], selectedId, onOpen }: TimelineChartProps) {
+  const labelWidth = useSizeClass() === "compact" ? LABEL_WIDTH_COMPACT : LABEL_WIDTH;
   const [scale, setScale] = useState<Scale>("week");
   const [shift, setShift] = useState(0);
   const scroller = useRef<HTMLDivElement>(null);
@@ -73,7 +77,7 @@ export function TimelineChart({ items, undated = [], selectedId, onOpen }: Timel
   }
 
   return (
-    <div className="timeline">
+    <div className="timeline" style={{ "--timeline-label": `${labelWidth}px` } as CSSProperties}>
       <div className="calendar-bar">
         <button
           type="button"
@@ -104,7 +108,7 @@ export function TimelineChart({ items, undated = [], selectedId, onOpen }: Timel
       </div>
 
       <div className="timeline-scroll" ref={scroller}>
-        <div className="timeline-inner" style={{ width: LABEL_WIDTH + trackWidth }}>
+        <div className="timeline-inner" style={{ width: labelWidth + trackWidth }}>
           <div className="timeline-row timeline-axis">
             <div className="timeline-label" />
             <div className="timeline-track" style={{ width: trackWidth }}>
@@ -142,7 +146,7 @@ export function TimelineChart({ items, undated = [], selectedId, onOpen }: Timel
           <div
             className="timeline-today"
             aria-hidden="true"
-            style={{ left: LABEL_WIDTH + (today - first) * px + px / 2 }}
+            style={{ left: labelWidth + (today - first) * px + px / 2 }}
           />
         </div>
       </div>
