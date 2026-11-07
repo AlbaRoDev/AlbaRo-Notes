@@ -109,7 +109,7 @@ export function TimeGrid({
 
   // On a narrow screen the grid is as tall as the day and the page scrolls (not a box inside the page): it opens
   // with the page scrolled to the first visible hour, the day headers kept in view by CSS.
-  const compact = useSizeClass() === "compact";
+  const compact = useSizeClass() !== "expanded";
   useEffect(() => {
     const box = scrollRef.current;
     if (!box) return;

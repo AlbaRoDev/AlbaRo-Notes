@@ -1147,7 +1147,7 @@
   display: none;
 }
 
-/* ---- a narrow screen ---- */
+/* ---- a narrow screen (compact or medium: the calendar keeps the phone layout until the window is wide enough for two zones) ---- */
 
 /* what only a narrow screen uses is not there otherwise */
 .cal-extras {
@@ -1160,7 +1160,7 @@
 }
 
 /* the bar keeps two rows: Today, arrows and title; then the views, notices, more and the new appointment */
-html[data-size="compact"] .cal-bar h2 {
+html:not([data-size="expanded"]) .cal-bar h2 {
   flex: 1 1 8rem;
   min-width: 0;
   margin: 0;
@@ -1170,30 +1170,32 @@ html[data-size="compact"] .cal-bar h2 {
   white-space: nowrap;
 }
 
-html[data-size="compact"] .cal-views {
+html:not([data-size="expanded"]) .cal-views {
   display: flex;
   flex: 1 1 auto;
 }
 
-html[data-size="compact"] .cal-views button {
-  flex: 1 1 0;
+html:not([data-size="expanded"]) .cal-views button {
+  flex: 1 1 auto;
+  justify-content: center;
+  min-width: max-content;
   padding-inline: 0.4rem;
 }
 
-html[data-size="compact"] .cal-extras-toggle {
+html:not([data-size="expanded"]) .cal-extras-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
 /* the date jump, the two switches and the .ics export fold behind «more» */
-html[data-size="compact"] .cal-extras {
+html:not([data-size="expanded"]) .cal-extras {
   display: none;
   order: 9;
   flex: 1 1 100%;
 }
 
-html[data-size="compact"] .cal-extras[data-open="true"] {
+html:not([data-size="expanded"]) .cal-extras[data-open="true"] {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1201,12 +1203,12 @@ html[data-size="compact"] .cal-extras[data-open="true"] {
 }
 
 /* the tray and the editor of an entry sit in a sheet over the foot of the screen, not after a whole week of grid */
-html[data-size="compact"] .cal {
+html:not([data-size="expanded"]) .cal {
   flex-direction: column;
   padding-bottom: calc(3rem * var(--text-zoom, 1));
 }
 
-html[data-size="compact"] .cal-side {
+html:not([data-size="expanded"]) .cal-side {
   position: fixed;
   inset: auto 0 var(--tabs-h, 0px);
   z-index: 30;
@@ -1219,7 +1221,7 @@ html[data-size="compact"] .cal-side {
   box-shadow: var(--shadow-popover);
 }
 
-html[data-size="compact"] .cal-side-handle {
+html:not([data-size="expanded"]) .cal-side-handle {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1232,11 +1234,11 @@ html[data-size="compact"] .cal-side-handle {
   font: inherit;
 }
 
-html[data-size="compact"] .cal-side > :not(.cal-side-handle) {
+html:not([data-size="expanded"]) .cal-side > :not(.cal-side-handle) {
   display: none;
 }
 
-html[data-size="compact"] .cal-side[data-open="true"] > :not(.cal-side-handle) {
+html:not([data-size="expanded"]) .cal-side[data-open="true"] > :not(.cal-side-handle) {
   display: block;
   box-sizing: border-box;
   max-height: 55dvh;
@@ -1244,23 +1246,23 @@ html[data-size="compact"] .cal-side[data-open="true"] > :not(.cal-side-handle) {
   overflow-y: auto;
 }
 
-html[data-size="compact"] .cal-side[data-open="true"] .cal-side-handle svg {
+html:not([data-size="expanded"]) .cal-side[data-open="true"] .cal-side-handle svg {
   transform: rotate(180deg);
 }
 
 /* the grid is as tall as the whole day and the page scrolls with it, so a drag anywhere moves the same thing;
    the day headers stay under the top bar while it does (`clip`, unlike `hidden`, does not trap them) */
-html[data-size="compact"] .cal-scroll {
+html:not([data-size="expanded"]) .cal-scroll {
   max-height: none;
   overflow: visible;
   overscroll-behavior: auto;
 }
 
-html[data-size="compact"] .cal-grid {
+html:not([data-size="expanded"]) .cal-grid {
   overflow: clip;
 }
 
-html[data-size="compact"] .cal-head {
+html:not([data-size="expanded"]) .cal-head {
   position: sticky;
   top: var(--topbar-h, 38px);
   z-index: 5;

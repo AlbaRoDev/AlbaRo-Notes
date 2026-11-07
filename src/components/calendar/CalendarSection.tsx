@@ -110,7 +110,7 @@ export function CalendarSection({ host }: { host: TaskHost }) {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
   // A narrow screen: the side (task tray or the entry's editor) is a sheet at the foot, and the bar keeps its extras folded.
-  const compact = useSizeClass() === "compact";
+  const compact = useSizeClass() !== "expanded";
   const [sideOpen, setSideOpen] = useState(false);
   const [extrasOpen, setExtrasOpen] = useState(false);
   useEffect(() => writePref("calendar.view", view), [view]);
