@@ -32,15 +32,20 @@ import {
   MAX_STROKES,
   MAX_STROKE_COORDS,
   MIN_HEIGHT,
+  COAST_STOP,
   MIN_ZOOM,
   PEN_WIDTHS,
   clamp,
   cleanHeight,
   clampView,
+  coast,
   fitView,
+  gestureView,
   grownHeight,
+  isDoubleTap,
   rasterize,
   rasterizeBlob,
+  releaseVelocity,
   round1,
   strokeHit,
   strokePath,
@@ -48,6 +53,8 @@ import {
   viewBoxOf,
   zoomAt,
   type CanvasColor,
+  type Gesture,
+  type Sample,
   type Stroke,
   type View,
 } from "./canvas-strokes";
@@ -64,6 +71,9 @@ const ERASER_RADIUS = 14;
 const MIN_STEP = 0.8;
 const ZOOM_STEP = 1.5;
 const RESIZE_STEP = 40;
+/** A touch that moves less than this (px) from where it landed is a tap. */
+const TAP_SLOP = 10;
+const COARSE = typeof matchMedia === "function" && matchMedia("(pointer: coarse)").matches;
 
 /**
  * The canvas block: one canvas that always keeps its ink (like an iPad notes app), to take
@@ -105,11 +115,33 @@ export function CanvasBlockView({
   const erasing = useRef<Set<number> | null>(null);
   const panning = useRef<{ x: number; y: number; view: View } | null>(null);
   const readToken = useRef(0);
+  // fingers: a finger draws, two move and zoom the sheet like a map (the stroke the first one began is dropped),
+  // a double tap zooms in, and a flick glides. A pen seen once makes lone fingers palms: only two fingers act.
+  const fingers = useRef(new Map<number, { x: number; y: number }>());
+  const gesture = useRef<Gesture | null>(null);
+  const gestured = useRef(false); // fingers of a two-finger gesture are still down: the last ones must not draw
+  const track = useRef<Sample[]>([]); // recent positions of what is moving the sheet, for the glide
+  const lastTap = useRef<(Sample & { dot: boolean }) | null>(null);
+  const downAt = useRef<{ x: number; y: number } | null>(null);
+  const skipUp = useRef(false); // the touch was a double tap: nothing to commit when it lifts
+  const penSeen = useRef(false);
+  const glideId = useRef(0);
   // what the native wheel listener needs (it is attached once, outside React's render)
   const current = useRef({ view, height });
   useEffect(() => {
     current.current = { view, height };
   });
+
+  /** Moves the view; `current` follows at once, so a gesture or glide never works from a stale one. */
+  const show = (v: View) => {
+    current.current.view = v;
+    setView(v);
+  };
+  const stopGlide = () => {
+    cancelAnimationFrame(glideId.current);
+    glideId.current = 0;
+  };
+  useEffect(() => stopGlide, []);
 
   const shownHeight = dragHeight ?? height;
   const panMode = tool === "hand" || spaceDown;
@@ -179,6 +211,51 @@ export function CanvasBlockView({
     return () => svg.removeEventListener("wheel", onWheel);
   }, [phase]);
 
+  /** The sheet keeps gliding at the speed the fingers had on lifting, slowing down on its own. */
+  const glide = () => {
+    const { vx, vy } = releaseVelocity(track.current, performance.now());
+    track.current = [];
+    const svg = svgRef.current;
+    if (!svg || Math.hypot(vx, vy) < COAST_STOP) return;
+    const width = svg.getBoundingClientRect().width;
+    let [sx, sy, last] = [vx, vy, performance.now()];
+    const step = (now: number) => {
+      const dt = clamp(now - last, 0, 50);
+      last = now;
+      [sx, sy] = [coast(sx, dt), coast(sy, dt)];
+      if (Math.hypot(sx, sy) < COAST_STOP) {
+        glideId.current = 0;
+        return;
+      }
+      const { view: v, height: h } = current.current;
+      const perPx = CANVAS_WIDTH / v.zoom / width;
+      show(clampView({ ...v, x: v.x - sx * dt * perPx, y: v.y - sy * dt * perPx }, h));
+      glideId.current = requestAnimationFrame(step);
+    };
+    glideId.current = requestAnimationFrame(step);
+  };
+
+  /** Midpoint (screen px) and gap of the first two fingers down. */
+  const twoFingers = () => {
+    const rect = svgRef.current!.getBoundingClientRect();
+    const [a, b] = [...fingers.current.values()];
+    return {
+      rect,
+      client: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
+      dist: Math.hypot(a.x - b.x, a.y - b.y),
+    };
+  };
+  const startGesture = () => {
+    const { rect, client, dist } = twoFingers();
+    gesture.current = {
+      view: current.current.view,
+      mx: client.x - rect.left,
+      my: client.y - rect.top,
+      dist,
+    };
+    track.current = [];
+  };
+
   /** Where the pointer is on the sheet, in drawing units (the visible part is `view`). */
   const toPage = (e: { clientX: number; clientY: number }): [number, number] => {
     const rect = svgRef.current!.getBoundingClientRect();
@@ -212,8 +289,41 @@ export function CanvasBlockView({
     }
     e.currentTarget.focus();
     setError(null); // a failed reading is old news once the user is writing again
+    stopGlide();
+    const touch = e.pointerType === "touch";
+    if (e.pointerType === "pen") penSeen.current = true;
+    if (touch) {
+      fingers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      downAt.current = { x: e.clientX, y: e.clientY };
+      if (fingers.current.size >= 2) {
+        // the second finger turns what the first began into a gesture: no stroke, not even a dot
+        drawing.current = null;
+        erasing.current = null;
+        panning.current = null;
+        setLive(null);
+        setHidden(new Set());
+        gestured.current = true;
+        lastTap.current = null;
+        if (fingers.current.size === 2) startGesture();
+        return;
+      }
+      if (penSeen.current) return; // a lone finger beside a pen is a palm
+      if (isDoubleTap(lastTap.current, e.clientX, e.clientY, performance.now())) {
+        // a double tap zooms in on that point; the dot the first tap drew (if it did) goes
+        const [zx, zy] = toPage(e);
+        if (lastTap.current?.dot && strokes[strokes.length - 1]?.points.length === 2) {
+          setHistory((h) => ({ ...h, undo: h.undo.slice(0, -1) }));
+          updateAttributes({ strokes: strokes.slice(0, -1) });
+        }
+        lastTap.current = null;
+        skipUp.current = true;
+        show(zoomAt(current.current.view, 2, zx, zy, shownHeight));
+        return;
+      }
+    }
     if (panMode || middle) {
       panning.current = { x: e.clientX, y: e.clientY, view };
+      track.current = [];
       return;
     }
     const [x, y] = toPage(e);
@@ -232,11 +342,30 @@ export function CanvasBlockView({
   };
 
   const onPointerMove = (e: ReactPointerEvent<SVGSVGElement>) => {
+    if (e.pointerType === "touch" && fingers.current.has(e.pointerId)) {
+      fingers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const g = gesture.current;
+      if (g) {
+        const { rect, client, dist } = twoFingers();
+        track.current = [
+          ...track.current.slice(-7),
+          { x: client.x, y: client.y, t: performance.now() },
+        ];
+        show(gestureView(g, client.x - rect.left, client.y - rect.top, dist, rect, shownHeight));
+        return;
+      }
+    }
     const pan = panning.current;
     if (pan) {
       const rect = svgRef.current!.getBoundingClientRect();
       const perPx = CANVAS_WIDTH / pan.view.zoom / rect.width;
-      setView(
+      if (e.pointerType === "touch") {
+        track.current = [
+          ...track.current.slice(-7),
+          { x: e.clientX, y: e.clientY, t: performance.now() },
+        ];
+      }
+      show(
         clampView(
           {
             ...pan.view,
@@ -264,11 +393,40 @@ export function CanvasBlockView({
     if (pen) setLive({ color: pen.color, width: pen.width, d: strokePath(pen.points) });
   };
 
-  const onPointerUp = () => {
+  const onPointerUp = (e: ReactPointerEvent<SVGSVGElement>) => {
+    const touch = e.pointerType === "touch";
+    if (touch) {
+      fingers.current.delete(e.pointerId);
+      if (gestured.current) {
+        if (gesture.current) {
+          if (fingers.current.size < 2) {
+            gesture.current = null;
+            glide();
+          } else {
+            startGesture(); // a third finger takes over from the one that lifted: no jump
+          }
+        }
+        if (fingers.current.size === 0) gestured.current = false;
+        return;
+      }
+      if (skipUp.current) {
+        skipUp.current = false;
+        return;
+      }
+    }
+    const wasPanning = panning.current;
     panning.current = null;
+    if (wasPanning && touch) glide();
     const pen = drawing.current;
     drawing.current = null;
     setLive(null);
+    if (touch) {
+      const from = downAt.current;
+      const tapped = from !== null && Math.hypot(e.clientX - from.x, e.clientY - from.y) < TAP_SLOP;
+      lastTap.current = tapped
+        ? { x: e.clientX, y: e.clientY, t: performance.now(), dot: pen?.points.length === 2 }
+        : null;
+    }
     if (pen) {
       // the window grows when the stroke ends near its bottom edge, so notes never run out of room
       const grown = grownHeight(height, pen.points, view);
@@ -661,6 +819,7 @@ export function CanvasBlockView({
             onPointerCancel={onPointerUp}
             onKeyDown={onKeyDown}
             onKeyUp={(e) => e.key === " " && setSpaceDown(false)}
+            onContextMenu={(e) => e.preventDefault()} // a long press is not a menu
             onFocus={() => setFocused(true)}
             onBlur={() => {
               setSpaceDown(false);
@@ -696,9 +855,11 @@ export function CanvasBlockView({
           </svg>
           {focused && !busy && (
             <p className="canvas-hint">
-              {t(
-                "Rueda: moverse · Ctrl+rueda: zoom · Botón central o Espacio: arrastrar · Esc: soltar el foco",
-              )}
+              {COARSE
+                ? t("Un dedo dibuja · dos dedos mueven y amplían · doble toque: acercar")
+                : t(
+                    "Rueda: moverse · Ctrl+rueda: zoom · Botón central o Espacio: arrastrar · Esc: soltar el foco",
+                  )}
             </p>
           )}
           {busy && (

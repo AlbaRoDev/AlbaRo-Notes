@@ -849,6 +849,8 @@ export const en: Record<string, string> = {
   "Volver al lienzo": "Back to the canvas",
   "Rueda: moverse · Ctrl+rueda: zoom · Botón central o Espacio: arrastrar · Esc: soltar el foco":
     "Wheel: move · Ctrl+wheel: zoom · Middle button or Space: drag · Esc: release focus",
+  "Un dedo dibuja · dos dedos mueven y amplían · doble toque: acercar":
+    "One finger draws · two fingers move and zoom · double tap: zoom in",
   " Leyendo tu letra…": " Reading your handwriting…",
   " Preparando la imagen…": " Preparing the image…",
   "Altura del lienzo": "Canvas height",

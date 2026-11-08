@@ -104,6 +104,12 @@
     min-width: 44px;
   }
 
+  /* the canvas block's toolbar: pen, colours, zoom… */
+  .page-editor .ProseMirror .canvas-bar button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
   .sidebar-close,
   .sidebar-item-delete,
   .sidebar-item-disclosure,

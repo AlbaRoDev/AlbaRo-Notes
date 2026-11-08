@@ -11,8 +11,13 @@ import {
   MAX_HEIGHT,
   cleanHeight,
   clampView,
+  coast,
+  COAST_STOP,
   fitView,
+  gestureView,
   grownHeight,
+  isDoubleTap,
+  releaseVelocity,
   sanitizeStrokes,
   viewBoxOf,
   zoomAt,
@@ -151,4 +156,49 @@ test("«ver todo» shows all the ink, wherever it is", () => {
     fitView([stroke([0, 0, 10, 10]), stroke([60000, 40000, 60010, 40010])], 360).zoom,
     0.05,
   );
+});
+
+test("two fingers: the sheet follows their midpoint and the zoom follows their gap", () => {
+  const H = 400;
+  const size = { width: 500, height: 200 }; // the sheet on screen: 0.5 px per unit
+  const start = { view: FULL_VIEW, mx: 250, my: 100, dist: 100 }; // fingers around the middle
+  // moved but not spread: a pure pan, 50 px right = 100 units, so the view slides 100 units left
+  const pan = gestureView(start, 300, 100, 100, size, H);
+  assert.deepEqual(pan, { zoom: 1, x: -100, y: 0 });
+  // spread to twice the gap around the same point: 2×, and the point under the fingers stays put
+  const zoom = gestureView(start, 250, 100, 200, size, H);
+  assert.deepEqual(zoom, { zoom: 2, x: 250, y: 100 });
+  // both at once: the point that was under the first midpoint is under the new one
+  const both = gestureView(start, 100, 40, 300, size, H);
+  const [px, py] = [(250 / 500) * 1000, (100 / 200) * H]; // under the fingers when they landed
+  assert.equal(both.zoom, 3);
+  assert.ok(Math.abs(both.x + (100 / 500) * (1000 / 3) - px) < 1e-9);
+  assert.ok(Math.abs(both.y + (40 / 200) * (H / 3) - py) < 1e-9);
+  // the zoom stops at its limits, and fingers that came down together (no gap) don't blow up
+  assert.equal(gestureView(start, 250, 100, 1e6, size, H).zoom, 5);
+  assert.equal(gestureView(start, 250, 100, 0.001, size, H).zoom, 0.05);
+  assert.equal(gestureView({ ...start, dist: 0 }, 250, 100, 80, size, H).zoom, 1);
+});
+
+test("a flick glides and slows down; fingers that rested before lifting don't", () => {
+  const moving = [
+    { x: 0, y: 0, t: 0 },
+    { x: 50, y: 25, t: 50 },
+    { x: 100, y: 50, t: 100 },
+  ];
+  assert.deepEqual(releaseVelocity(moving, 110), { vx: 1, vy: 0.5 });
+  assert.deepEqual(releaseVelocity(moving, 400), { vx: 0, vy: 0 }); // rested 300 ms
+  assert.deepEqual(releaseVelocity([], 0), { vx: 0, vy: 0 });
+  assert.deepEqual(releaseVelocity([{ x: 5, y: 5, t: 10 }], 20), { vx: 0, vy: 0 }); // one sample
+  assert.ok(coast(1, 100) < 1 && coast(1, 100) > coast(1, 500)); // keeps slowing
+  assert.ok(coast(1, 0) === 1);
+  assert.ok(coast(1, 3000) < COAST_STOP); // and stops
+});
+
+test("a double tap is two taps close in time and place", () => {
+  const first = { x: 100, y: 100, t: 1000 };
+  assert.ok(isDoubleTap(first, 105, 104, 1250));
+  assert.ok(!isDoubleTap(first, 105, 104, 1400)); // too slow
+  assert.ok(!isDoubleTap(first, 160, 100, 1200)); // too far: another dot of a line of writing
+  assert.ok(!isDoubleTap(null, 100, 100, 1100));
 });

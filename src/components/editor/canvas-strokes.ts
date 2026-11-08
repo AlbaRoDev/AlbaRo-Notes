@@ -121,6 +121,70 @@ export function zoomAt(v: View, factor: number, px: number, py: number, height: 
   );
 }
 
+/** Where two fingers were when they came down: the view then, their midpoint and gap (px, from the sheet's corner). */
+export interface Gesture {
+  view: View;
+  mx: number;
+  my: number;
+  dist: number;
+}
+
+/**
+ * The view while two fingers move, as in a map: the point of the sheet that was under their midpoint
+ * stays under it (so the sheet follows the fingers) and the zoom grows with the gap between them.
+ * `size` is the sheet's size on screen in px.
+ */
+export function gestureView(
+  g: Gesture,
+  mx: number,
+  my: number,
+  dist: number,
+  size: { width: number; height: number },
+  height: number,
+): View {
+  const zoom = clamp(g.view.zoom * (g.dist > 0 ? dist / g.dist : 1), MIN_ZOOM, MAX_ZOOM);
+  const [px, py] = [
+    g.view.x + (g.mx / size.width) * (CANVAS_WIDTH / g.view.zoom),
+    g.view.y + (g.my / size.height) * (height / g.view.zoom),
+  ];
+  return clampView(
+    {
+      zoom,
+      x: px - (mx / size.width) * (CANVAS_WIDTH / zoom),
+      y: py - (my / size.height) * (height / zoom),
+    },
+    height,
+  );
+}
+
+/** Time for the coasting speed to fall to 1/e (ms): a flick glides about a second. */
+const COAST_TIME = 325;
+/** Below this speed (px/ms) a glide stops. */
+export const COAST_STOP = 0.02;
+
+/** The speed of a glide `dt` ms later. */
+export const coast = (v: number, dt: number) => v * Math.exp(-dt / COAST_TIME);
+
+/** A finger position (px) at a time (ms). */
+export interface Sample {
+  x: number;
+  y: number;
+  t: number;
+}
+
+/** The speed (px/ms) the fingers had on lifting, from the last 100 ms of samples; nothing if they stopped before lifting. */
+export function releaseVelocity(samples: Sample[], now: number): { vx: number; vy: number } {
+  const last = samples[samples.length - 1];
+  if (!last || now - last.t > 100) return { vx: 0, vy: 0 };
+  const first = samples.find((s) => last.t - s.t <= 100) ?? last;
+  const dt = last.t - first.t;
+  return dt > 0 ? { vx: (last.x - first.x) / dt, vy: (last.y - first.y) / dt } : { vx: 0, vy: 0 };
+}
+
+/** A second tap close in time and place to the first (px, ms) is a double tap. */
+export const isDoubleTap = (prev: Sample | null, x: number, y: number, t: number) =>
+  prev !== null && t - prev.t <= 300 && Math.hypot(x - prev.x, y - prev.y) <= 16;
+
 export const viewBoxOf = (v: View, height: number) =>
   `${round1(v.x)} ${round1(v.y)} ${round1(CANVAS_WIDTH / v.zoom)} ${round1(height / v.zoom)}`;
 
