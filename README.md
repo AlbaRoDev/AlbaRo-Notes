@@ -56,6 +56,8 @@ release lists the SHA-256 checksum of its installer: compare it with the one of 
 with the project's key and listed with its SHA-256 on each release. There is no Google Play version, and no
 automatic update: install the next APK over the old one (the signature is the same, so your notes stay). The
 "local" AI mode (Ollama) is not available on a phone; the online services are.
+Your browser may warn that an APK "could be harmful": it says that about every APK. The certificate it is signed
+with has the SHA-256 fingerprint `EA:5B:7B:5C:B1:11:94:EF:5C:4E:CC:F4:82:E6:7B:58:0A:A7:13:71:07:FD:F7:15:7B:1D:5A:77:72:E1:E7:8A` (`apksigner verify --print-certs <file>`).
 
 **Updates (Windows).** The app checks GitHub for a new version when it starts and every 12 hours. It only tells you: nothing
 is downloaded or installed until you press the button, and the update's signature is checked against the project's

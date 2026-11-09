@@ -58,6 +58,8 @@ descargado (`Get-FileHash <archivo>` en PowerShell) si quieres estar seguro de q
 con la clave del proyecto y cada versión publica su SHA-256. No hay versión en Google Play ni actualización
 automática: instala el APK nuevo encima del viejo (la firma es la misma, así que tus notas se conservan). El modo
 de IA «local» (Ollama) no existe en el móvil; los servicios en línea sí.
+El navegador puede avisar de que un APK «puede ser dañino»: lo dice de todos. El certificado con el que está firmado
+tiene la huella SHA-256 `EA:5B:7B:5C:B1:11:94:EF:5C:4E:CC:F4:82:E6:7B:58:0A:A7:13:71:07:FD:F7:15:7B:1D:5A:77:72:E1:E7:8A` (`apksigner verify --print-certs <archivo>`).
 
 **Actualizaciones (Windows).** La app mira en GitHub si hay una versión nueva al arrancar y cada 12 horas. Solo te avisa: no
 descarga ni instala nada hasta que pulsas el botón, y antes comprueba la firma de la actualización con la clave del
