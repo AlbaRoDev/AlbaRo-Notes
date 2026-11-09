@@ -491,13 +491,18 @@ function App() {
       icon: FileDown,
       run: () => window.dispatchEvent(new Event(IMPORT_FILES_EVENT)),
     },
-    {
-      id: "import-folder",
-      label: t("Importar una carpeta…"),
-      keywords: t("abrir markdown md notas obsidian directorio páginas"),
-      icon: FolderInput,
-      run: () => window.dispatchEvent(new Event(IMPORT_FOLDER_EVENT)),
-    },
+    // Android's webview opens its plain file picker for a folder input (a folder cannot be chosen), so there it is left out
+    ...(import.meta.env.TAURI_ENV_PLATFORM === "android"
+      ? []
+      : [
+          {
+            id: "import-folder",
+            label: t("Importar una carpeta…"),
+            keywords: t("abrir markdown md notas obsidian directorio páginas"),
+            icon: FolderInput,
+            run: () => window.dispatchEvent(new Event(IMPORT_FOLDER_EVENT)),
+          },
+        ]),
     {
       id: "new-database",
       label: t("Nueva base de datos"),
