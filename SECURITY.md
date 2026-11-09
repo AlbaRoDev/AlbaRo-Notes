@@ -16,12 +16,13 @@ are credited in the release notes unless you prefer not to be.
 
 ## Supported versions
 
-Only the latest release gets security fixes. The app checks GitHub for a new version when it starts and every 12 hours,
-and installs one only when you press the button; updates are checked against the project's signature first.
+Only the latest release gets security fixes. The Windows app checks GitHub for a new version when it starts and every 12
+hours, and installs one only when you press the button; updates are checked against the project's signature first. The
+Android APK has no updater: install the newest APK over the old one.
 
 ## What counts
 
-In scope: the app itself (the Rust backend, the interface and the installers), for example a way to run code in the
+In scope: the app itself (the Rust backend, the interface, the installers and the APK), for example a way to run code in the
 page, to make the app read or write files outside its data folder, to reach a machine on your network through the
 app's own requests, to read the AI service's API key, or to make the AI assistant change your notes without you
 pressing "Apply".
@@ -62,12 +63,13 @@ versión y se te cita en sus notas, salvo que prefieras no salir.
 
 ## Versiones con arreglos
 
-Solo la última versión recibe arreglos de seguridad. La app mira en GitHub si hay una versión nueva al arrancar y cada
-12 horas, y solo instala una cuando pulsas el botón; antes comprueba la firma de la actualización con la clave del proyecto.
+Solo la última versión recibe arreglos de seguridad. La app de Windows mira en GitHub si hay una versión nueva al arrancar
+y cada 12 horas, y solo instala una cuando pulsas el botón; antes comprueba la firma de la actualización con la clave del
+proyecto. El APK de Android no tiene actualizador: instala el APK más nuevo encima del viejo.
 
 ## Qué cuenta y qué no
 
-Cuenta: la propia app (la parte de Rust, la interfaz y los instaladores). Por ejemplo, ejecutar código en la página,
+Cuenta: la propia app (la parte de Rust, la interfaz, los instaladores y el APK). Por ejemplo, ejecutar código en la página,
 hacer que la app lea o escriba ficheros fuera de su carpeta de datos, alcanzar una máquina de tu red a través de las
 peticiones de la app, leer la clave de API del servicio de IA, o conseguir que el asistente cambie tus notas sin que
 pulses «Aplicar».

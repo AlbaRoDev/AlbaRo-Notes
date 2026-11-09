@@ -1154,6 +1154,8 @@ export const en: Record<string, string> = {
   "Ya tienes la última versión.": "You already have the latest version.",
   "No se pudo comprobar: {err}": "Couldn't check: {err}",
   "Cerrar el aviso": "Close the notice",
+  "El WebView de tu sistema (Chrome {version}) es antiguo y parte de la app puede fallar. Actualiza «Android System WebView» en Google Play (hace falta la versión {min} o posterior).":
+    'Your system WebView (Chrome {version}) is old and part of the app may fail. Update "Android System WebView" in Google Play (version {min} or later is needed).',
   "Hay una versión nueva:": "There is a new version:",
   ". Se descarga, se comprueba su firma y se reinicia la app.":
     ". It is downloaded, its signature is checked and the app restarts.",

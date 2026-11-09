@@ -12,8 +12,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-// The systems we ship. macOS is not distributed yet: add "aarch64-apple-darwin" with it.
-const TARGETS = ["x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"];
+// The systems we ship (Android: the 64-bit ARM APK). macOS is not distributed yet: add "aarch64-apple-darwin" with it.
+const TARGETS = ["x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu", "aarch64-linux-android"];
 const CHECK = process.argv.includes("--check");
 const CACHE = join(root, "scripts/notices-cache");
 // Crates that declare no repository: found by hand.

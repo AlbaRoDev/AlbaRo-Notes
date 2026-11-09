@@ -14,6 +14,9 @@ import { fileURLToPath } from "node:url";
 // it is the one system the app has been tried on. Linux joins with its own line here, a build in
 // release.yml and the zip question of the updater (see the updater's `zip` feature in Cargo.toml).
 const PLATFORMS = [[/_windows-x64-setup\.exe$/, "windows-x86_64"]];
+// Published and hashed, but never in `latest.json`: the Android APK has no updater (the plugin is
+// left out on mobile); it is updated by installing the next APK over it.
+const HASH_ONLY = [/_android-arm64\.apk$/];
 
 /** `files`: [{ name, signature, sha256 }]. Pure: no disk, no clock. */
 export function buildManifest({ tag, repo, files, notes, date }) {
@@ -50,7 +53,16 @@ El instalador de Windows no está firmado con un certificado de pago: SmartScree
 «Windows protegió su PC». Pulsa *Más información* y después *Ejecutar de todas formas* (comprueba antes
 que el SHA-256 coincide). Las actualizaciones de la propia app sí van firmadas, y la app comprueba la
 firma antes de instalarlas.
-`;
+${
+  files.some((f) => HASH_ONLY.some((p) => p.test(f.name)))
+    ? `
+**Android** (\`*_android-arm64.apk\`, móviles y tabletas con procesador ARM de 64 bits, Android 7 o
+posterior): abre el fichero en el aparato y permite «instalar apps desconocidas» a la app que lo abra.
+No hay actualización automática: para actualizar, instala el APK nuevo encima de este (misma firma, los
+datos se conservan). Comprueba antes el SHA-256 de arriba.
+`
+    : ""
+}`;
 }
 
 const sha256 = (path) => createHash("sha256").update(readFileSync(path)).digest("hex");
@@ -58,7 +70,7 @@ const sha256 = (path) => createHash("sha256").update(readFileSync(path)).digest(
 function main(dir, tag, repo) {
   const names = readdirSync(dir);
   const files = names
-    .filter((n) => PLATFORMS.some(([pattern]) => pattern.test(n)))
+    .filter((n) => [...PLATFORMS.map(([p]) => p), ...HASH_ONLY].some((p) => p.test(n)))
     .sort()
     .map((name) => ({
       name,

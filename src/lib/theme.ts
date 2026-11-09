@@ -2,6 +2,7 @@ import { CURSOR_VARIABLES, cursorVariables } from "./cursor";
 import { PALETTE_VARIABLES, paletteFor } from "./palette";
 import { readPref, writePref } from "./prefs";
 import { seasonFor } from "./seasons";
+import { syncSystemBars } from "./system-bars.ts";
 
 export type ThemePref = "system" | "light" | "dark";
 
@@ -69,6 +70,7 @@ function apply(pref: ThemePref, style: StylePref = getStylePref(), now = new Dat
     delete root.dataset.season;
     for (const name of PALETTE_VARIABLES) root.style.removeProperty(name);
     applyCursor(root);
+    syncSystemBars(root, dark);
     return;
   }
   const season = seasonFor(now);
@@ -78,6 +80,7 @@ function apply(pref: ThemePref, style: StylePref = getStylePref(), now = new Dat
     root.style.setProperty(name, value);
   }
   applyCursor(root);
+  syncSystemBars(root, dark);
 }
 
 const styleListeners = new Set<(style: StylePref) => void>();

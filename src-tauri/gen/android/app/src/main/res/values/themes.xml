@@ -1,6 +1,8 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- Base application theme. The window is painted with the app's own background from the first frame, so a start
+         in the dark does not flash white; the page then sets the exact colour (see SystemBars in MainActivity). -->
     <style name="Theme.albaro_notes" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your theme here. -->
+        <item name="android:windowBackground">@color/app_background</item>
+        <item name="android:windowSplashScreenBackground" tools:targetApi="31">@color/app_background</item>
     </style>
 </resources>

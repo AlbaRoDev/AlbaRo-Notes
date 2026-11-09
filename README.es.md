@@ -2,13 +2,13 @@
 
 [English](README.md)
 
-Una aplicación de escritorio libre y abierta para tus notas y tu organización personal: páginas con editor de
+Una aplicación libre y abierta para tus notas y tu organización personal: páginas con editor de
 bloques, bases de datos con muchos tipos de vista, un gestor de tareas con calendario y tableros, y un asistente de
-IA opcional. Todo se guarda en tu ordenador, sin cuentas, sin anuncios y sin telemetría.
+IA opcional. Todo se guarda en tu aparato, sin cuentas, sin anuncios y sin telemetría.
 
 ![Una página con títulos, una lista de tareas, una lista, una cita y un destacado](screenshots/notes.png)
 
-La interfaz está por ahora solo en español.
+La interfaz está en español y en inglés.
 
 ## Qué hace
 
@@ -40,11 +40,12 @@ Las capturas usan datos inventados.
 
 ## Instalar
 
-Descarga el instalador de la [página de versiones](https://github.com/AlbaRoDev/AlbaRo-Notes/releases).
+Descarga el instalador o el APK de la [página de versiones](https://github.com/AlbaRoDev/AlbaRo-Notes/releases).
 
 | Sistema       | Archivo           | Estado                |
 | ------------- | ----------------- | --------------------- |
 | Windows 10/11 | Instalador `.exe` | Plataforma principal  |
+| Android 7+    | `.apk` (arm64)    | Nuevo                 |
 | Linux         |                   | Todavía no disponible |
 | macOS         |                   | Todavía no disponible |
 
@@ -53,7 +54,12 @@ mostrar «Windows protegió su PC». Si lo has descargado de la página de versi
 _Ejecutar de todas formas_. Cada versión publica el SHA-256 de su instalador: compáralo con el del archivo que has
 descargado (`Get-FileHash <archivo>` en PowerShell) si quieres estar seguro de que no ha cambiado.
 
-**Actualizaciones.** La app mira en GitHub si hay una versión nueva al arrancar y cada 12 horas. Solo te avisa: no
+**Android.** Abre el `.apk` en el aparato y permite «instalar apps desconocidas» a la app que lo abra. Está firmado
+con la clave del proyecto y cada versión publica su SHA-256. No hay versión en Google Play ni actualización
+automática: instala el APK nuevo encima del viejo (la firma es la misma, así que tus notas se conservan). El modo
+de IA «local» (Ollama) no existe en el móvil; los servicios en línea sí.
+
+**Actualizaciones (Windows).** La app mira en GitHub si hay una versión nueva al arrancar y cada 12 horas. Solo te avisa: no
 descarga ni instala nada hasta que pulsas el botón, y antes comprueba la firma de la actualización con la clave del
 proyecto.
 

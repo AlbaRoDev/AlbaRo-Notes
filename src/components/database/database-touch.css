@@ -10,10 +10,6 @@ html .page-editor .ProseMirror .db-tabs-list {
 }
 
 @media (pointer: coarse) {
-  html {
-    --touch-min: 44px;
-  }
-
   /* the view tabs and the bar under them */
   html .page-editor .ProseMirror .db-tab {
     min-height: var(--touch-min);

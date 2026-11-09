@@ -52,3 +52,17 @@ test("the notes list every hash with its file name and warn about SmartScreen", 
   assert.ok(text.includes(`${windows.sha256}  ${windows.name}`));
   assert.ok(text.includes("SmartScreen"));
 });
+
+test("the Android APK is hashed and explained, but has no place in latest.json", () => {
+  const apk = {
+    name: "AlbaRo-Notes_1.2.3_android-arm64.apk",
+    signature: "",
+    sha256: "b".repeat(64),
+  };
+  const m = buildManifest({ ...base, files: [windows, apk] });
+  assert.deepEqual(Object.keys(m.platforms), ["windows-x86_64"]);
+  const text = releaseNotes("v1.2.3", [windows, apk]);
+  assert.ok(text.includes(`${apk.sha256}  ${apk.name}`));
+  assert.ok(text.includes("Android"));
+  assert.ok(!releaseNotes("v1.2.3", [windows]).includes("Android"));
+});

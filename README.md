@@ -2,13 +2,13 @@
 
 [Español](README.es.md)
 
-A free, open desktop app for notes and personal organisation: pages with a block editor, databases with many
+A free, open app for notes and personal organisation: pages with a block editor, databases with many
 kinds of views, a built-in task manager with calendar and boards, and an optional AI assistant. Everything is
-stored on your computer, with no accounts, no ads and no telemetry.
+stored on your device, with no accounts, no ads and no telemetry.
 
 ![A page with headings, a checklist, a list, a quote and a callout](screenshots/notes.png)
 
-The interface is currently in Spanish only.
+The interface is in Spanish and English.
 
 ## Features
 
@@ -38,11 +38,12 @@ The screenshots show made-up data.
 
 ## Install
 
-Download the installer from the [Releases page](https://github.com/AlbaRoDev/AlbaRo-Notes/releases).
+Download the installer or the APK from the [Releases page](https://github.com/AlbaRoDev/AlbaRo-Notes/releases).
 
 | System        | File             | Status            |
 | ------------- | ---------------- | ----------------- |
 | Windows 10/11 | `.exe` installer | Main platform     |
+| Android 7+    | `.apk` (arm64)   | New               |
 | Linux         |                  | Not available yet |
 | macOS         |                  | Not available yet |
 
@@ -51,7 +52,12 @@ protected your PC". If you downloaded it from the Releases page, choose _More in
 release lists the SHA-256 checksum of its installer: compare it with the one of the file you downloaded
 (`Get-FileHash <file>` in PowerShell) if you want to be sure it is untouched.
 
-**Updates.** The app checks GitHub for a new version when it starts and every 12 hours. It only tells you: nothing
+**Android.** Open the `.apk` on the device and allow "install unknown apps" for the app that opens it. It is signed
+with the project's key and listed with its SHA-256 on each release. There is no Google Play version, and no
+automatic update: install the next APK over the old one (the signature is the same, so your notes stay). The
+"local" AI mode (Ollama) is not available on a phone; the online services are.
+
+**Updates (Windows).** The app checks GitHub for a new version when it starts and every 12 hours. It only tells you: nothing
 is downloaded or installed until you press the button, and the update's signature is checked against the project's
 key first.
 

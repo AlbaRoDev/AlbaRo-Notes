@@ -20,7 +20,7 @@
   .mobile-bar-row {
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: 4px;
     padding: 2px 4px;
     overflow-x: auto;
     scrollbar-width: none;
@@ -35,8 +35,8 @@
     flex: 0 0 auto;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
+    width: var(--touch-min, 44px);
+    height: var(--touch-min, 44px);
     padding: 0;
     border: none;
     border-radius: 6px;

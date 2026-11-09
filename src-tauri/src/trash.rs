@@ -82,7 +82,7 @@ fn damaged() -> String {
 /// The rows a query returns, as JSON objects by column name.
 fn dump(conn: &Connection, query: &str, param: &str) -> Result<Vec<Value>, String> {
     let mut stmt = conn.prepare(query).map_err(sql)?;
-    let names: Vec<String> = stmt.column_names().into_iter().map(String::from).collect();
+    let names: Vec<String> = stmt.column_names().map(String::from).collect();
     let rows = stmt
         .query_map([param], |row| {
             let mut object = Map::new();

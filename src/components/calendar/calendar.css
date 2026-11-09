@@ -1238,7 +1238,7 @@ html:not([data-size="expanded"]) .cal-side-handle {
   justify-content: center;
   gap: 0.3rem;
   width: 100%;
-  min-height: 44px;
+  min-height: var(--touch-min, 44px);
   border: none;
   background: none;
   color: var(--text-muted);

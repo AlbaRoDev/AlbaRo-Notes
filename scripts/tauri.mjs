@@ -4,7 +4,7 @@
 // Mobile test bench (see the three loops in the project notes):
 //   ALBARO_MOBILE=1 npm run tauri dev   desktop window the size of a phone, `data-mobile` forced on
 //   npm run tauri android dev           emulator or USB phone; the debug app has its own package id
-//                                       (`.debug` suffix in build.gradle.kts), so its data is separate too
+//                                       (`com.albaro.notes.debug`: set in build.gradle.kts), so its data is separate too
 import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";

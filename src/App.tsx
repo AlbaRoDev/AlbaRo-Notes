@@ -63,6 +63,7 @@ import { askConfirm } from "./lib/confirm";
 import { emitAnyDatabaseChange } from "./lib/database-bus";
 import { countBelow } from "./lib/page-links";
 import { UpdateBanner } from "./components/UpdateBanner";
+import { WebviewNotice } from "./components/WebviewNotice";
 import { requestUpdateCheck } from "./lib/app-update";
 import { renamePage } from "./lib/rename";
 import type { PageSummary } from "./types";
@@ -785,6 +786,7 @@ function App() {
       <ConfirmHost />
       <ImportHost onDone={handleImported} />
       <UpdateBanner />
+      <WebviewNotice />
     </>
   );
 }

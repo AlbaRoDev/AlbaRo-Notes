@@ -43,7 +43,8 @@ pub fn run() {
         .plugin(navigation_guard())
         .setup(|app| {
             let app_data_dir = app.path().app_data_dir()?;
-            let conn = db::init(&app_data_dir)?;
+            // A setup error never reaches the page (it only sees "state not managed"): say it in the log.
+            let conn = db::init(&app_data_dir).inspect_err(|e| eprintln!("the database cannot be opened: {e}"))?;
 
             // The content of pages deleted long ago (see db::sweep_orphan_blocks) goes first: while it
             // exists it keeps its attachments and synced blocks "in use".

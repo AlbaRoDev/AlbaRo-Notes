@@ -25,8 +25,22 @@ android {
         versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()
         versionName = tauriProperties.getProperty("tauri.android.versionName", "1.0")
     }
+    // The release key comes from the environment (never from a file in the repository). Without it the
+    // release APK is left unsigned, and the release workflow refuses to publish it.
+    val releaseKeystore = System.getenv("ALBARO_KEYSTORE")
+    if (releaseKeystore != null) {
+        signingConfigs {
+            create("release") {
+                storeFile = file(releaseKeystore)
+                storePassword = System.getenv("ALBARO_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ALBARO_KEY_ALIAS")
+                keyPassword = System.getenv("ALBARO_KEY_PASSWORD")
+            }
+        }
+    }
     buildTypes {
         getByName("debug") {
+            // Own package id: the test build and the real one can sit side by side on the same phone.
             manifestPlaceholders["usesCleartextTraffic"] = "true"
             isDebuggable = true
             isJniDebuggable = true
@@ -39,6 +53,7 @@ android {
             }
         }
         getByName("release") {
+            if (releaseKeystore != null) signingConfig = signingConfigs.getByName("release")
             optimization {
                enable = true
             }
@@ -56,6 +71,15 @@ android {
     }
     buildFeatures {
         buildConfig = true
+    }
+}
+
+// Own package id for the debug build, so it never replaces the signed release app on a phone (different
+// signatures cannot be installed over each other) and keeps its own data. Set here and not with
+// `applicationIdSuffix`: the Tauri CLI rewrites that line on every build.
+androidComponents {
+    onVariants(selector().withBuildType("debug")) { variant ->
+        variant.applicationId.set("com.albaro.notes.debug")
     }
 }
 

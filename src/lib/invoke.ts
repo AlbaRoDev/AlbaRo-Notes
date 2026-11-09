@@ -32,14 +32,33 @@ export function translateError(text: string): string {
   return text;
 }
 
+/**
+ * On a phone the page can start asking before Rust has finished opening the database (the first start migrates a
+ * new one): Tauri answers "state not managed" until `setup` is done. That is waiting, not an error.
+ */
+export function isStartingUp(error: unknown): boolean {
+  return typeof error === "string" && error.startsWith("state not managed for field");
+}
+
+/** How long a command waits for Rust to be ready, and between tries (ms). */
+const STARTUP_WAIT = 20_000;
+const STARTUP_STEP = 50;
+
 export async function invoke<T>(
   command: string,
   args?: InvokeArgs,
   options?: InvokeOptions,
 ): Promise<T> {
-  try {
-    return await tauriInvoke<T>(command, args, options);
-  } catch (e) {
-    throw typeof e === "string" && getLang() === "en" ? translateError(e) : e;
+  const started = Date.now();
+  for (;;) {
+    try {
+      return await tauriInvoke<T>(command, args, options);
+    } catch (e) {
+      if (isStartingUp(e) && Date.now() - started < STARTUP_WAIT) {
+        await new Promise((resolve) => setTimeout(resolve, STARTUP_STEP));
+        continue;
+      }
+      throw typeof e === "string" && getLang() === "en" ? translateError(e) : e;
+    }
   }
 }

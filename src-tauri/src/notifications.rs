@@ -33,6 +33,7 @@ use tauri_plugin_notification::NotificationExt;
 pub const LEADS: [u32; 6] = [0, 5, 10, 15, 30, 60];
 const CHECK_EVERY: Duration = Duration::from_secs(20);
 /// A notice that is this many minutes late is still shown (the thread was busy, the app just started); later it is not.
+#[cfg(any(desktop, test))]
 const GRACE_MINUTES: i64 = 2;
 const MINUTES_PER_DAY: i64 = 1_440;
 /// How far ahead a phone's alarms are set, and how many at most (the system limits what an app may schedule).
@@ -165,8 +166,15 @@ fn now_minutes(days_ahead: u64) -> (i64, String, String) {
     (minutes, today.format("%Y-%m-%d").to_string(), tomorrow.format("%Y-%m-%d").to_string())
 }
 
+/// The small icon of a notice on Android (`res/drawable/ic_notification.xml`); without it Android draws its own.
+#[cfg(mobile)]
+const SMALL_ICON: &str = "ic_notification";
+
 fn show(app: &AppHandle, notice: &Notice) -> Result<(), String> {
-    app.notification().builder().title(&notice.title).body(&notice.body).show().map_err(|e| e.to_string())
+    let builder = app.notification().builder().title(&notice.title).body(&notice.body);
+    #[cfg(mobile)]
+    let builder = builder.icon(SMALL_ICON);
+    builder.show().map_err(|e| e.to_string())
 }
 
 /// A sample, so the user can see what the notices look like (and that the system lets them through).
@@ -299,6 +307,7 @@ fn sync(app: &AppHandle, wanted: &[Alarm], scheduled: &mut Scheduled) {
             .notification()
             .builder()
             .id(alarm.id)
+            .icon(SMALL_ICON)
             .title(&alarm.notice.title)
             .body(&alarm.notice.body)
             .schedule(Schedule::At {

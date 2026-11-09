@@ -54,10 +54,38 @@
 }
 
 @media (pointer: coarse) {
+  /*
+   * What a finger presses: 48 px on a phone, 52 px from the medium class up (a tablet is held further away, with
+   * two hands). It does not grow with the system's letter size: a button of icons would push its neighbours off a small
+   * screen, and the ones with text grow with their text. Every touch rule reads this one value; the
+   * 4 px between neighbours keeps a miss from landing on the next button.
+   */
+  html {
+    --touch-min: 48px;
+    --touch-gap: 4px;
+  }
+
+  html[data-size="medium"],
+  html[data-size="expanded"] {
+    --touch-min: 52px;
+    --touch-gap: 6px;
+  }
+
+  /* a small phone: six buttons of 48 px and their gaps are wider than the top bar, so the floor goes back to 44 px */
+  @media (max-width: 359px) {
+    html {
+      --touch-min: 44px;
+    }
+  }
+
+  html[data-size="compact"] .workspace-bar {
+    gap: var(--touch-gap);
+  }
+
   /* ≥ 44 px (the finger's tip), growing with the letter size where the control has text */
   .ws-icon-button {
-    min-width: 44px;
-    min-height: 44px;
+    min-width: var(--touch-min, 44px);
+    min-height: var(--touch-min, 44px);
     box-sizing: border-box;
   }
 
@@ -68,7 +96,7 @@
   .app-menu-pop button[role="menuitem"],
   .confirm-actions button,
   .about-actions button {
-    min-height: 44px;
+    min-height: var(--touch-min, 44px);
   }
 
   .sidebar-item,
@@ -76,7 +104,7 @@
   [role="menuitem"],
   [role="option"] {
     box-sizing: border-box;
-    min-height: 44px;
+    min-height: var(--touch-min, 44px);
   }
 
   .search-results li[role="option"] {
@@ -95,19 +123,19 @@
   .page-header-add button,
   .ai-head button,
   .ai-input button {
-    min-height: 44px;
+    min-height: var(--touch-min, 44px);
   }
 
   .page-topbar-actions button,
   .cal-bar button,
   .ai-head button {
-    min-width: 44px;
+    min-width: var(--touch-min, 44px);
   }
 
   /* the canvas block's toolbar: pen, colours, zoom… */
   .page-editor .ProseMirror .canvas-bar button {
-    min-width: 44px;
-    min-height: 44px;
+    min-width: var(--touch-min, 44px);
+    min-height: var(--touch-min, 44px);
   }
 
   .sidebar-close,
@@ -119,8 +147,61 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 44px;
-    min-height: 44px;
+    min-width: var(--touch-min, 44px);
+    min-height: var(--touch-min, 44px);
+  }
+}
+
+/*
+ * The small controls inside the editor and the side panels. The buttons of a toolbar just grow; the ones that sit in
+ * a line of text (the toggle's arrow, a callout's icon) keep their look and widen only the part that answers to a tap.
+ * `!important`: these components' own sizes live in chunks that load after this file.
+ */
+@media (pointer: coarse) {
+  .page-editor .ProseMirror .tabs-bar button,
+  .page-editor .ProseMirror .columns-controls button,
+  .page-editor .ProseMirror .image-toolbar button,
+  .page-editor .ProseMirror .code-block-toolbar button,
+  .page-editor .ProseMirror .code-block-toolbar select,
+  .page-editor .ProseMirror .file-card button,
+  .companion-item,
+  .cal-tray-section li button,
+  .cal-tray-tools button,
+  .cal-tray-tools input,
+  .cal-day-head,
+  .workspace-companion-close,
+  .ai-send,
+  .update-note button {
+    box-sizing: border-box;
+    min-width: var(--touch-min, 44px) !important;
+    min-height: var(--touch-min, 44px) !important;
+  }
+
+  .companion-item,
+  .cal-tray-section li button,
+  .cal-tray-tools button,
+  .cal-tray-tools input,
+  .cal-day-head,
+  .update-note button:not(.update-close) {
+    min-width: 0 !important;
+  }
+
+  .page-editor .ProseMirror .toggle-marker,
+  .page-editor .ProseMirror .callout-icon {
+    position: relative;
+  }
+
+  .page-editor .ProseMirror .toggle-marker::after,
+  .page-editor .ProseMirror .callout-icon::after {
+    content: "";
+    position: absolute;
+    inset: -14px;
+  }
+
+  .page-editor .ProseMirror .columns-controls,
+  .page-editor .ProseMirror .image-toolbar,
+  .page-editor .ProseMirror .tabs-bar {
+    gap: var(--touch-gap);
   }
 }
 

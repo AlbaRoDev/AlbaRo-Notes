@@ -1,13 +1,39 @@
 package com.albaro.notes
 
+import android.app.Activity
 import android.os.Bundle
 import android.view.View
+import android.webkit.JavascriptInterface
+import android.webkit.WebView
 import androidx.activity.enableEdgeToEdge
 import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 
+/**
+ * The page tells the window what colour it is (`src/lib/system-bars.ts`): the system's own dark mode is not the
+ * app's (the user can pick the opposite theme), so without this the strip under the navigation buttons and the
+ * status bar's icons would be the wrong way round. It only changes colours; nothing can be read through it.
+ */
+class SystemBars(private val activity: Activity) {
+  @JavascriptInterface
+  fun set(rgb: Int, dark: Boolean) {
+    activity.runOnUiThread {
+      val window = activity.window
+      window.decorView.setBackgroundColor(0xFF000000.toInt() or (rgb and 0xFFFFFF))
+      val controller = WindowCompat.getInsetsController(window, window.decorView)
+      controller.isAppearanceLightStatusBars = !dark
+      controller.isAppearanceLightNavigationBars = !dark
+    }
+  }
+}
+
 class MainActivity : TauriActivity() {
+  override fun onWebViewCreate(webView: WebView) {
+    webView.addJavascriptInterface(SystemBars(this), "AlbaroNative")
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)
