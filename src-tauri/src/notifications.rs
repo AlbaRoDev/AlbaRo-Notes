@@ -6,7 +6,15 @@
 //! timers throttled, and nothing here needs a permission for the page (`tauri-plugin-notification` is used only from
 //! here, and a test in `lib.rs` checks that no capability grants it).
 //!
-//! Known limits: it works while the app is running (closed, nothing watches); all-day entries, the «Fecha límite»
+//! On a phone nothing may depend on that thread (the system suspends the app in the background), so there the
+//! notices are handed to the system's alarm clock instead (`AlarmManager` through the plugin): while the app runs,
+//! the thread keeps the alarms of the next two weeks equal to the calendar (`plan` + `sync`), and the system shows
+//! them with the app closed.
+//!
+//! Known limits: on desktop it works while the app is running (closed, nothing watches); on a phone the alarms
+//! cover the next `HORIZON_DAYS` from the last time the app ran, are inexact (a few minutes late) unless the user
+//! allows exact alarms for the app, and the ones already set are lost on a reboot until the app is opened;
+//! all-day entries, the «Fecha límite»
 //! of the tasks and the date mentions of the pages have no hour, so they do not notify; what was due while the
 //! computer slept for longer than `GRACE_MINUTES` is not shown late; clicking a notification only brings the app
 //! up (the plugin has no click handler on desktop).
@@ -27,6 +35,11 @@ const CHECK_EVERY: Duration = Duration::from_secs(20);
 /// A notice that is this many minutes late is still shown (the thread was busy, the app just started); later it is not.
 const GRACE_MINUTES: i64 = 2;
 const MINUTES_PER_DAY: i64 = 1_440;
+/// How far ahead a phone's alarms are set, and how many at most (the system limits what an app may schedule).
+#[cfg(mobile)]
+const HORIZON_DAYS: u64 = 14;
+#[cfg(any(mobile, test))]
+const MAX_ALARMS: usize = 100;
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
@@ -82,7 +95,7 @@ pub fn set_settings(app: &AppHandle, settings: &Settings) -> Result<Settings, St
 }
 
 /// What is shown.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Notice {
     pub title: String,
     pub body: String,
@@ -106,6 +119,7 @@ fn clock(stamp: &str) -> &str {
 
 /// The notices due at `now` (minutes since 1970, local), each at most once: `shown` remembers `entry@start` with
 /// the minute it was due and forgets what is more than a day old.
+#[cfg(any(desktop, test))]
 fn due(entries: &[CalendarEntry], now: i64, lead: u32, shown: &mut HashMap<String, i64>) -> Vec<Notice> {
     shown.retain(|_, due_at| *due_at > now - MINUTES_PER_DAY);
     let mut out = Vec::new();
@@ -118,29 +132,34 @@ fn due(entries: &[CalendarEntry], now: i64, lead: u32, shown: &mut HashMap<Strin
         if shown.insert(format!("{}@{}", e.id, e.start), due_at).is_some() {
             continue;
         }
-        let left = start - now;
-        let when = if left <= 0 {
-            lang::pick("Ahora", "Now").to_string()
-        } else {
-            format!("{} {left} min", lang::pick("En", "In"))
-        };
-        let mut body = format!("{when} · {}–{}", clock(&e.start), clock(&e.end));
-        if let Some(place) = e.location.as_deref().filter(|l| !l.is_empty()) {
-            body.push_str(&format!(" · {place}"));
-        }
-        let title = if e.title.is_empty() {
-            lang::pick("Cita sin título", "Untitled event").to_string()
-        } else {
-            e.title.clone()
-        };
-        out.push(Notice { title, body });
+        out.push(notice_of(e, start - now));
     }
     out
 }
 
-fn now_minutes() -> (i64, String, String) {
+/// What is shown for `e`, `left` minutes before it starts.
+fn notice_of(e: &CalendarEntry, left: i64) -> Notice {
+    let when = if left <= 0 {
+        lang::pick("Ahora", "Now").to_string()
+    } else {
+        format!("{} {left} min", lang::pick("En", "In"))
+    };
+    let mut body = format!("{when} · {}–{}", clock(&e.start), clock(&e.end));
+    if let Some(place) = e.location.as_deref().filter(|l| !l.is_empty()) {
+        body.push_str(&format!(" · {place}"));
+    }
+    let title = if e.title.is_empty() {
+        lang::pick("Cita sin título", "Untitled event").to_string()
+    } else {
+        e.title.clone()
+    };
+    Notice { title, body }
+}
+
+/// Now as minutes since 1970 (local), today and the day `days_ahead` later (`YYYY-MM-DD`).
+fn now_minutes(days_ahead: u64) -> (i64, String, String) {
     let now = chrono::Local::now().naive_local();
-    let (today, tomorrow) = (now.date(), now.date() + chrono::Days::new(1));
+    let (today, tomorrow) = (now.date(), now.date() + chrono::Days::new(days_ahead));
     let minutes =
         calendar::day_number(&today.format("%Y-%m-%d").to_string()) * MINUTES_PER_DAY + i64::from(chrono::Timelike::hour(&now)) * 60 + i64::from(chrono::Timelike::minute(&now));
     (minutes, today.format("%Y-%m-%d").to_string(), tomorrow.format("%Y-%m-%d").to_string())
@@ -162,6 +181,7 @@ pub fn send_test(app: &AppHandle) -> Result<(), String> {
 }
 
 /// Starts the thread that watches the calendar.
+#[cfg(desktop)]
 pub fn start(app: AppHandle) {
     std::thread::spawn(move || {
         let mut shown: HashMap<String, i64> = HashMap::new();
@@ -171,12 +191,7 @@ pub fn start(app: AppHandle) {
             if !settings.enabled {
                 continue;
             }
-            let (now, today, tomorrow) = now_minutes();
-            let state = app.state::<DbState>();
-            let Ok(conn) = state.0.lock() else { continue };
-            let entries = calendar::list_entries(&conn, &today, &tomorrow);
-            drop(conn); // the notification is shown without holding the database
-            let Ok(entries) = entries else { continue };
+            let Some((now, entries)) = calendar_ahead(&app, 1) else { continue };
             for notice in due(&entries, now, settings.lead_minutes, &mut shown) {
                 if let Err(e) = show(&app, &notice) {
                     eprintln!("notification failed: {e}");
@@ -184,6 +199,146 @@ pub fn start(app: AppHandle) {
             }
         }
     });
+}
+
+/// Now (minutes since 1970, local) and the entries from today to `days_ahead` days later.
+fn calendar_ahead(app: &AppHandle, days_ahead: u64) -> Option<(i64, Vec<CalendarEntry>)> {
+    let (now, today, last) = now_minutes(days_ahead);
+    let state = app.state::<DbState>();
+    let conn = state.0.lock().ok()?;
+    let entries = calendar::list_entries(&conn, &today, &last);
+    drop(conn); // the notification is shown without holding the database
+    Some((now, entries.ok()?))
+}
+
+/// Starts the thread that keeps the system's alarms equal to the calendar. It sets them at once and checks again
+/// every few seconds (a change, a new language or a new lead is a different plan); the system fires them.
+#[cfg(mobile)]
+pub fn start(app: AppHandle) {
+    std::thread::spawn(move || {
+        let mut scheduled = Scheduled::new();
+        loop {
+            let settings = settings_path(&app).map(|p| load(&p)).unwrap_or_default();
+            let wanted = match calendar_ahead(&app, HORIZON_DAYS) {
+                Some((now, entries)) if settings.enabled => Some(plan(&entries, now, settings.lead_minutes)),
+                _ if !settings.enabled => Some(Vec::new()),
+                _ => None, // the calendar could not be read this time: leave the alarms as they are
+            };
+            if let Some(wanted) = wanted {
+                sync(&app, &wanted, &mut scheduled);
+            }
+            std::thread::sleep(CHECK_EVERY);
+        }
+    });
+}
+
+/// One alarm to set: the system fires it at `at` (minutes since 1970, local) whatever the app is doing.
+#[cfg(any(mobile, test))]
+#[derive(Debug, PartialEq, Clone)]
+struct Alarm {
+    id: i32,
+    at: i64,
+    notice: Notice,
+}
+
+/// A number for an occurrence that stays the same between runs and versions (so setting it again replaces the
+/// alarm instead of adding another, and a removed one can be cancelled): FNV-1a, never 0 and never negative.
+#[cfg(any(mobile, test))]
+fn alarm_id(key: &str) -> i32 {
+    let hash = key.bytes().fold(0x811c_9dc5_u32, |h, b| (h ^ u32::from(b)).wrapping_mul(0x0100_0193));
+    ((hash & 0x7fff_ffff) as i32).max(1)
+}
+
+/// The alarms the calendar asks for: each entry with an hour, `lead` minutes before it, that is still to come, soonest
+/// first and at most `MAX_ALARMS`. The same entries and lead always give the same alarms.
+#[cfg(any(mobile, test))]
+fn plan(entries: &[CalendarEntry], now: i64, lead: u32) -> Vec<Alarm> {
+    let mut out: Vec<Alarm> = entries
+        .iter()
+        .filter(|e| !e.all_day)
+        .filter_map(|e| {
+            let at = minutes_of(&e.start)? - i64::from(lead);
+            (at > now).then(|| Alarm {
+                id: alarm_id(&format!("{}@{}", e.id, e.start)),
+                at,
+                notice: notice_of(e, i64::from(lead)),
+            })
+        })
+        .collect();
+    out.sort_by_key(|a| (a.at, a.id));
+    out.dedup_by_key(|a| a.id);
+    out.truncate(MAX_ALARMS);
+
+    out
+}
+
+/// What the alarms were last set to (by id), to touch only what changed.
+#[cfg(mobile)]
+type Scheduled = HashMap<i32, Alarm>;
+
+/// Sets what is new or different and cancels what is no longer wanted (deleted, moved or beyond the horizon). What
+/// has already gone off is only forgotten: cancelling it would also take its notice out of the shade.
+#[cfg(mobile)]
+fn sync(app: &AppHandle, wanted: &[Alarm], scheduled: &mut Scheduled) {
+    use tauri_plugin_notification::Schedule;
+    let (now, ..) = now_minutes(0);
+    scheduled.retain(|_, a| a.at > now);
+    let gone: Vec<i32> = scheduled.keys().copied().filter(|id| !wanted.iter().any(|w| w.id == *id)).collect();
+    if !gone.is_empty() {
+        match app.notification().cancel(gone.clone()) {
+            Ok(()) => gone.iter().for_each(|id| drop(scheduled.remove(id))),
+            Err(e) => eprintln!("cancelling alarms failed: {e}"),
+        }
+    }
+    for alarm in wanted {
+        if scheduled.get(&alarm.id) == Some(alarm) {
+            continue;
+        }
+        let Some(date) = local_time(alarm.at) else { continue };
+        let set = app
+            .notification()
+            .builder()
+            .id(alarm.id)
+            .title(&alarm.notice.title)
+            .body(&alarm.notice.body)
+            .schedule(Schedule::At {
+                date,
+                repeating: false,
+                allow_while_idle: true,
+            })
+            .show();
+        match set {
+            Ok(()) => drop(scheduled.insert(alarm.id, alarm.clone())),
+            Err(e) => eprintln!("setting an alarm failed: {e}"),
+        }
+    }
+}
+
+/// The moment of `minutes` (local time of day since 1970) as the instant the plugin wants, with the offset the clock
+/// has then (a change of summer time in between is respected). `None` for a time that does not exist.
+#[cfg(mobile)]
+fn local_time(minutes: i64) -> Option<time::OffsetDateTime> {
+    use chrono::TimeZone;
+    let naive = chrono::DateTime::from_timestamp(minutes.checked_mul(60)?, 0)?.naive_utc();
+    let instant = chrono::Local.from_local_datetime(&naive).earliest()?;
+    time::OffsetDateTime::from_unix_timestamp(instant.timestamp()).ok()
+}
+
+/// Whether the system lets the app show notices; on Android 13+ `ask` shows the system's question (once). Always
+/// true on desktop.
+pub fn permission(app: &AppHandle, ask: bool) -> Result<bool, String> {
+    #[cfg(mobile)]
+    {
+        use tauri_plugin_notification::PermissionState;
+        let notification = app.notification();
+        let state = if ask { notification.request_permission() } else { notification.permission_state() };
+        Ok(state.map_err(|e| e.to_string())? == PermissionState::Granted)
+    }
+    #[cfg(desktop)]
+    {
+        let _ = (app, ask);
+        Ok(true)
+    }
 }
 
 #[cfg(test)]
@@ -262,6 +417,40 @@ mod tests {
                 body: "Ahora · 10:00–11:00 · Sala 2".into()
             }]
         );
+    }
+
+    #[test]
+    fn the_phone_sets_an_alarm_per_future_entry_with_an_hour_and_the_same_one_every_time() {
+        let entries = [
+            entry("past", "2026-11-04T09:00", "2026-11-04T10:00", false),
+            entry("next", "2026-11-04T12:00", "2026-11-04T13:00", false),
+            entry("day", "2026-11-04", "2026-11-04", true),
+            entry("later", "2026-11-05T08:00", "2026-11-05T09:00", false),
+            entry("x", "garbage", "garbage", false),
+        ];
+        let now = at("2026-11-04T10:00");
+        let alarms = plan(&entries, now, 15);
+        assert_eq!(alarms.iter().map(|a| a.at).collect::<Vec<_>>(), [at("2026-11-04T11:45"), at("2026-11-05T07:45")]);
+        assert_eq!(alarms[0].notice.body, "En 15 min · 12:00–13:00", "the lead is said as it is, not as the minutes left");
+        assert_eq!(alarms, plan(&entries, now, 15), "same calendar, same alarms (same ids: setting again replaces)");
+        assert_ne!(alarms[0].id, alarms[1].id);
+        assert!(alarms.iter().all(|a| a.id > 0));
+        // an alarm whose time has already come is not set (the system refuses a past time)
+        assert_eq!(plan(&entries, at("2026-11-04T11:45"), 15).len(), 1);
+        // moving an entry is another occurrence: another alarm
+        let moved = [entry("next", "2026-11-04T12:30", "2026-11-04T13:30", false)];
+        assert_ne!(plan(&moved, now, 0)[0].id, alarm_id("next@2026-11-04T12:00"));
+    }
+
+    #[test]
+    fn the_phone_never_sets_more_alarms_than_the_cap_and_keeps_the_soonest() {
+        let entries: Vec<_> = (0..MAX_ALARMS + 20)
+            .map(|i| entry(&format!("e{i}"), &format!("2026-11-05T{:02}:{:02}", 8 + i / 60, i % 60), "2026-11-05T23:00", false))
+            .collect();
+        let alarms = plan(&entries, at("2026-11-04T10:00"), 0);
+        assert_eq!(alarms.len(), MAX_ALARMS);
+        assert_eq!(alarms[0].at, at("2026-11-05T08:00"));
+        assert!(alarms.windows(2).all(|w| w[0].at <= w[1].at));
     }
 
     #[test]

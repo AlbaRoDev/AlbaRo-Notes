@@ -230,6 +230,20 @@ pub fn store_bytes(dir: &Path, bytes: &[u8], ext: &str) -> Result<AttachmentInfo
     copy_limited(bytes, dir, ext, MAX_ATTACHMENT_BYTES)
 }
 
+/// The same as `store_bytes` for a file that came as base64 text: Android's webview does not let Tauri read a
+/// request body, so there the page cannot send raw bytes. The size is checked before decoding (the text is a third
+/// bigger than the file), so a huge text is refused without being turned into a huge buffer.
+pub fn store_base64(dir: &Path, data: &str, ext: &str) -> Result<AttachmentInfo, String> {
+    use base64::Engine;
+    if data.len() as u64 > MAX_ATTACHMENT_BYTES / 3 * 4 + 4 {
+        return Err(format!("El archivo supera el límite de {} MB", max_mb(MAX_ATTACHMENT_BYTES)));
+    }
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(data)
+        .map_err(|_| "El contenido del archivo no es válido".to_string())?;
+    store_bytes(dir, &bytes, ext)
+}
+
 pub fn resolve(dir: &Path, file: &str) -> Result<PathBuf, String> {
     if !valid_attachment_name(file) {
         return Err("Referencia de archivo no válida".to_string());
@@ -834,6 +848,20 @@ mod tests {
         assert_eq!(parse_meta("<head><meta name='x"), Meta::default());
         assert_eq!(parse_meta(""), Meta::default());
         assert_eq!(clean(&"é".repeat(500), 200).unwrap().chars().count(), 200);
+    }
+
+    #[test]
+    fn a_file_sent_as_base64_is_stored_the_same_and_the_limit_and_bad_text_are_refused() {
+        let dir = std::env::temp_dir().join(format!("albaro-test-{}", Uuid::new_v4()));
+        let info = store_base64(&dir, "aG9sYQ==", "TXT").unwrap(); // "hola"
+        assert!(valid_attachment_name(&info.file) && info.file.ends_with(".txt") && info.size == 4);
+        assert_eq!(fs::read(dir.join(&info.file)).unwrap(), b"hola");
+        assert!(store_base64(&dir, "no es base64!", "txt").is_err());
+        // a text longer than the limit allows is refused without decoding it
+        let too_long = "A".repeat((MAX_ATTACHMENT_BYTES / 3 * 4 + 8) as usize);
+        assert!(store_base64(&dir, &too_long, "bin").err().unwrap().contains("límite"));
+        assert_eq!(fs::read_dir(&dir).unwrap().count(), 1, "a refused upload leaves nothing behind");
+        let _ = fs::remove_dir_all(&dir);
     }
 
     #[test]

@@ -417,6 +417,10 @@ export const en: Record<string, string> = {
   Cuándo: "When",
   "No se pudo mostrar el aviso: {n1}": "Couldn't show the alert: {n1}",
   "Probar un aviso": "Test an alert",
+  "El sistema tiene bloqueados los avisos de esta app: actívalos en los ajustes del móvil (Aplicaciones → AlbaRo Notes → Notificaciones).":
+    "The system blocks this app's alerts: turn them on in the phone's settings (Apps → AlbaRo Notes → Notifications).",
+  "Los avisos de las próximas dos semanas los programa el sistema y suenan aunque la app esté cerrada; se actualizan al abrirla. Pueden llegar unos minutos tarde con el ahorro de batería. Las citas de todo el día y las fechas límite no tienen hora, así que no avisan.":
+    "The alerts for the next two weeks are scheduled by the system and ring even with the app closed; they are refreshed when you open it. They can arrive a few minutes late with battery saving. All-day events and due dates have no time, so they don't alert.",
   "Solo se avisa con la aplicación abierta. Las citas de todo el día y las fechas límite no tienen hora, así que no avisan.":
     "You are only alerted while the app is open. All-day events and due dates have no time, so they don't alert.",
   "Todos los días": "Every day",

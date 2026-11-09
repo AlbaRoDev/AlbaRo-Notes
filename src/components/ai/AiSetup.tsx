@@ -10,6 +10,7 @@ import {
   type AiStatus,
 } from "../../lib/ai-client";
 import { t } from "../../lib/i18n.ts";
+import { isMobile } from "../../lib/viewport.ts";
 
 const MODES: { mode: AiMode; title: string; text: string }[] = [
   {
@@ -131,7 +132,8 @@ export function AiSetup({
         )}
       </p>
 
-      {MODES.map((m) => (
+      {/* Ollama does not run on a phone (Rust refuses the mode there as well) */}
+      {MODES.filter((m) => !(isMobile && m.mode === "local")).map((m) => (
         <label key={m.mode} className="ai-choice" data-selected={mode === m.mode}>
           <input
             type="radio"

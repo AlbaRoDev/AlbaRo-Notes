@@ -521,6 +521,11 @@ export async function setNotificationSettings(
   return invoke<NotificationSettings>("set_notification_settings", { settings });
 }
 
+/** Whether the system lets the app notify; with `ask`, shows its question first if it was not decided (Android 13+). */
+export async function notificationPermission(ask: boolean): Promise<boolean> {
+  return invoke<boolean>("notification_permission", { ask });
+}
+
 /** Shows a sample notification (and fails if the system does not let it through). */
 export async function testNotification(): Promise<void> {
   return invoke<void>("test_notification");

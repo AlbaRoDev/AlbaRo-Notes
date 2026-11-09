@@ -26,6 +26,7 @@ import { useAttachmentUrl } from "../../hooks/useAttachmentUrl";
 import { focusLineAfterNode } from "./media-commands";
 import { ImageView } from "./ImageView";
 import { t } from "../../lib/i18n.ts";
+import { isMobile } from "../../lib/viewport.ts";
 
 const KIND_LABEL: Record<MediaKind, { noun: string; Icon: typeof ImageIcon; accept?: string }> = {
   image: { noun: t("imagen"), Icon: ImageIcon, accept: "image/*" },
@@ -297,13 +298,16 @@ function FileCard({
         )}
         <span className="file-card-size">{formatSize(size ?? 0)}</span>
       </div>
-      <button
-        type="button"
-        onClick={() => void act(async () => (await openAttachment(file), null))}
-      >
-        <ExternalLink size={14} strokeWidth={1.75} aria-hidden="true" />
-        {t("Abrir")}
-      </button>
+      {/* a phone cannot hand a file of the app's private folder to another app: it is saved, then opened from there */}
+      {!isMobile && (
+        <button
+          type="button"
+          onClick={() => void act(async () => (await openAttachment(file), null))}
+        >
+          <ExternalLink size={14} strokeWidth={1.75} aria-hidden="true" />
+          {t("Abrir")}
+        </button>
+      )}
       <button
         type="button"
         onClick={() =>

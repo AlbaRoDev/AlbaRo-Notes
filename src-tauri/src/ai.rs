@@ -421,6 +421,10 @@ impl AiConfig {
 
     /// The new configuration, or why it isn't valid. Nothing reaches a request without passing here.
     fn with(&self, input: &AiSettingsInput) -> Result<AiConfig, String> {
+        // Ollama does not exist on a phone: the page hides the option, and nothing may reach the local address anyway
+        if cfg!(mobile) && input.mode == Mode::Local {
+            return Err("La IA local no está disponible en el móvil".to_string());
+        }
         check_model(&input.local_model)?;
         check_model(&input.online_model)?;
         check_model(&input.local_vision_model)?;

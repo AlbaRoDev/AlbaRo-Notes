@@ -1012,6 +1012,17 @@
   animation: pop-in 120ms ease-out;
 }
 
+/* with the bell in the middle of a narrow bar the panel would hang off the left of the screen (and sit under the sheet
+   of the tray): it takes the width of the window, at the height it would have had */
+html[data-size="compact"] .cal-notify-pop {
+  position: fixed;
+  top: auto;
+  right: 0.75rem;
+  left: 0.75rem;
+  z-index: 40;
+  width: auto;
+}
+
 .cal-notify-row {
   display: flex;
   align-items: center;

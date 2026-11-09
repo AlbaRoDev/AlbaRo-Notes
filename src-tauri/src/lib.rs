@@ -35,6 +35,8 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        // Only used from Rust (src/commands.rs: saving to what the dialog picked); no capability gives it to the page.
+        .plugin(tauri_plugin_fs::init())
         // Only used from Rust (src/notifications.rs); no capability gives it to the page.
         .plugin(tauri_plugin_notification::init())
         // The window can only show the app itself.
@@ -132,6 +134,7 @@ pub fn run() {
             commands::get_notification_settings,
             commands::set_notification_settings,
             commands::test_notification,
+            commands::notification_permission,
             commands::set_language,
             commands::list_boards,
             commands::get_board,

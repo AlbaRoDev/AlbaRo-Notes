@@ -3,11 +3,13 @@ import { Bell, BellOff } from "lucide-react";
 import {
   NOTIFICATION_LEADS,
   getNotificationSettings,
+  notificationPermission,
   setNotificationSettings,
   testNotification,
   type NotificationSettings as Settings,
 } from "../../lib/db-client";
 import { t } from "../../lib/i18n.ts";
+import { isMobile } from "../../lib/viewport.ts";
 
 const leadLabel = (m: number) =>
   m === 0 ? t("A la hora") : m === 60 ? t("1 hora antes") : t("{m} min antes", { m });
@@ -19,6 +21,8 @@ const leadLabel = (m: number) =>
 export function NotificationSettings({ onError }: { onError: (message: string | null) => void }) {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [open, setOpen] = useState(false);
+  // a phone asks the person once (Android 13+); `false` = the system blocks the app's notices
+  const [allowed, setAllowed] = useState(true);
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -27,9 +31,17 @@ export function NotificationSettings({ onError }: { onError: (message: string | 
       .catch((e) => onError(String(e)));
   }, [onError]);
 
+  const enabled = settings?.enabled;
+  useEffect(() => {
+    if (!isMobile || !enabled) return;
+    notificationPermission(true)
+      .then(setAllowed)
+      .catch(() => setAllowed(true));
+  }, [enabled]);
+
   useEffect(() => {
     if (!open) return;
-    const onDown = (e: MouseEvent) => {
+    const onDown = (e: PointerEvent) => {
       if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
@@ -37,10 +49,10 @@ export function NotificationSettings({ onError }: { onError: (message: string | 
       e.stopPropagation();
       setOpen(false);
     };
-    document.addEventListener("mousedown", onDown);
+    document.addEventListener("pointerdown", onDown);
     document.addEventListener("keydown", onKey, true);
     return () => {
-      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("pointerdown", onDown);
       document.removeEventListener("keydown", onKey, true);
     };
   }, [open]);
@@ -102,10 +114,21 @@ export function NotificationSettings({ onError }: { onError: (message: string | 
           >
             {t("Probar un aviso")}
           </button>
+          {settings.enabled && !allowed && (
+            <p className="cal-notify-hint" role="alert">
+              {t(
+                "El sistema tiene bloqueados los avisos de esta app: actívalos en los ajustes del móvil (Aplicaciones → AlbaRo Notes → Notificaciones).",
+              )}
+            </p>
+          )}
           <p className="cal-notify-hint">
-            {t(
-              "Solo se avisa con la aplicación abierta. Las citas de todo el día y las fechas límite no tienen hora, así que no avisan.",
-            )}
+            {isMobile
+              ? t(
+                  "Los avisos de las próximas dos semanas los programa el sistema y suenan aunque la app esté cerrada; se actualizan al abrirla. Pueden llegar unos minutos tarde con el ahorro de batería. Las citas de todo el día y las fechas límite no tienen hora, así que no avisan.",
+                )
+              : t(
+                  "Solo se avisa con la aplicación abierta. Las citas de todo el día y las fechas límite no tienen hora, así que no avisan.",
+                )}
           </p>
         </div>
       )}

@@ -15,10 +15,12 @@ use crate::trash::{self, TrashItem};
 use crate::views::{self, ViewInfo, ViewResult};
 use serde_json::Value;
 use std::fs;
+use std::io::Write;
 use std::path::Path;
 use tauri::ipc::{InvokeBody, Request};
 use tauri::{AppHandle, State};
-use tauri_plugin_dialog::DialogExt;
+use tauri_plugin_dialog::{DialogExt, FilePath};
+use tauri_plugin_fs::{FsExt, OpenOptions};
 use tauri_plugin_opener::OpenerExt;
 
 /// Verifies the SQLite connection is alive and migrations have run.
@@ -357,6 +359,14 @@ pub fn calendar_deadlines(state: State<DbState>, from: String, to: String) -> Re
     calendar::deadlines(&conn, &from, &to)
 }
 
+/// What the save dialog picked, open for writing (emptied if it had content): a path on desktop, a `content://`
+/// address on Android, which only the system can open.
+fn create_picked(app: &AppHandle, dest: FilePath) -> Result<fs::File, String> {
+    let mut options = OpenOptions::new();
+    options.write(true).create(true).truncate(true);
+    app.fs().open(dest, options).map_err(|e| format!("No se pudo guardar el archivo: {e}"))
+}
+
 /// Exports the calendar as an `.ics` file: the text is made first (the lock is not held while the dialog is open), then
 /// the native «Save as» dialog is shown from Rust so the page never supplies a path. Returns the saved path, or
 /// `None` if the user cancelled.
@@ -376,9 +386,11 @@ pub async fn export_calendar(app: AppHandle, state: State<'_, DbState>, include_
     else {
         return Ok(None);
     };
-    let dest = dest.into_path().map_err(|e| e.to_string())?;
-    fs::write(&dest, text).map_err(|e| format!("No se pudo guardar el archivo: {e}"))?;
-    Ok(Some(dest.to_string_lossy().into_owned()))
+    let shown = dest.to_string();
+    create_picked(&app, dest)?
+        .write_all(text.as_bytes())
+        .map_err(|e| format!("No se pudo guardar el archivo: {e}"))?;
+    Ok(Some(shown))
 }
 
 /// notifications of the calendar (src/notifications.rs): the settings and a sample to see what they look like.
@@ -395,6 +407,15 @@ pub fn set_notification_settings(app: AppHandle, settings: notifications::Settin
 #[tauri::command]
 pub fn test_notification(app: AppHandle) -> Result<(), String> {
     notifications::send_test(&app)
+}
+
+/// Whether the system lets the app show notices; `ask` also shows its question when it was not decided yet
+/// (Android 13+). Asks from a worker: the answer comes back through the activity, which must not wait on this thread.
+#[tauri::command]
+pub async fn notification_permission(app: AppHandle, ask: bool) -> Result<bool, String> {
+    tauri::async_runtime::spawn_blocking(move || notifications::permission(&app, ask))
+        .await
+        .map_err(|e| e.to_string())?
 }
 
 /// The page tells the language of the interface at start and when it changes (see lang.rs).
@@ -674,16 +695,24 @@ pub fn set_value(state: State<DbState>, page_id: String, property_id: String, va
     databases::set_value(&conn, &page_id, &property_id, &value)
 }
 
-/// Raw-bytes IPC (no JSON/base64): the file is the request body, its extension
+/// Raw-bytes IPC (no JSON/base64 where the webview allows it): the file is the request body, its extension
 /// the `x-file-ext` header. The display name never reaches Rust — the frontend
 /// keeps it in the node, only the sanitized extension names the file on disk.
 #[tauri::command]
 pub async fn store_attachment(dir: State<'_, AttachmentsDir>, request: Request<'_>) -> Result<AttachmentInfo, String> {
-    let InvokeBody::Raw(bytes) = request.body() else {
-        return Err("Se esperaba el contenido del archivo como bytes".to_string());
-    };
-    let ext = request.headers().get("x-file-ext").and_then(|v| v.to_str().ok()).unwrap_or("");
-    attachments::store_bytes(&dir.0, bytes, ext)
+    match request.body() {
+        InvokeBody::Raw(bytes) => {
+            let ext = request.headers().get("x-file-ext").and_then(|v| v.to_str().ok()).unwrap_or("");
+            attachments::store_bytes(&dir.0, bytes, ext)
+        }
+        // Android: no raw bodies (see `attachments::store_base64`); the file is `{ data: <base64>, ext }`
+        InvokeBody::Json(json) => {
+            let Some(data) = json.get("data").and_then(Value::as_str) else {
+                return Err("Se esperaba el contenido del archivo como bytes".to_string());
+            };
+            attachments::store_base64(&dir.0, data, json.get("ext").and_then(Value::as_str).unwrap_or(""))
+        }
+    }
 }
 
 #[tauri::command]
@@ -719,8 +748,8 @@ pub async fn save_attachment_as(app: AppHandle, dir: State<'_, AttachmentsDir>, 
     let Some(dest) = app.dialog().file().set_file_name(suggested).blocking_save_file() else {
         return Ok(false);
     };
-    let dest = dest.into_path().map_err(|e| e.to_string())?;
-    fs::copy(&source, &dest).map_err(|e| format!("No se pudo guardar el archivo: {e}"))?;
+    let mut from = fs::File::open(&source).map_err(|e| format!("No se pudo guardar el archivo: {e}"))?;
+    std::io::copy(&mut from, &mut create_picked(&app, dest)?).map_err(|e| format!("No se pudo guardar el archivo: {e}"))?;
     Ok(true)
 }
 

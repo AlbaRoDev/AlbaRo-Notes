@@ -2,6 +2,8 @@
 // its {placeholders} in the same order. tests/i18n.test.mjs keeps this file in step with the Rust code.
 export const enRust: Record<string, string> = {
   "La clave de API no tiene un formato válido": "The API key doesn't have a valid format",
+  "El contenido del archivo no es válido": "The file content isn't valid",
+  "La IA local no está disponible en el móvil": "Local AI isn't available on a phone",
   "Para usar la IA online hace falta una clave de API": "An API key is needed to use the online AI",
   "Para usar la IA online tienes que aceptar que el texto de tus notas se envíe al servicio":
     "To use the online AI you must accept that the text of your notes is sent to the service",

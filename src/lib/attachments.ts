@@ -66,7 +66,7 @@ export function mediaKindOf(mime: string): MediaKind {
   return "file";
 }
 
-/** Copies a File into the app's attachments folder. The bytes travel as a raw IPC body — no JSON, no base64. */
+/** Copies a File into the app's attachments folder. The bytes travel as a raw IPC body — no JSON, no base64 — except on Android. */
 export async function storeAttachment(file: File): Promise<AttachmentInfo> {
   if (file.size > MAX_ATTACHMENT_BYTES) {
     throw new Error(
@@ -78,6 +78,16 @@ export async function storeAttachment(file: File): Promise<AttachmentInfo> {
     /[^a-zA-Z0-9]/g,
     "",
   );
+  if (import.meta.env.TAURI_ENV_PLATFORM === "android") {
+    // Android's webview cannot hand Tauri a request body, so there the bytes would not arrive as bytes: as text
+    const data = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result).split(",", 2)[1] ?? "");
+      reader.onerror = () => reject(reader.error ?? new Error(t("Error desconocido")));
+      reader.readAsDataURL(file);
+    });
+    return invoke<AttachmentInfo>("store_attachment", { data, ext });
+  }
   const bytes = new Uint8Array(await file.arrayBuffer());
   return invoke<AttachmentInfo>("store_attachment", bytes, { headers: { "x-file-ext": ext } });
 }
