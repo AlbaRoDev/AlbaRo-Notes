@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Download, X } from "lucide-react";
 import {
+  type AppUpdate,
   checkAppUpdate,
   getAppUpdate,
   installAppUpdate,
@@ -21,19 +22,27 @@ const UP_TO_DATE_MS = 4000;
  */
 export function UpdateBanner() {
   const [version, setVersion] = useState<string | null>(null);
+  const [manual, setManual] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [installing, setInstalling] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
   /** The outcome of a manual «Buscar actualizaciones» while there is no new version to offer. */
-  const [check, setCheck] = useState<{ text: string; busy: boolean; error?: boolean } | null>(null);
+  const [check, setCheck] = useState<{
+    text: string;
+    busy: boolean;
+    error?: boolean;
+    /** Stays until closed (it tells what to do next). */
+    keep?: boolean;
+  } | null>(null);
 
   useEffect(() => {
     let alive = true;
-    void getAppUpdate().then(
-      (update) => alive && update && setVersion(update.version),
-      console.error,
-    );
-    const unlisten = onAppUpdateAvailable((update) => alive && setVersion(update.version));
+    const offer = (update: AppUpdate) => {
+      setVersion(update.version);
+      setManual(update.manual);
+    };
+    void getAppUpdate().then((update) => alive && update && offer(update), console.error);
+    const unlisten = onAppUpdateAvailable((update) => alive && offer(update));
     const offCheck = onUpdateCheckRequested(() => {
       setHidden(false);
       setCheck({ text: t("Buscando actualizaciones…"), busy: true });
@@ -41,7 +50,7 @@ export function UpdateBanner() {
         (update) => {
           if (!alive) return;
           if (update) {
-            setVersion(update.version);
+            offer(update);
             setCheck(null);
           } else {
             setCheck({ text: t("Ya tienes la última versión."), busy: false });
@@ -61,7 +70,7 @@ export function UpdateBanner() {
 
   // «Ya tienes la última versión» fades by itself; an error stays until it is closed.
   useEffect(() => {
-    if (check === null || check.busy || check.error) return;
+    if (check === null || check.busy || check.error || check.keep) return;
     const timer = setTimeout(() => setCheck(null), UP_TO_DATE_MS);
     return () => clearTimeout(timer);
   }, [check]);
@@ -96,9 +105,18 @@ export function UpdateBanner() {
       // Installing closes the app. A field still being edited commits when it loses focus, and the
       // autosave of a page has its own wait (Known limit: a fixed pause; a longer debounce someday needs more).
       if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
-      await new Promise((resolve) => setTimeout(resolve, SETTLE_MS));
-      // On success the app restarts and this never settles.
+      if (!manual) await new Promise((resolve) => setTimeout(resolve, SETTLE_MS));
+      // On success the app restarts and this never settles; on the phone it settles once the download is opened.
       await installAppUpdate();
+      setInstalling(false);
+      setHidden(true);
+      setCheck({
+        text: t(
+          "Se abre la descarga en el navegador. Cuando termine, ábrela para instalar la nueva versión.",
+        ),
+        busy: false,
+        keep: true,
+      });
     } catch (err) {
       setInstalling(false);
       setFailure(String(err));
@@ -111,7 +129,9 @@ export function UpdateBanner() {
       <div className="update-text">
         <p>
           {t("Hay una versión nueva:")} <strong>{version}</strong>
-          {t(". Se descarga, se comprueba su firma y se reinicia la app.")}
+          {manual
+            ? t(". Se descarga desde GitHub y la instalas tú, sin cables.")
+            : t(". Se descarga, se comprueba su firma y se reinicia la app.")}
         </p>
         {failure !== null && <p className="update-error">{failure}</p>}
         <div className="update-actions">
@@ -121,7 +141,7 @@ export function UpdateBanner() {
             disabled={installing}
             onClick={() => void install()}
           >
-            {installing ? t("Instalando…") : t("Instalar y reiniciar")}
+            {installing ? t("Instalando…") : manual ? t("Descargar") : t("Instalar y reiniciar")}
           </button>
           <button
             type="button"

@@ -18,6 +18,8 @@ mod ics;
 mod lang;
 mod maps;
 mod notifications;
+#[cfg(any(mobile, test))]
+mod release_check;
 mod search;
 mod secret;
 mod tasks;
@@ -95,6 +97,12 @@ pub fn run() {
             #[cfg(desktop)]
             {
                 app.handle().plugin(tauri_plugin_updater::Builder::new().build())?;
+                app.manage(app_update::Pending::default());
+                app_update::start(app.handle().clone());
+            }
+            // The phone looks at GitHub's latest release (it cannot replace itself, see `app_update_mobile.rs`).
+            #[cfg(mobile)]
+            {
                 app.manage(app_update::Pending::default());
                 app_update::start(app.handle().clone());
             }

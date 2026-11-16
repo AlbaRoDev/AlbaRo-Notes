@@ -38,6 +38,8 @@ pub struct Pending {
 #[derive(Clone, Serialize)]
 pub struct UpdateInfo {
     version: String,
+    /// Always false here: the plugin installs and restarts by itself (the phone app finishes by hand).
+    manual: bool,
 }
 
 /// Looks now and then, in a thread of its own; errors (no connection, no release yet) are only
@@ -73,7 +75,10 @@ pub async fn check(app: &AppHandle) -> Result<Option<UpdateInfo>, String> {
             update.download_url.host_str().unwrap_or("?")
         ));
     }
-    let info = UpdateInfo { version: update.version.clone() };
+    let info = UpdateInfo {
+        version: update.version.clone(),
+        manual: false,
+    };
     if let Ok(mut pending) = app.state::<Pending>().update.lock() {
         *pending = Some(update);
     }
@@ -101,7 +106,10 @@ fn allowed(url: &Url) -> bool {
 pub fn pending(app: &AppHandle) -> Option<UpdateInfo> {
     let pending = app.state::<Pending>();
     let update = pending.update.lock().ok()?;
-    update.as_ref().map(|u| UpdateInfo { version: u.version.clone() })
+    update.as_ref().map(|u| UpdateInfo {
+        version: u.version.clone(),
+        manual: false,
+    })
 }
 
 /// Downloads, verifies and installs the update, then restarts. The page has already written

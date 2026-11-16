@@ -1162,6 +1162,10 @@ export const en: Record<string, string> = {
   "Instalando…": "Installing…",
   "Instalar y reiniciar": "Install and restart",
   "Más tarde": "Later",
+  ". Se descarga desde GitHub y la instalas tú, sin cables.":
+    ". It is downloaded from GitHub and you install it yourself, no cable needed.",
+  "Se abre la descarga en el navegador. Cuando termine, ábrela para instalar la nueva versión.":
+    "The download opens in the browser. When it finishes, open it to install the new version.",
   Modo: "Mode",
   "Añadir el {day}": "Add on {day}",
   "Añadir en este día": "Add on this day",

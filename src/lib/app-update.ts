@@ -5,6 +5,8 @@ import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 
 export interface AppUpdate {
   version: string;
+  /** The phone app cannot replace itself: the button opens the download and the person finishes the install. */
+  manual: boolean;
 }
 
 /** The update the last check found, if any (the event may have come before the page listened). */
@@ -29,7 +31,7 @@ export function onUpdateCheckRequested(handler: () => void): () => void {
   return () => window.removeEventListener(CHECK_REQUESTED, handler);
 }
 
-/** Downloads, checks the signature of and installs the update, then restarts. On success it never settles. */
+/** Downloads, checks the signature of and installs the update, then restarts (on success it never settles). On the phone it opens the download in the browser and settles. */
 export async function installAppUpdate(): Promise<void> {
   return invoke("install_app_update");
 }
