@@ -55,7 +55,7 @@ function addMonths(iso: string, months: number): string {
   return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(Math.min(d, last)).padStart(2, "0")}`;
 }
 
-function titleOf(view: View, anchor: string): string {
+function titleOf(view: View, anchor: string, days: string[]): string {
   const [y, m, d] = anchor.split("-").map(Number);
   if (view === "month") return formatMonthYear(y, m);
   if (view === "day")
@@ -65,7 +65,7 @@ function titleOf(view: View, anchor: string): string {
       month: "long",
       year: "numeric",
     });
-  const week = weekDays(anchor);
+  const week = days;
   const [a, b] = [week[0].split("-").map(Number), week[6].split("-").map(Number)];
   return a[1] === b[1]
     ? t("{d1} – {d2} de {month} de {year}", {
@@ -97,6 +97,12 @@ export function CalendarSection({ host }: { host: TaskHost }) {
     return VIEWS.find((v) => v.id === stored)?.id ?? first;
   });
   const [anchor, setAnchor] = useState(todayIso);
+  // The first day of the week view once a dragged block has scrolled it: from then on it no longer starts on a Monday.
+  const [slide, setSlide] = useState<string | null>(null);
+  const goTo = (date: string) => {
+    setSlide(null);
+    setAnchor(date);
+  };
   const [showDeadlines, setShowDeadlines] = useState(() => readPref("calendar.deadlines") !== "0");
   const [showLists, setShowLists] = useState(() => readPref("calendar.checklists") !== "0");
   const [entries, setEntries] = useState<CalendarEntry[]>([]);
@@ -118,7 +124,15 @@ export function CalendarSection({ host }: { host: TaskHost }) {
   useEffect(() => writePref("calendar.checklists", showLists ? "1" : "0"), [showLists]);
 
   const [year, month] = [Number(anchor.slice(0, 4)), Number(anchor.slice(5, 7))];
-  const days = useMemo(() => (view === "day" ? [anchor] : weekDays(anchor)), [view, anchor]);
+  const days = useMemo(
+    () =>
+      view === "day"
+        ? [anchor]
+        : view === "week" && slide
+          ? Array.from({ length: 7 }, (_, i) => addDays(slide, i))
+          : weekDays(anchor),
+    [view, anchor, slide],
+  );
   const [from, to] = useMemo(() => {
     if (view === "month") {
       const weeks = monthGrid(year, month);
@@ -132,9 +146,11 @@ export function CalendarSection({ host }: { host: TaskHost }) {
   const reload = () => setReloadKey((k) => k + 1);
   useEffect(() => {
     let cancelled = false;
+    // the week view also loads the week on each side, so days scrolled in by a dragged block already have their entries
+    const [first, last] = view === "week" ? [addDays(from, -7), addDays(to, 7)] : [from, to];
     Promise.all([
-      listCalendarEntries(from, to),
-      showDeadlines ? calendarDeadlines(from, to) : Promise.resolve([]),
+      listCalendarEntries(first, last),
+      showDeadlines ? calendarDeadlines(first, last) : Promise.resolve([]),
       calendarScheduledTasks(),
     ])
       .then(([found, due, ids]) => {
@@ -147,7 +163,7 @@ export function CalendarSection({ host }: { host: TaskHost }) {
     return () => {
       cancelled = true;
     };
-  }, [from, to, showDeadlines, pages, reloadKey]);
+  }, [view, from, to, showDeadlines, pages, reloadKey]);
 
   /** Runs a write, reloads and reports a refusal; resolves the result (or null when it failed). */
   const write = async <T,>(action: () => Promise<T>): Promise<T | null> => {
@@ -198,11 +214,19 @@ export function CalendarSection({ host }: { host: TaskHost }) {
   // a rule was just created: the panel scrolls to it (the panel is long and the rule is at its end)
   const [revealRepeat, setRevealRepeat] = useState(false);
 
-  const apply = async (entry: CalendarEntry, input: EntryInput, scope: Scope, reselect = true) => {
+  /** `reselect`: select the saved entry afterwards; `"kept"`: only if the person has not picked something else meanwhile (a field saves as the focus leaves it, and the press that did it may be deselecting). */
+  const apply = async (
+    entry: CalendarEntry,
+    input: EntryInput,
+    scope: Scope,
+    reselect: boolean | "kept" = true,
+  ) => {
     const done = await write(() =>
       updateCalendarEntry(entry.id, input, scope, entry.occurrence ?? undefined),
     );
-    if (done && reselect) setSelectedId(keyOf(done));
+    if (done && reselect === "kept")
+      setSelection((s) => (s.length === 1 && s[0] === keyOf(entry) ? [keyOf(done)] : s));
+    else if (done && reselect) setSelectedId(keyOf(done));
     return done !== null;
   };
   /** From the grid (a drag): a repeating entry asks first (with what was already changed in the panel). */
@@ -221,7 +245,7 @@ export function CalendarSection({ host }: { host: TaskHost }) {
     if (!entry.repeat && input.repeat) setRevealRepeat(true);
     if (ruleChanged || !entry.repeat) {
       setDraft(null);
-      return apply(entry, input, "all");
+      return apply(entry, input, "all", "kept");
     }
     setDraft({ key: keyOf(entry), entry, input });
     return Promise.resolve(true);
@@ -411,12 +435,19 @@ export function CalendarSection({ host }: { host: TaskHost }) {
       repeat: null,
     });
 
-  const step = (dir: -1 | 1) =>
+  const step = (dir: -1 | 1) => {
     setAnchor((a) =>
       view === "month" ? addMonths(a, dir) : addDays(a, dir * (view === "week" ? 7 : 1)),
     );
+    setSlide((s) => s && addDays(s, dir * 7));
+  };
+  /** A block dragged at a side of the week view scrolls it by one day (the first time, off the Monday it began on). */
+  const slideBy = (dir: -1 | 1) => {
+    setSlide((s) => addDays(s ?? weekDays(anchor)[0], dir));
+    setAnchor((a) => addDays(a, dir));
+  };
   const openDay = (date: string) => {
-    setAnchor(date);
+    goTo(date);
     setView("day");
   };
 
@@ -466,7 +497,7 @@ export function CalendarSection({ host }: { host: TaskHost }) {
     <div className="cal">
       <div className="cal-main">
         <div className="cal-bar">
-          <button type="button" className="cal-today" onClick={() => setAnchor(todayIso())}>
+          <button type="button" className="cal-today" onClick={() => goTo(todayIso())}>
             {t("Hoy")}
           </button>
           <button
@@ -485,14 +516,14 @@ export function CalendarSection({ host }: { host: TaskHost }) {
           >
             <ChevronRight size={16} aria-hidden="true" />
           </button>
-          <h2>{titleOf(view, anchor)}</h2>
+          <h2>{titleOf(view, anchor, days)}</h2>
           <div className="cal-extras" data-open={extrasOpen}>
             <input
               type="date"
               className="cal-date"
               value={anchor}
               aria-label={t("Ir a una fecha")}
-              onChange={(e) => e.target.value && setAnchor(e.target.value)}
+              onChange={(e) => e.target.value && goTo(e.target.value)}
             />
             <span className="cal-bar-gap" />
             <label
@@ -539,7 +570,15 @@ export function CalendarSection({ host }: { host: TaskHost }) {
           </div>
           <div className="cal-views" role="group" aria-label={t("Vista")}>
             {VIEWS.map(({ id, label }) => (
-              <button key={id} type="button" aria-pressed={view === id} onClick={() => setView(id)}>
+              <button
+                key={id}
+                type="button"
+                aria-pressed={view === id}
+                onClick={() => {
+                  setSlide(null);
+                  setView(id);
+                }}
+              >
                 {label}
               </button>
             ))}
@@ -601,6 +640,7 @@ export function CalendarSection({ host }: { host: TaskHost }) {
             onChange={change}
             onChangeMany={changeMany}
             onDropTask={dropTask}
+            onSlide={slideBy}
           />
         )}
       </div>

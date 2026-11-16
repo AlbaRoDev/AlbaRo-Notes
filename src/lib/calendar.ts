@@ -117,6 +117,23 @@ export function dragSpan(
 }
 
 /**
+ * Which way a block being dragged at screen `x` pushes the view: -1 (earlier) at the grid's left edge, 1 (later) at
+ * its right edge — within `edge` px of it or past it — and 0 elsewhere. Holding it there pages the calendar, so a block can
+ * be dragged from one week into the next as if the calendar were continuous.
+ */
+export function edgeDirection(x: number, left: number, right: number, edge: number): -1 | 0 | 1 {
+  if (x <= left + edge) return -1;
+  if (x >= right - edge) return 1;
+  return 0;
+}
+
+/** How hard a block pushes at a side of the grid, 0 (just inside the zone) to 1 (a whole zone past it): the further, the faster the days scroll. */
+export function edgeSpeed(x: number, left: number, right: number, edge: number): number {
+  const depth = x <= left + edge ? left + edge - x : x - (right - edge);
+  return clamp(depth / (2 * edge), 0, 1);
+}
+
+/**
  * An entry's start and end moved by a drag of `minutes` (a timed entry, across days too) or of `days` (an all-day one,
  * which only moves by whole days).
  */

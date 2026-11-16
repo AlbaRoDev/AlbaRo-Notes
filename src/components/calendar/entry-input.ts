@@ -33,14 +33,12 @@ export function isAdditive(e: { ctrlKey: boolean; metaKey: boolean; shiftKey: bo
 }
 
 /**
- * Enter ends the edit of a field and hands the focus back to the calendar. Just blurring would leave it on nothing,
- * and then Supr could not reach the calendar to delete the selected entry.
+ * Enter ends the edit of a field: blurring it is what saves it. The focus falls on the page, and Supr still reaches
+ * the calendar from there (its key listener is on the document). Handing the focus to the `.cal` div instead did
+ * nothing once that div stopped being focusable, so Enter never saved.
  */
 export function leaveOnEnter(e: KeyboardEvent<HTMLInputElement>) {
-  if (e.key !== "Enter") return;
-  const calendar = e.currentTarget.closest<HTMLElement>(".cal");
-  if (calendar) calendar.focus();
-  else e.currentTarget.blur();
+  if (e.key === "Enter") e.currentTarget.blur();
 }
 
 /**

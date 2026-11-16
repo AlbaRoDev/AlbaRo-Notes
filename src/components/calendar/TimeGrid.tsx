@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { SquareCheck } from "lucide-react";
 import { WEEKDAYS, dayNumber, todayIso } from "../../lib/date-utils";
 import {
@@ -8,6 +8,8 @@ import {
   clamp,
   clock,
   dragSpan,
+  edgeDirection,
+  edgeSpeed,
   endFromAbs,
   layoutDay,
   shiftEntry,
@@ -34,6 +36,14 @@ const LIST_MIN_PX = 90;
 /** The shortest a block is drawn (a 15-minute one is 12 px); below `SHORT_PX` it drops its padding to fit one line. */
 const MIN_BLOCK_PX = 16;
 const SHORT_PX = 30;
+/**
+ * Holding a block within `EDGE_PX` of the grid's side (or past it) scrolls the days: after `SCROLL_DELAY` ms one day every
+ * `SLOW_STEP` ms, down to `FAST_STEP` ms the further past the edge. Each step slides the columns over its own length.
+ */
+const EDGE_PX = 56;
+const SCROLL_DELAY = 250;
+const SLOW_STEP = 420;
+const FAST_STEP = 130;
 
 interface Preview {
   /** The entry being dragged (none while creating). */
@@ -70,7 +80,10 @@ export function TimeGrid({
   onChange,
   onChangeMany,
   onDropTask,
+  onSlide,
 }: {
+  /** A block is held at the side of the grid: the days scroll by one (-1 earlier, 1 later). */
+  onSlide: (dir: -1 | 1) => void;
   days: string[];
   entries: CalendarEntry[];
   deadlines: Deadline[];
@@ -93,6 +106,46 @@ export function TimeGrid({
 }) {
   const today = todayIso();
   const [preview, setPreview] = useState<Preview | null>(null);
+  const root = useRef<HTMLDivElement>(null);
+  const repage = useRef<(() => void) | null>(null);
+  const slide = useRef<{ dir: -1 | 1; ms: number } | null>(null);
+  const sliding = useRef<{ dir: -1 | 1; ms: number; w: number; at: number } | null>(null);
+  // The days scrolled by one under a held block: the columns slide over the step (so the calendar flows instead of
+  // jumping) and the block is placed again where the pointer now is, staying put on screen while they pass under it.
+  useLayoutEffect(() => {
+    const moved = slide.current;
+    slide.current = null;
+    const grid = root.current;
+    if (moved && grid) {
+      const w = grid.querySelector(".cal-col")?.getBoundingClientRect().width ?? 0;
+      grid.querySelectorAll(".cal-block[data-dragging]").forEach((el) => {
+        for (const a of el.getAnimations()) a.cancel();
+      });
+      for (const el of grid.querySelectorAll(".cal-day-head, .cal-allday-cell, .cal-col"))
+        el.animate([{ transform: `translateX(${moved.dir * w}px)` }, { transform: "none" }], {
+          duration: moved.ms,
+          easing: "linear",
+        });
+      sliding.current = { ...moved, w, at: performance.now() };
+    }
+    repage.current?.();
+  }, [days]);
+  // the dragged blocks appear (placed again) after the slide began: they undo what is left of it
+  useLayoutEffect(() => {
+    const s = sliding.current;
+    if (!s) return;
+    const left = s.ms - (performance.now() - s.at);
+    if (left <= 0) return;
+    root.current?.querySelectorAll(".cal-block[data-dragging]").forEach((el) => {
+      if (el.getAnimations().length) return;
+      el.animate(
+        [{ transform: `translateX(${(-s.dir * s.w * left) / s.ms}px)` }, { transform: "none" }],
+        { duration: left, easing: "linear" },
+      );
+    });
+  }, [preview]);
+  // the blocks being dragged stay drawn after the days scroll to a range that does not list them
+  const [carried, setCarried] = useState<CalendarEntry[]>([]);
   const [ghost, setGhost] = useState<{ date: string; start: number } | null>(null);
   const [allDayOver, setAllDayOver] = useState<string | null>(null);
   // tasks whose checklist is folded in their blocks (a view state, not saved)
@@ -152,7 +205,10 @@ export function TimeGrid({
     move: (x: number, y: number, dx: number, dy: number) => void,
     done: (clicked: boolean) => void,
   ) => {
+    // Cancelling the press keeps the browser from moving the focus, so a field being typed in (the panel's title) would
+    // stay focused until the entry is dropped from under it — and a removed field never saves. Leave it now instead.
     e.preventDefault();
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     const [x0, y0] = [e.clientX, e.clientY];
     let moved = false;
     const onMove = (ev: PointerEvent) => {
@@ -239,34 +295,83 @@ export function TimeGrid({
     const additive = isAdditive(e);
     // dragging one block of a selection drags them all
     const together = mode === "move" && selectedIds.size > 1 && selectedIds.has(keyOf(entry));
+    const moving = together ? entries.filter((x) => selectedIds.has(keyOf(x))) : [entry];
+    if (mode === "move") setCarried(moving);
     let last: Preview = { id: keyOf(entry), start: from, end: to };
     let dayShift = 0;
+    // Holding the block at a side of the grid scrolls the calendar a day at a time (each step slides, see `slide`), faster
+    // the further past the edge it is, so it can go on into the next weeks and not only to a day in view.
+    let edge: -1 | 0 | 1 = 0;
+    let pointerX = 0;
+    let scroller: number | undefined;
+    const stopScrolling = () => {
+      window.clearTimeout(scroller);
+      edge = 0;
+    };
+    /** The grid's sides now (the columns change as the days scroll, so `days` of this render would be stale) and the zone that counts as the edge. */
+    const sides = () => {
+      const rects = [...columns.current.values()].map((el) => el.getBoundingClientRect());
+      if (!rects.length) return null;
+      return {
+        left: Math.min(...rects.map((r) => r.left)),
+        right: Math.max(...rects.map((r) => r.right)),
+        // never more than half a column, or in a narrow window the middle of a column would count as the edge
+        zone: Math.min(EDGE_PX, Math.min(...rects.map((r) => r.width)) / 2),
+      };
+    };
+    const watchEdge = (x: number) => {
+      pointerX = x;
+      const s = sides();
+      const dir = s ? edgeDirection(x, s.left, s.right, s.zone) : 0;
+      if (dir === edge) return;
+      stopScrolling();
+      edge = dir;
+      if (!dir) return;
+      const step = () => {
+        const now = sides();
+        const speed = now ? edgeSpeed(pointerX, now.left, now.right, now.zone) : 0;
+        const ms = SLOW_STEP - (SLOW_STEP - FAST_STEP) * speed;
+        slide.current = { dir, ms };
+        onSlide(dir);
+        scroller = window.setTimeout(step, ms);
+      };
+      scroller = window.setTimeout(step, SCROLL_DELAY);
+    };
+    const follow = (x: number, y: number, dy: number) => {
+      dayShift =
+        mode === "move" ? dayNumber(locate(x, y)?.date ?? grabDate) - dayNumber(grabDate) : 0;
+      const span = dragSpan(mode, from, to, dy / PX_PER_MIN + dayShift * DAY_MINUTES);
+      last = {
+        id: keyOf(entry),
+        ...span,
+        group: together ? { minutes: span.start - from, days: dayShift } : undefined,
+      };
+      setPreview(last);
+    };
     track(
       e,
       (x, y, _dx, dy) => {
-        dayShift =
-          mode === "move" ? dayNumber(locate(x, y)?.date ?? grabDate) - dayNumber(grabDate) : 0;
-        const span = dragSpan(mode, from, to, dy / PX_PER_MIN + dayShift * DAY_MINUTES);
-        last = {
-          id: keyOf(entry),
-          ...span,
-          group: together ? { minutes: span.start - from, days: dayShift } : undefined,
-        };
-        setPreview(last);
+        if (mode === "move") {
+          watchEdge(x);
+          // the pointer stays put while the page turns: the columns under it change, so the block is placed again
+          repage.current = () => follow(x, y, dy);
+        }
+        follow(x, y, dy);
       },
       (clicked) => {
+        stopScrolling();
+        repage.current = null;
         setPreview(null);
+        setCarried([]);
         if (clicked) return onSelect(keyOf(entry), additive);
         if (last.start === from && last.end === to) return;
         if (last.group) {
           const { minutes, days: shifted } = last.group;
           onChangeMany(
-            entries
-              .filter((x) => selectedIds.has(keyOf(x)))
-              .map((x) => ({
-                entry: x,
-                input: { ...toInput(x), ...shiftEntry(x, minutes, shifted) },
-              })),
+            moving.map((x) => ({
+              entry: x,
+              input: { ...toInput(x), ...shiftEntry(x, minutes, shifted) },
+            })),
           );
         } else
           onChange(entry, {
@@ -278,7 +383,10 @@ export function TimeGrid({
     );
   };
 
-  const timed = useMemo(() => entries.filter((e) => !e.allDay), [entries]);
+  const timed = useMemo(() => {
+    const listed = new Set(entries.map(keyOf));
+    return [...entries, ...carried.filter((c) => !listed.has(keyOf(c)))].filter((e) => !e.allDay);
+  }, [entries, carried]);
   const allDay = useMemo(() => entries.filter((e) => e.allDay), [entries]);
 
   /** The part of each timed block that falls on one day (a block across midnight has a piece in each), the one being dragged shown where it would land. */
@@ -330,7 +438,11 @@ export function TimeGrid({
   };
 
   return (
-    <div className="cal-grid" style={{ "--cal-days": days.length } as React.CSSProperties}>
+    <div
+      className="cal-grid"
+      ref={root}
+      style={{ "--cal-days": days.length } as React.CSSProperties}
+    >
       <div className="cal-head">
         <div className="cal-gutter" />
         {days.map((date) => {
