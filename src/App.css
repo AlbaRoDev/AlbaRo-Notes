@@ -31,6 +31,17 @@
   --tag-purple: rgb(232, 222, 238);
   --tag-pink: rgb(245, 224, 233);
   --tag-red: rgb(255, 226, 221);
+  /* Extra colours only the calendar offers. */
+  --tag-teal: rgb(204, 236, 232);
+  --tag-cyan: rgb(204, 239, 246);
+  --tag-sky: rgb(214, 230, 252);
+  --tag-indigo: rgb(220, 222, 247);
+  --tag-lavender: rgb(238, 230, 250);
+  --tag-magenta: rgb(248, 214, 240);
+  --tag-coral: rgb(255, 215, 205);
+  --tag-lime: rgb(228, 240, 200);
+  --tag-mint: rgb(209, 242, 222);
+  --tag-sand: rgb(240, 232, 214);
   /* Text colours of the formatting bar (the backgrounds are the --tag-* ones). */
   --text-gray: #787774;
   --text-brown: #9f6b53;
@@ -72,6 +83,16 @@
   --tag-purple: rgb(73, 47, 100);
   --tag-pink: rgb(105, 49, 76);
   --tag-red: rgb(110, 54, 48);
+  --tag-teal: rgb(28, 82, 80);
+  --tag-cyan: rgb(24, 76, 92);
+  --tag-sky: rgb(35, 70, 120);
+  --tag-indigo: rgb(55, 58, 112);
+  --tag-lavender: rgb(84, 62, 115);
+  --tag-magenta: rgb(112, 40, 98);
+  --tag-coral: rgb(128, 60, 44);
+  --tag-lime: rgb(84, 98, 30);
+  --tag-mint: rgb(36, 96, 66);
+  --tag-sand: rgb(100, 86, 56);
   --text-gray: #9b9b9b;
   --text-brown: #bf7e71;
   --text-orange: #ffa344;

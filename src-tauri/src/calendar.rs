@@ -21,6 +21,8 @@ use rusqlite::{params, Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
+/// Colours only the calendar offers, on top of the tag colours (the same list as `ENTRY_COLORS` in the interface).
+const EXTRA_COLORS: [&str; 10] = ["teal", "cyan", "sky", "indigo", "lavender", "magenta", "coral", "lime", "mint", "sand"];
 const MAX_TITLE: usize = 200;
 const MAX_LOCATION: usize = 200;
 const MAX_NOTE: usize = 2_000;
@@ -380,7 +382,7 @@ fn clean(conn: &Connection, input: &EntryInput) -> Result<Clean, String> {
     }
     let color = match input.color.as_deref() {
         None => None,
-        Some(c) if COLORS.contains(&c) => Some(c.to_string()),
+        Some(c) if COLORS.contains(&c) || EXTRA_COLORS.contains(&c) => Some(c.to_string()),
         Some(c) => return Err(format!("Color desconocido: {c}")),
     };
     let repeat = input.repeat.as_ref().map(|r| check_repeat(r, &input.start[..10])).transpose()?;
@@ -1213,6 +1215,10 @@ mod tests {
         let mut with_color = input(None, Some("c"), "2026-10-21", "2026-10-21", true);
         with_color.color = Some("fucsia".to_string());
         assert!(create_entry(&conn, &with_color).is_err());
+        for ok in ["teal", "sand", "red"] {
+            with_color.color = Some(ok.to_string());
+            assert!(create_entry(&conn, &with_color).is_ok(), "{ok}");
+        }
         let mut long_note = input(None, Some("c"), "2026-10-21", "2026-10-21", true);
         long_note.note = Some("n".repeat(2001));
         assert!(create_entry(&conn, &long_note).is_err());

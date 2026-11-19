@@ -805,6 +805,38 @@
   color: var(--danger);
 }
 
+/* The calendar's own colours (the tag ones are named in DatabaseView.css). */
+:is(.cal-block, .cal-chip, .cal-editor-colors button)[data-color="teal"] {
+  --tag: var(--tag-teal);
+}
+:is(.cal-block, .cal-chip, .cal-editor-colors button)[data-color="cyan"] {
+  --tag: var(--tag-cyan);
+}
+:is(.cal-block, .cal-chip, .cal-editor-colors button)[data-color="sky"] {
+  --tag: var(--tag-sky);
+}
+:is(.cal-block, .cal-chip, .cal-editor-colors button)[data-color="indigo"] {
+  --tag: var(--tag-indigo);
+}
+:is(.cal-block, .cal-chip, .cal-editor-colors button)[data-color="lavender"] {
+  --tag: var(--tag-lavender);
+}
+:is(.cal-block, .cal-chip, .cal-editor-colors button)[data-color="magenta"] {
+  --tag: var(--tag-magenta);
+}
+:is(.cal-block, .cal-chip, .cal-editor-colors button)[data-color="coral"] {
+  --tag: var(--tag-coral);
+}
+:is(.cal-block, .cal-chip, .cal-editor-colors button)[data-color="lime"] {
+  --tag: var(--tag-lime);
+}
+:is(.cal-block, .cal-chip, .cal-editor-colors button)[data-color="mint"] {
+  --tag: var(--tag-mint);
+}
+:is(.cal-block, .cal-chip, .cal-editor-colors button)[data-color="sand"] {
+  --tag: var(--tag-sand);
+}
+
 .cal-editor-colors {
   display: flex;
   flex-wrap: wrap;
