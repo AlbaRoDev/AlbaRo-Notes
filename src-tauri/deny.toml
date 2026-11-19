@@ -46,6 +46,7 @@ ignore = [
     { id = "RUSTSEC-2026-0370", reason = "zvariant is unmaintained. Linux only (zbus, through Tauri's dialog and opener plugins). Review when Tauri updates its Linux plugins." },
     { id = "RUSTSEC-2026-0371", reason = "zbus_names is unmaintained. Linux only (zbus, through Tauri's dialog and opener plugins). Review when Tauri updates its Linux plugins." },
     { id = "RUSTSEC-2026-0372", reason = "zvariant_derive is unmaintained. Linux only (zbus, through Tauri's dialog and opener plugins). Review when Tauri updates its Linux plugins." },
+    { id = "RUSTSEC-2026-0543", reason = "chrono is unmaintained (no known vulnerability, no safe upgrade). Used only to read the local clock and time zone for calendar notifications; nothing parses untrusted dates with it. Review when jiff or time covers local time zones, or if a vulnerability is reported." },
 ]
 
 [bans]
