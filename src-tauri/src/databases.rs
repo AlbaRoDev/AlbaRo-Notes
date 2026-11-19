@@ -210,6 +210,13 @@ fn options_of(config: &str) -> Vec<String> {
 
 /// Notion's tag colours. An option with none stored is coloured by its position on the client.
 pub const COLORS: [&str; 10] = ["default", "gray", "brown", "orange", "yellow", "green", "blue", "purple", "pink", "red"];
+/// More tag colours, picked by hand only: the colour an option gets by its position cycles through `COLORS`.
+pub const EXTRA_COLORS: [&str; 10] = ["teal", "cyan", "sky", "indigo", "lavender", "magenta", "coral", "lime", "mint", "sand"];
+
+/// Whether `name` is a tag colour (the same list as `TAG_COLORS` in the interface).
+pub fn is_color(name: &str) -> bool {
+    COLORS.contains(&name) || EXTRA_COLORS.contains(&name)
+}
 
 fn colors_of(config: &str) -> Map<String, Value> {
     serde_json::from_str::<Value>(config)
@@ -707,7 +714,7 @@ pub fn set_option_color(conn: &Connection, id: &str, option: &str, color: &str) 
     if !has_options(&prop.kind) {
         return Err("Solo las propiedades de selección y de etiquetas tienen opciones".to_string());
     }
-    if !COLORS.contains(&color) {
+    if !is_color(color) {
         return Err(format!("Color desconocido: {color}"));
     }
     let options = options_of(&prop.config);
@@ -1509,7 +1516,10 @@ mod tests {
         let colors = |fx: &Fx| get_database(&fx.conn, &fx.db).unwrap().unwrap().properties[0].config.get("colors").cloned();
         set_option_color(&fx.conn, &sel, "A", "green").unwrap();
         assert_eq!(colors(&fx), Some(json!({ "A": "green" })));
-        assert!(set_option_color(&fx.conn, &sel, "A", "fucsia").is_err()); // not a Notion colour
+        set_option_color(&fx.conn, &sel, "A", "teal").unwrap(); // one of the extra colours
+        assert_eq!(colors(&fx), Some(json!({ "A": "teal" })));
+        set_option_color(&fx.conn, &sel, "A", "green").unwrap();
+        assert!(set_option_color(&fx.conn, &sel, "A", "fucsia").is_err()); // not a colour at all
         assert!(set_option_color(&fx.conn, &sel, "Nope", "red").is_err()); // no such option
         let text = prop(&fx, "Nota", "text", json!({}));
         assert!(set_option_color(&fx.conn, &text, "A", "red").is_err());

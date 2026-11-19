@@ -12,34 +12,12 @@ import {
   unstamp,
 } from "../../lib/calendar";
 import { dayNumber } from "../../lib/date-utils";
-import type { CalendarEntry, EntryColor, EntryInput } from "../../types";
+import type { CalendarEntry, EntryInput } from "../../types";
+import { TAG_COLORS } from "../database/property-types";
 import { TaskChecklist } from "../boards/TaskChecklist";
 import { RepeatField } from "./RepeatField";
 import { leaveOnEnter, toInput } from "./entry-input";
 import { t } from "../../lib/i18n.ts";
-
-/** The colours an entry can have, in rainbow order (Rust's `COLORS` plus `calendar::EXTRA_COLORS`). */
-const ENTRY_COLORS: { color: EntryColor; label: string }[] = [
-  { color: "red", label: t("Rojo") },
-  { color: "coral", label: t("Coral") },
-  { color: "orange", label: t("Naranja") },
-  { color: "sand", label: t("Arena") },
-  { color: "yellow", label: t("Amarillo") },
-  { color: "lime", label: t("Lima") },
-  { color: "green", label: t("Verde") },
-  { color: "mint", label: t("Menta") },
-  { color: "teal", label: t("Turquesa") },
-  { color: "cyan", label: t("Cian") },
-  { color: "sky", label: t("Celeste") },
-  { color: "blue", label: t("Azul") },
-  { color: "indigo", label: t("Índigo") },
-  { color: "purple", label: t("Morado") },
-  { color: "lavender", label: t("Lavanda") },
-  { color: "magenta", label: t("Magenta") },
-  { color: "pink", label: t("Rosa") },
-  { color: "brown", label: t("Marrón") },
-  { color: "gray", label: t("Gris") },
-];
 
 /** The longest the duration slider reaches (a block can be longer, by dragging or by its end day). */
 const MAX_SLIDER = DAY_MINUTES;
@@ -299,7 +277,7 @@ export function EntryEditor({
           data-color="none"
           onClick={() => void save({ color: null })}
         />
-        {ENTRY_COLORS.map(({ color, label }) => (
+        {TAG_COLORS.filter((c) => c.color !== "default").map(({ color, label }) => (
           <button
             key={color}
             type="button"

@@ -92,23 +92,46 @@ export function typeChoiceOf(prop: Pick<Property, "type" | "config">): TypeChoic
   );
 }
 
-/** Notion's tag colours, in its menu order (CSS: `--tag-<colour>`). */
+/** The tag colours, in rainbow order (CSS: `--tag-<colour>`). Gray to brown are Notion's; the rest are our own. */
 export const TAG_COLORS: { color: TagColor; label: string }[] = [
   { color: "default", label: t("Predeterminado") },
-  { color: "gray", label: t("Gris") },
-  { color: "brown", label: t("Marrón") },
-  { color: "orange", label: t("Naranja") },
-  { color: "yellow", label: t("Amarillo") },
-  { color: "green", label: t("Verde") },
-  { color: "blue", label: t("Azul") },
-  { color: "purple", label: t("Morado") },
-  { color: "pink", label: t("Rosa") },
   { color: "red", label: t("Rojo") },
+  { color: "coral", label: t("Coral") },
+  { color: "orange", label: t("Naranja") },
+  { color: "sand", label: t("Arena") },
+  { color: "yellow", label: t("Amarillo") },
+  { color: "lime", label: t("Lima") },
+  { color: "green", label: t("Verde") },
+  { color: "mint", label: t("Menta") },
+  { color: "teal", label: t("Turquesa") },
+  { color: "cyan", label: t("Cian") },
+  { color: "sky", label: t("Celeste") },
+  { color: "blue", label: t("Azul") },
+  { color: "indigo", label: t("Índigo") },
+  { color: "purple", label: t("Morado") },
+  { color: "lavender", label: t("Lavanda") },
+  { color: "magenta", label: t("Magenta") },
+  { color: "pink", label: t("Rosa") },
+  { color: "brown", label: t("Marrón") },
+  { color: "gray", label: t("Gris") },
+];
+
+/** The colours a new option gets by its position (Notion's, in its order; Rust's `COLORS` after «default»). */
+const AUTO_COLORS: TagColor[] = [
+  "gray",
+  "brown",
+  "orange",
+  "yellow",
+  "green",
+  "blue",
+  "purple",
+  "pink",
+  "red",
 ];
 
 /** An option's colour: the one chosen for it, else one picked by its position (as Notion does for new options). */
 export function optionColor(prop: Property, option: string): TagColor | undefined {
   const index = (prop.config.options ?? []).indexOf(option);
   if (index < 0) return undefined;
-  return prop.config.colors?.[option] ?? TAG_COLORS[1 + (index % 9)].color;
+  return prop.config.colors?.[option] ?? AUTO_COLORS[index % AUTO_COLORS.length];
 }

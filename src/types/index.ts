@@ -43,7 +43,7 @@ export interface CalendarEntry {
   start: string;
   end: string;
   allDay: boolean;
-  color: EntryColor | null;
+  color: TagColor | null;
   location: string | null;
   note: string | null;
   repeat: Repeat | null;
@@ -59,7 +59,7 @@ export interface EntryInput {
   start: string;
   end: string;
   allDay: boolean;
-  color: EntryColor | null;
+  color: TagColor | null;
   location: string | null;
   note: string | null;
   repeat: Repeat | null;
@@ -163,13 +163,18 @@ export type StatusGroup = "todo" | "doing" | "done";
 /** A text property shown as a link, a mail address or a phone number (Rust's `TEXT_FORMATS`). */
 export type TextFormat = "url" | "email" | "phone";
 
-/** Notion's tag colours (Rust's `databases::COLORS`). */
+/** The tag colours (Rust\'s `databases::COLORS` and `EXTRA_COLORS`). */
 export type TagColor =
-  "default" | "gray" | "brown" | "orange" | "yellow" | "green" | "blue" | "purple" | "pink" | "red";
-
-/** A calendar entry's colour: the tag colours plus the calendar's own (Rust's `calendar::EXTRA_COLORS`). */
-export type EntryColor =
-  | TagColor
+  | "default"
+  | "gray"
+  | "brown"
+  | "orange"
+  | "yellow"
+  | "green"
+  | "blue"
+  | "purple"
+  | "pink"
+  | "red"
   | "teal"
   | "cyan"
   | "sky"

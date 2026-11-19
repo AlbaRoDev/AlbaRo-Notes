@@ -1167,6 +1167,46 @@ button.db-prop-name {
   --tag: var(--tag-red);
 }
 
+[data-color="teal"] {
+  --tag: var(--tag-teal);
+}
+
+[data-color="cyan"] {
+  --tag: var(--tag-cyan);
+}
+
+[data-color="sky"] {
+  --tag: var(--tag-sky);
+}
+
+[data-color="indigo"] {
+  --tag: var(--tag-indigo);
+}
+
+[data-color="lavender"] {
+  --tag: var(--tag-lavender);
+}
+
+[data-color="magenta"] {
+  --tag: var(--tag-magenta);
+}
+
+[data-color="coral"] {
+  --tag: var(--tag-coral);
+}
+
+[data-color="lime"] {
+  --tag: var(--tag-lime);
+}
+
+[data-color="mint"] {
+  --tag: var(--tag-mint);
+}
+
+[data-color="sand"] {
+  --tag: var(--tag-sand);
+}
+
 .page-editor .ProseMirror .db-select[data-color] {
   background: var(--tag);
 }
