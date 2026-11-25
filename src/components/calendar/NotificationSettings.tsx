@@ -117,7 +117,7 @@ export function NotificationSettings({ onError }: { onError: (message: string | 
           {settings.enabled && !allowed && (
             <p className="cal-notify-hint" role="alert">
               {t(
-                "El sistema tiene bloqueados los avisos de esta app: actívalos en los ajustes del móvil (Aplicaciones → AlbaRo Notes → Notificaciones).",
+                "El sistema tiene bloqueados los avisos de esta app: actívalos en los ajustes del móvil (Aplicaciones → Alvraco Notes → Notificaciones).",
               )}
             </p>
           )}

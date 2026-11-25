@@ -32,7 +32,7 @@ export function Home({
         {!isMobile && <WindowControls />}
       </header>
       <img src={appIcon} alt="" className="home-icon" />
-      <h1>{t("AlbaRo")}</h1>
+      <h1>{t("Alvraco")}</h1>
       <div className="home-cards">
         {(["notes", "manager"] as const).map((half, i) => {
           const { label, blurb, Icon, key } = HALVES[half];
@@ -52,7 +52,7 @@ export function Home({
           );
         })}
       </div>
-      {version && <p className="home-version">AlbaRo Notes v{version}</p>}
+      {version && <p className="home-version">Alvraco Notes v{version}</p>}
     </div>
   );
 }

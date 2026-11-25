@@ -371,7 +371,7 @@ export function Sidebar({
         <div className="sidebar-inner" style={single ? undefined : { width }}>
           <div className="sidebar-workspace">
             <img src={appIcon} alt="" className="sidebar-workspace-icon" />
-            <span className="sidebar-workspace-name">{t("AlbaRo Notes")}</span>
+            <span className="sidebar-workspace-name">{t("Alvraco Notes")}</span>
             <button
               type="button"
               className="sidebar-close"

@@ -136,7 +136,7 @@ jobs:
           # 16 kB pages (Android 15+): the library inside must be aligned for them.
           "$tools/zipalign" -c -P 16 4 "$unsigned"
           mkdir release
-          out="release/AlbaRo-Notes_${GITHUB_REF_NAME#v}_android-arm64.apk"
+          out="release/Alvraco-Notes_${GITHUB_REF_NAME#v}_android-arm64.apk"
           echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
           "$tools/apksigner" sign --ks "$RUNNER_TEMP/release.jks" --ks-key-alias "$ANDROID_KEY_ALIAS" \
             --ks-pass env:ANDROID_KEYSTORE_PASSWORD --key-pass env:ANDROID_KEY_PASSWORD \
@@ -172,5 +172,5 @@ jobs:
       - name: Create the draft release
         run: |
           gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag --draft \
-            --title "AlbaRo Notes $GITHUB_REF_NAME" --notes-file release/RELEASE_NOTES.md \
+            --title "Alvraco Notes $GITHUB_REF_NAME" --notes-file release/RELEASE_NOTES.md \
             release/*.exe release/*.exe.sig release/*.apk release/latest.json release/SHA256SUMS

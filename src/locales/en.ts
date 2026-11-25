@@ -299,12 +299,12 @@ export const en: Record<string, string> = {
   "Ctrl+K": "Ctrl+K",
   Ayuda: "Help",
   "Buscar actualizaciones…": "Check for updates…",
-  "Acerca de AlbaRo Notes": "About AlbaRo Notes",
+  "Acerca de Alvraco Notes": "About Alvraco Notes",
   "Repositorio en GitHub": "Repository on GitHub",
   "Versiones publicadas": "Published releases",
-  "Menú de AlbaRo Notes": "AlbaRo Notes menu",
+  "Menú de Alvraco Notes": "Alvraco Notes menu",
   Cerrar: "Close",
-  "AlbaRo Notes": "AlbaRo Notes",
+  "Alvraco Notes": "Alvraco Notes",
   "Versión {version}": "Version {version}",
   "Versión desconocida": "Unknown version",
   "Código abierto, licencia MIT. Tus notas se quedan en este equipo.":
@@ -417,8 +417,8 @@ export const en: Record<string, string> = {
   Cuándo: "When",
   "No se pudo mostrar el aviso: {n1}": "Couldn't show the alert: {n1}",
   "Probar un aviso": "Test an alert",
-  "El sistema tiene bloqueados los avisos de esta app: actívalos en los ajustes del móvil (Aplicaciones → AlbaRo Notes → Notificaciones).":
-    "The system blocks this app's alerts: turn them on in the phone's settings (Apps → AlbaRo Notes → Notifications).",
+  "El sistema tiene bloqueados los avisos de esta app: actívalos en los ajustes del móvil (Aplicaciones → Alvraco Notes → Notificaciones).":
+    "The system blocks this app's alerts: turn them on in the phone's settings (Apps → Alvraco Notes → Notifications).",
   "Los avisos de las próximas dos semanas los programa el sistema y suenan aunque la app esté cerrada; se actualizan al abrirla. Pueden llegar unos minutos tarde con el ahorro de batería. Las citas de todo el día y las fechas límite no tienen hora, así que no avisan.":
     "The alerts for the next two weeks are scheduled by the system and ring even with the app closed; they are refreshed when you open it. They can arrive a few minutes late with battery saving. All-day events and due dates have no time, so they don't alert.",
   "Solo se avisa con la aplicación abierta. Las citas de todo el día y las fechas límite no tienen hora, así que no avisan.":
@@ -1223,7 +1223,7 @@ export const en: Record<string, string> = {
   "Páginas, bases de datos y la IA para tus apuntes": "Pages, databases and the AI for your notes",
   Gestor: "Manager",
   "Calendario, tareas, tableros y familias": "Calendar, tasks, boards and families",
-  AlbaRo: "AlbaRo",
+  Alvraco: "Alvraco",
   "Día, semana y mes con horas; arrastra tareas desde cualquier vista.":
     "Day, week and month with hours; drag tasks from any view.",
   "Tu base de tareas, con las categorías que quieras.":

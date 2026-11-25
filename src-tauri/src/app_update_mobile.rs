@@ -11,7 +11,7 @@ use tauri_plugin_opener::OpenerExt;
 
 use crate::release_check::{newer_release, Found};
 
-const LATEST: &str = "https://api.github.com/repos/AlbaRoDev/AlbaRo-Notes/releases/latest";
+const LATEST: &str = "https://api.github.com/repos/Alvraco/Alvraco-Notes/releases/latest";
 const FIRST_CHECK: Duration = Duration::from_secs(20);
 const CHECK_EVERY: Duration = Duration::from_secs(12 * 60 * 60);
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);

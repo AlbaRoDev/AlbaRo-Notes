@@ -160,7 +160,7 @@ mod tests {
     #[test]
     fn the_installer_may_come_only_from_github_over_https() {
         for ok in [
-            "https://github.com/AlbaRoDev/AlbaRo-Notes/releases/download/v0.7.0/setup.exe",
+            "https://github.com/Alvraco/Alvraco-Notes/releases/download/v0.7.0/setup.exe",
             "https://release-assets.githubusercontent.com/github-production-release-asset/1/x?sp=r",
             "https://objects.githubusercontent.com/x",
             "https://GitHub.com:443/x",
@@ -246,7 +246,7 @@ mod tests {
         let updater = &config()["plugins"]["updater"];
         let endpoints = updater["endpoints"].as_array().unwrap();
         assert_eq!(endpoints.len(), 1);
-        assert_eq!(endpoints[0], "https://github.com/AlbaRoDev/AlbaRo-Notes/releases/latest/download/latest.json");
+        assert_eq!(endpoints[0], "https://github.com/Alvraco/Alvraco-Notes/releases/latest/download/latest.json");
         for weakening in [
             "dangerousInsecureTransportProtocol",
             "dangerousAcceptInvalidCerts",

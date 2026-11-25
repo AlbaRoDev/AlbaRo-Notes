@@ -732,7 +732,7 @@ function App() {
                   : t("Base de datos: esquema v{dbSchema}", { dbSchema })
               }
             >
-              AlbaRo Notes v{version}
+              Alvraco Notes v{version}
             </p>
           )}
         </main>

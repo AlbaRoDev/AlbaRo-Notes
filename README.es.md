@@ -1,4 +1,4 @@
-# AlbaRo Notes
+# Alvraco Notes
 
 [English](README.md)
 
@@ -40,7 +40,7 @@ Las capturas usan datos inventados.
 
 ## Instalar
 
-Descarga el instalador o el APK de la [página de versiones](https://github.com/AlbaRoDev/AlbaRo-Notes/releases).
+Descarga el instalador o el APK de la [página de versiones](https://github.com/Alvraco/Alvraco-Notes/releases).
 
 | Sistema       | Archivo           | Estado                |
 | ------------- | ----------------- | --------------------- |

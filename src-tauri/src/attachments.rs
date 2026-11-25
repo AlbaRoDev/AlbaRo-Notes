@@ -476,7 +476,7 @@ fn http_get(url: &Url, redirects: u32, timeout: Duration, public_only: bool) -> 
         // with redirects(0) the 3xx comes back as the response, and check_kind refuses it
         .max_redirects_will_error(false)
         .http_status_as_error(false)
-        .user_agent("AlbaRoNotes/0.1")
+        .user_agent("AlvracoNotes/0.1")
         .build();
     let agent = if public_only {
         ureq::Agent::with_parts(config, DefaultConnector::default(), PublicOnly)

@@ -41,7 +41,7 @@ export function buildManifest({ tag, repo, files, notes, date }) {
 
 export function releaseNotes(tag, files) {
   const sums = files.map((f) => `${f.sha256}  ${f.name}`).join("\n");
-  return `## AlbaRo Notes ${tag}
+  return `## Alvraco Notes ${tag}
 
 **SHA-256** del instalador (\`Get-FileHash <fichero>\` en PowerShell):
 
@@ -85,7 +85,7 @@ function main(dir, tag, repo) {
     tag,
     repo,
     files,
-    notes: `AlbaRo Notes ${tag}`,
+    notes: `Alvraco Notes ${tag}`,
     date: new Date(),
   });
   writeFileSync(join(dir, "latest.json"), `${JSON.stringify(manifest, null, 2)}\n`);

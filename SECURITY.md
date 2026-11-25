@@ -1,6 +1,6 @@
 # Security policy
 
-AlbaRo Notes is a personal, open-source project maintained by one person. Security reports are welcome and are
+Alvraco Notes is a personal, open-source project maintained by one person. Security reports are welcome and are
 handled on a best-effort basis.
 
 ## Reporting a vulnerability
@@ -48,7 +48,7 @@ file; and the AI service's API key lives in the system's credential store.
 
 # Política de seguridad
 
-AlbaRo Notes es un proyecto personal de código abierto, mantenido por una persona. Los avisos de seguridad se
+Alvraco Notes es un proyecto personal de código abierto, mantenido por una persona. Los avisos de seguridad se
 agradecen y se atienden lo mejor posible.
 
 ## Cómo avisar de una vulnerabilidad

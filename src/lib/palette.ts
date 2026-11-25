@@ -1,5 +1,5 @@
 // The colours of the themed style: warm cream surfaces with brown text in light, deep brown in dark, and an
-// accent that changes with the season — the same palette AlbaRo Downloader and the author's website use. Each
+// accent that changes with the season — the same palette Alvraco Downloader and the author's website use. Each
 // season is the accent (hue and chroma), the tint of the surfaces and the hues of a thin gradient strip;
 // `paletteFor` turns that into the CSS variables of App.css. Lightness is fixed per mode, so the text on every
 // surface keeps its contrast whatever the hue: `tests/palette.test.mjs` checks all 9 seasons in both modes
@@ -23,7 +23,7 @@ interface SeasonColours {
   strip: number[];
 }
 
-// The website's palette, season by season, reduced to what an app needs (see AlbaRo Downloader's palette.ts,
+// The website's palette, season by season, reduced to what an app needs (see Alvraco Downloader's palette.ts,
 // from which these figures come): the accent colours the buttons and links, the tint the surfaces, and the
 // strip carries the rest of the season's colours.
 export const SEASON_COLOURS: Record<Season, SeasonColours> = {

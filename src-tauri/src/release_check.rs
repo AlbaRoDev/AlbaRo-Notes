@@ -3,7 +3,7 @@
 
 /// Where releases are downloaded from. The address of the APK is built here from the version, never
 /// taken from the reply, so a strange reply cannot make the app open a stranger's address.
-const DOWNLOADS: &str = "https://github.com/AlbaRoDev/AlbaRo-Notes/releases/download";
+const DOWNLOADS: &str = "https://github.com/Alvraco/Alvraco-Notes/releases/download";
 
 /// A newer release that has an APK for phones.
 #[derive(Debug, PartialEq)]
@@ -37,7 +37,7 @@ pub fn newer_release(reply: &str, current: &str) -> Result<Option<Found>, String
         return Ok(None);
     }
     let version = tag.strip_prefix('v').unwrap_or(tag);
-    let apk = format!("AlbaRo-Notes_{version}_android-arm64.apk");
+    let apk = format!("Alvraco-Notes_{version}_android-arm64.apk");
     let has_apk = json
         .get("assets")
         .and_then(|a| a.as_array())
@@ -74,13 +74,13 @@ mod tests {
 
     #[test]
     fn offers_only_a_newer_release_with_its_apk() {
-        let apk = "AlbaRo-Notes_1.1.3_android-arm64.apk";
+        let apk = "Alvraco-Notes_1.1.3_android-arm64.apk";
         let found = newer_release(&reply("v1.1.3", &[apk, "latest.json"]), "1.1.2").unwrap();
         assert_eq!(
             found,
             Some(Found {
                 version: "1.1.3".into(),
-                url: "https://github.com/AlbaRoDev/AlbaRo-Notes/releases/download/v1.1.3/AlbaRo-Notes_1.1.3_android-arm64.apk".into()
+                url: "https://github.com/Alvraco/Alvraco-Notes/releases/download/v1.1.3/Alvraco-Notes_1.1.3_android-arm64.apk".into()
             })
         );
         // the same or an older release: nothing to offer
@@ -89,7 +89,7 @@ mod tests {
         // newer, but the APK is not up yet
         assert_eq!(newer_release(&reply("v1.1.3", &["latest.json"]), "1.1.2").unwrap(), None);
         // an APK of another version does not count
-        assert_eq!(newer_release(&reply("v1.1.3", &["AlbaRo-Notes_1.1.2_android-arm64.apk"]), "1.1.2").unwrap(), None);
+        assert_eq!(newer_release(&reply("v1.1.3", &["Alvraco-Notes_1.1.2_android-arm64.apk"]), "1.1.2").unwrap(), None);
     }
 
     #[test]

@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { buildManifest, releaseNotes } from "../scripts/release-manifest.mjs";
 
 const windows = {
-  name: "AlbaRo-Notes_1.2.3_windows-x64-setup.exe",
+  name: "Alvraco-Notes_1.2.3_windows-x64-setup.exe",
   signature: "sigwin\n",
   sha256: "a".repeat(64),
 };
@@ -23,7 +23,7 @@ test("each installer maps to its updater key, with the release download URL", ()
   assert.deepEqual(m.platforms, {
     "windows-x86_64": {
       signature: "sigwin",
-      url: "https://github.com/o/r/releases/download/v1.2.3/AlbaRo-Notes_1.2.3_windows-x64-setup.exe",
+      url: "https://github.com/o/r/releases/download/v1.2.3/Alvraco-Notes_1.2.3_windows-x64-setup.exe",
     },
   });
 });
@@ -41,7 +41,7 @@ test("a missing installer, a missing signature and a bad tag are refused", () =>
     () =>
       buildManifest({
         ...base,
-        files: [{ ...windows, name: "AlbaRo Notes_1.2.3_x64-setup.exe" }],
+        files: [{ ...windows, name: "Alvraco Notes_1.2.3_x64-setup.exe" }],
       }),
     /windows-x86_64/,
   );
@@ -55,7 +55,7 @@ test("the notes list every hash with its file name and warn about SmartScreen", 
 
 test("the Android APK is hashed and explained, but has no place in latest.json", () => {
   const apk = {
-    name: "AlbaRo-Notes_1.2.3_android-arm64.apk",
+    name: "Alvraco-Notes_1.2.3_android-arm64.apk",
     signature: "",
     sha256: "b".repeat(64),
   };

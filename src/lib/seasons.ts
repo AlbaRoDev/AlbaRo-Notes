@@ -1,5 +1,5 @@
-// The themed style changes with the date: the same nine "seasons" as the author's website (albaro.dev) and
-// AlbaRo Downloader, by fixed dates, so the three agree. Special days win over the plain seasons. Pure, so a
+// The themed style changes with the date: the same nine "seasons" as the author's website (alvraco.dev) and
+// Alvraco Downloader, by fixed dates, so the three agree. Special days win over the plain seasons. Pure, so a
 // test can try every date.
 
 export const SEASONS = [

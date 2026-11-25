@@ -1,4 +1,4 @@
-# AlbaRo Notes
+# Alvraco Notes
 
 [Español](README.es.md)
 
@@ -38,7 +38,7 @@ The screenshots show made-up data.
 
 ## Install
 
-Download the installer or the APK from the [Releases page](https://github.com/AlbaRoDev/AlbaRo-Notes/releases).
+Download the installer or the APK from the [Releases page](https://github.com/Alvraco/Alvraco-Notes/releases).
 
 | System        | File             | Status            |
 | ------------- | ---------------- | ----------------- |

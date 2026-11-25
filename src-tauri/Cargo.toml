@@ -1,8 +1,8 @@
 [package]
 name = "albaro-notes"
-version = "1.1.4"
-description = "AlbaRo Notes: notas con editor de bloques, bases de datos e IA opcional"
-authors = ["AlbaRoDev"]
+version = "1.2.0"
+description = "Alvraco Notes: notas con editor de bloques, bases de datos e IA opcional"
+authors = ["Alvraco"]
 edition = "2021"
 license = "MIT"
 # Not a crate to publish.

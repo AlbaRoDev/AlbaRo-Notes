@@ -21,7 +21,7 @@ const MAX_QUERY_CHARS: usize = 200;
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 const TIMEOUT: Duration = Duration::from_secs(10);
 /// OSM's usage policy asks for an identifying user agent.
-const USER_AGENT: &str = "AlbaRoNotes/0.1 (desktop notes app)";
+const USER_AGENT: &str = "AlvracoNotes/0.1 (desktop notes app)";
 
 #[derive(Serialize, Debug, PartialEq)]
 pub struct GeocodeResult {

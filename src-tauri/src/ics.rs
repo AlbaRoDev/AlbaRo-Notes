@@ -179,9 +179,9 @@ pub fn export(conn: &Connection, include_deadlines: bool, now: &str) -> Result<S
     let mut lines = vec![
         "BEGIN:VCALENDAR".to_string(),
         "VERSION:2.0".to_string(),
-        "PRODID:-//AlbaRo Notes//Calendario//ES".to_string(),
+        "PRODID:-//Alvraco Notes//Calendario//ES".to_string(),
         "CALSCALE:GREGORIAN".to_string(),
-        "X-WR-CALNAME:AlbaRo Notes".to_string(),
+        "X-WR-CALNAME:Alvraco Notes".to_string(),
     ];
     for (entry, created) in calendar::all_entries(conn)? {
         if let Some(event_lines) = event(conn, &entry, &created)? {
@@ -278,7 +278,7 @@ mod tests {
         assert!(text.starts_with("BEGIN:VCALENDAR\r\n") && text.ends_with("END:VCALENDAR\r\n"));
         assert!(!text.replace("\r\n", "").contains('\n'), "every line ends in CRLF");
         let l = lines(&conn, false);
-        assert!(has(&l, "VERSION:2.0") && has(&l, "PRODID:-//AlbaRo Notes//Calendario//ES"));
+        assert!(has(&l, "VERSION:2.0") && has(&l, "PRODID:-//Alvraco Notes//Calendario//ES"));
         assert!(has(&l, "DTSTART:20261021T100000") && has(&l, "DTEND:20261021T113000"), "no zone: floating");
         assert!(has(&l, "SUMMARY:Reunión\\; con\\, comas\\\\y"));
         assert!(has(&l, "LOCATION:Sala 2") && has(&l, "DESCRIPTION:Primera línea\\nSegunda"));
@@ -409,7 +409,7 @@ mod tests {
         let conn = conn();
         assert_eq!(
             export(&conn, true, NOW).unwrap(),
-            "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//AlbaRo Notes//Calendario//ES\r\nCALSCALE:GREGORIAN\r\nX-WR-CALNAME:AlbaRo Notes\r\nEND:VCALENDAR\r\n"
+            "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Alvraco Notes//Calendario//ES\r\nCALSCALE:GREGORIAN\r\nX-WR-CALNAME:Alvraco Notes\r\nEND:VCALENDAR\r\n"
         );
     }
 }

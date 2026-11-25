@@ -22,7 +22,7 @@ import { getFontPref } from "../lib/theme";
 import { useSizeClass } from "../lib/viewport.ts";
 import { useBackLayer } from "../hooks/useBackLayer.ts";
 
-const REPOSITORY = "https://github.com/AlbaRoDev/AlbaRo-Notes";
+const REPOSITORY = "https://github.com/Alvraco/Alvraco-Notes";
 const RELEASES = `${REPOSITORY}/releases`;
 
 interface Entry {
@@ -163,7 +163,7 @@ export function AppMenu({
       label: t("Ayuda"),
       items: [
         { label: t("Buscar actualizaciones…"), icon: RefreshCw, run: requestUpdateCheck },
-        { label: t("Acerca de AlbaRo Notes"), icon: Info, run: () => setAbout(true) },
+        { label: t("Acerca de Alvraco Notes"), icon: Info, run: () => setAbout(true) },
         "separator",
         link(t("Repositorio en GitHub"), REPOSITORY),
         link(t("Versiones publicadas"), RELEASES),
@@ -184,8 +184,8 @@ export function AppMenu({
         className="app-menu-button"
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={t("Menú de AlbaRo Notes")}
-        title={t("Menú de AlbaRo Notes")}
+        aria-label={t("Menú de Alvraco Notes")}
+        title={t("Menú de Alvraco Notes")}
         onClick={() => (open ? close() : setOpen(true))}
       >
         <img src={appIcon} alt="" className="app-menu-icon" />
@@ -194,7 +194,7 @@ export function AppMenu({
         <div
           className="app-menu-pop"
           role="menu"
-          aria-label={t("Menú de AlbaRo Notes")}
+          aria-label={t("Menú de Alvraco Notes")}
           data-drilled={(compact && current) || undefined}
         >
           <div className="app-menu-categories">
@@ -283,14 +283,14 @@ function About({
         className="about"
         role="dialog"
         aria-modal="true"
-        aria-label={t("Acerca de AlbaRo Notes")}
+        aria-label={t("Acerca de Alvraco Notes")}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <button type="button" className="about-close" aria-label={t("Cerrar")} onClick={onClose}>
           <X size={14} />
         </button>
         <img src={appIcon} alt="" className="about-icon" />
-        <h2>{t("AlbaRo Notes")}</h2>
+        <h2>{t("Alvraco Notes")}</h2>
         <p>{version ? t("Versión {version}", { version }) : t("Versión desconocida")}</p>
         {dbSchema !== null && (
           <p className="about-faint">{t("Base de datos: esquema v{dbSchema}", { dbSchema })}</p>
